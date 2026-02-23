@@ -56,6 +56,84 @@ export type Database = {
         }
         Relationships: []
       }
+      payees: {
+        Row: {
+          apt: string | null
+          city: string | null
+          created_at: string
+          first_name: string | null
+          first_name_yiddish: string | null
+          id: string
+          last_name: string | null
+          last_name_yiddish: string | null
+          middle_name: string | null
+          middle_name_yiddish: string | null
+          payee_name: string
+          record_id: string | null
+          sort_order: number | null
+          state: string | null
+          street_name: string | null
+          street_no: string | null
+          title: string | null
+          title_1_yiddish: string | null
+          title_2_yiddish: string | null
+          title_to_use: string | null
+          updated_at: string
+          urgent_level: number | null
+          zip: string | null
+        }
+        Insert: {
+          apt?: string | null
+          city?: string | null
+          created_at?: string
+          first_name?: string | null
+          first_name_yiddish?: string | null
+          id?: string
+          last_name?: string | null
+          last_name_yiddish?: string | null
+          middle_name?: string | null
+          middle_name_yiddish?: string | null
+          payee_name: string
+          record_id?: string | null
+          sort_order?: number | null
+          state?: string | null
+          street_name?: string | null
+          street_no?: string | null
+          title?: string | null
+          title_1_yiddish?: string | null
+          title_2_yiddish?: string | null
+          title_to_use?: string | null
+          updated_at?: string
+          urgent_level?: number | null
+          zip?: string | null
+        }
+        Update: {
+          apt?: string | null
+          city?: string | null
+          created_at?: string
+          first_name?: string | null
+          first_name_yiddish?: string | null
+          id?: string
+          last_name?: string | null
+          last_name_yiddish?: string | null
+          middle_name?: string | null
+          middle_name_yiddish?: string | null
+          payee_name?: string
+          record_id?: string | null
+          sort_order?: number | null
+          state?: string | null
+          street_name?: string | null
+          street_no?: string | null
+          title?: string | null
+          title_1_yiddish?: string | null
+          title_2_yiddish?: string | null
+          title_to_use?: string | null
+          updated_at?: string
+          urgent_level?: number | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
