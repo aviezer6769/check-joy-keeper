@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAddPayee, type PayeeInsert } from "@/hooks/usePayees";
-import { Upload, Plus, Trash2 } from "lucide-react";
+import { Upload, Plus, Trash2, FileUp } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import * as XLSX from "xlsx";
 
 const COLUMN_KEYS: (keyof PayeeInsert)[] = [
   "payee_name", "record_id", "sort_order", "urgent_level",
@@ -103,13 +104,14 @@ export function PayeeBulkImport() {
   const [csvText, setCsvText] = useState("");
   const [rows, setRows] = useState<Record<string, string>[]>([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()]);
   const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [fileRows, setFileRows] = useState<Record<string, string>[]>([]);
   const qc = useQueryClient();
 
-  const handleCSVImport = async () => {
-    const parsed = parseCSV(csvText);
-    const payees = parsed.map(rowToPayee).filter(Boolean) as PayeeInsert[];
+  const importPayees = async (payees: PayeeInsert[], onDone: () => void) => {
     if (payees.length === 0) {
-      toast.error("No valid payees found in pasted data");
+      toast.error("No valid payees found");
       return;
     }
     setImporting(true);
@@ -120,28 +122,71 @@ export function PayeeBulkImport() {
     } else {
       toast.success(`${payees.length} payee(s) imported`);
       qc.invalidateQueries({ queryKey: ["payees"] });
-      setCsvText("");
+      onDone();
       setOpen(false);
     }
   };
 
-  const handleMultiRowSubmit = async () => {
+  const handleCSVImport = () => {
+    const parsed = parseCSV(csvText);
+    const payees = parsed.map(rowToPayee).filter(Boolean) as PayeeInsert[];
+    importPayees(payees, () => setCsvText(""));
+  };
+
+  const handleMultiRowSubmit = () => {
     const payees = rows.map(rowToPayee).filter(Boolean) as PayeeInsert[];
-    if (payees.length === 0) {
-      toast.error("Please fill in at least one payee name");
-      return;
-    }
-    setImporting(true);
-    const { error } = await supabase.from("payees").insert(payees);
-    setImporting(false);
-    if (error) {
-      toast.error("Import failed: " + error.message);
-    } else {
-      toast.success(`${payees.length} payee(s) added`);
-      qc.invalidateQueries({ queryKey: ["payees"] });
-      setRows([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()]);
-      setOpen(false);
-    }
+    importPayees(payees, () => setRows([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()]));
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonRows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: "" });
+
+        // Map spreadsheet headers to our column keys
+        const mapped = jsonRows.map((row) => {
+          const mapped: Record<string, string> = {};
+          Object.entries(row).forEach(([header, value]) => {
+            const normalized = header.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
+            const match = COLUMN_KEYS.find(
+              (k) =>
+                k === normalized ||
+                k.replace(/_/g, "") === normalized.replace(/_/g, "") ||
+                COLUMN_LABELS[k]?.toLowerCase().replace(/[^a-z0-9]/g, "") === normalized.replace(/[^a-z0-9]/g, "")
+            );
+            if (match) mapped[match] = String(value);
+          });
+          if (!mapped.payee_name && mapped.first_name && mapped.last_name) {
+            mapped.payee_name = `${mapped.first_name} ${mapped.last_name}`.trim();
+          }
+          return mapped;
+        });
+
+        setFileRows(mapped);
+        toast.success(`Parsed ${mapped.length} row(s) from ${file.name}`);
+      } catch {
+        toast.error("Failed to parse file. Make sure it's a valid CSV or Excel file.");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    // Reset input so the same file can be re-selected
+    e.target.value = "";
+  };
+
+  const handleFileImport = () => {
+    const payees = fileRows.map(rowToPayee).filter(Boolean) as PayeeInsert[];
+    importPayees(payees, () => {
+      setFileRows([]);
+      setFileName(null);
+    });
   };
 
   const updateRow = (idx: number, key: string, value: string) => {
@@ -151,7 +196,6 @@ export function PayeeBulkImport() {
   const addRow = () => setRows((prev) => [...prev, EMPTY_ROW()]);
   const removeRow = (idx: number) => setRows((prev) => prev.filter((_, i) => i !== idx));
 
-  // Show a subset of columns in multi-row for usability
   const MULTI_ROW_KEYS: (keyof PayeeInsert)[] = [
     "payee_name", "record_id", "first_name", "last_name", "city", "state", "zip",
   ];
@@ -167,11 +211,65 @@ export function PayeeBulkImport() {
         <DialogHeader>
           <DialogTitle>Import Payees</DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="csv">
+        <Tabs defaultValue="file">
           <TabsList>
-            <TabsTrigger value="csv">Paste CSV / Excel</TabsTrigger>
+            <TabsTrigger value="file">Upload File</TabsTrigger>
+            <TabsTrigger value="csv">Paste CSV</TabsTrigger>
             <TabsTrigger value="rows">Multi-Row Form</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="file" className="space-y-4 pt-2">
+            <div className="flex flex-col items-center gap-4 py-6 border-2 border-dashed border-border rounded-lg">
+              <FileUp className="h-10 w-10 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Upload a CSV or Excel (.xlsx, .xls) file</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                Choose File
+              </Button>
+              {fileName && (
+                <p className="text-sm font-medium">{fileName} — {fileRows.length} row(s) parsed</p>
+              )}
+            </div>
+            {fileRows.length > 0 && (
+              <div className="overflow-x-auto max-h-48 rounded border border-border">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-muted/50">
+                      {COLUMN_KEYS.filter((k) => fileRows.some((r) => r[k])).map((k) => (
+                        <th key={k} className="text-left px-2 py-1 font-semibold text-muted-foreground whitespace-nowrap">
+                          {COLUMN_LABELS[k]}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fileRows.slice(0, 20).map((row, i) => (
+                      <tr key={i} className="border-t border-border">
+                        {COLUMN_KEYS.filter((k) => fileRows.some((r) => r[k])).map((k) => (
+                          <td key={k} className="px-2 py-1 whitespace-nowrap">{row[k] || ""}</td>
+                        ))}
+                      </tr>
+                    ))}
+                    {fileRows.length > 20 && (
+                      <tr><td colSpan={99} className="px-2 py-1 text-muted-foreground">…and {fileRows.length - 20} more</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button onClick={handleFileImport} disabled={importing || fileRows.length === 0}>
+                {importing ? "Importing..." : `Import ${fileRows.length} Payee(s)`}
+              </Button>
+            </div>
+          </TabsContent>
 
           <TabsContent value="csv" className="space-y-3 pt-2">
             <div>
