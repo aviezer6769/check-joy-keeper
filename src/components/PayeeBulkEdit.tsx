@@ -201,11 +201,11 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
             </form>
           </TabsContent>
 
-          <TabsContent value="grid" className="pt-2 flex flex-col min-h-0 flex-1">
-            <p className="text-sm text-muted-foreground mb-3">
+          <TabsContent value="grid" className="pt-2 flex flex-col min-h-0 flex-1" style={{ display: "flex" }}>
+            <p className="text-sm text-muted-foreground mb-3 shrink-0">
               Edit each payee individually in the grid below.
             </p>
-            <div className="overflow-auto rounded border border-border flex-1 min-h-0">
+            <div className="rounded border border-border overflow-auto flex-1 min-h-0">
               <table className="w-full text-xs">
                 <thead className="sticky top-0 z-10 bg-muted">
                   <tr>
