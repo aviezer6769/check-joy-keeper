@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { PayeeForm } from "@/components/PayeeForm";
 import { PayeeBulkImport } from "@/components/PayeeBulkImport";
@@ -96,6 +97,34 @@ const Payees = () => {
     }
   };
 
+  const handleExport = () => {
+    const rows = filtered.map((p) => ({
+      "Record ID": p.record_id || "",
+      "Sort": p.sort_order,
+      "Urgent": p.urgent_level,
+      "טיטל 1": p.title_1_yiddish || "",
+      "ערשטע נאמען": p.first_name_yiddish || "",
+      "מיטעלסטע": p.middle_name_yiddish || "",
+      "לעצטע": p.last_name_yiddish || "",
+      "טיטל 2": p.title_2_yiddish || "",
+      "Title": p.title || "",
+      "TitleToUse": p.title_to_use || "",
+      "First Name": p.first_name || "",
+      "Middle": p.middle_name || "",
+      "Last Name": p.last_name || "",
+      "St #": p.street_no || "",
+      "Street": p.street_name || "",
+      "Apt": p.apt || "",
+      "City": p.city || "",
+      "State": p.state || "",
+      "Zip": p.zip || "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Payees");
+    XLSX.writeFile(wb, "payees.xlsx");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
@@ -125,6 +154,9 @@ const Payees = () => {
                   </Button>
                 </>
               )}
+              <Button size="sm" variant="outline" onClick={handleExport}>
+                <Download className="h-4 w-4 mr-1" /> Export
+              </Button>
               <PayeeForm />
               <PayeeBulkImport />
             </div>
