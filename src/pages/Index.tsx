@@ -2,7 +2,8 @@ import { useState, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert } from "@/hooks/useChecks";
 import { CheckForm } from "@/components/CheckForm";
 import { ChecksTable } from "@/components/ChecksTable";
@@ -69,10 +70,18 @@ const Index = () => {
               <h1 className="text-2xl font-bold tracking-tight">Check Tracker</h1>
               <p className="text-sm text-muted-foreground mt-1">Manage and print charity checks</p>
             </div>
-            <Button onClick={() => { setEditingCheck(null); setFormOpen(true); }}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Check
-            </Button>
+            <div className="flex gap-2">
+              <Link to="/payees">
+                <Button variant="outline">
+                  <Users className="h-4 w-4 mr-2" />
+                  Payees
+                </Button>
+              </Link>
+              <Button onClick={() => { setEditingCheck(null); setFormOpen(true); }}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Check
+              </Button>
+            </div>
           </div>
         </div>
       </header>
