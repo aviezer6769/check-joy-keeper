@@ -1,0 +1,115 @@
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useUpdatePayee, useDeletePayee, type Payee } from "@/hooks/usePayees";
+import { Trash2 } from "lucide-react";
+
+interface FieldDef {
+  key: keyof Omit<Payee, "id" | "created_at" | "updated_at">;
+  label: string;
+  dir?: "rtl";
+  type?: "number";
+}
+
+const FIELDS: FieldDef[] = [
+  { key: "payee_name", label: "Payee Name" },
+  { key: "record_id", label: "Record ID" },
+  { key: "sort_order", label: "Sort Order", type: "number" },
+  { key: "urgent_level", label: "Urgent Level", type: "number" },
+  { key: "title_1_yiddish", label: "טיטל 1", dir: "rtl" },
+  { key: "first_name_yiddish", label: "ערשטע נאמען", dir: "rtl" },
+  { key: "middle_name_yiddish", label: "מיטעלסטע", dir: "rtl" },
+  { key: "last_name_yiddish", label: "לעצטע", dir: "rtl" },
+  { key: "title_2_yiddish", label: "טיטל 2", dir: "rtl" },
+  { key: "title", label: "Title" },
+  { key: "title_to_use", label: "TitleToUse" },
+  { key: "first_name", label: "First Name" },
+  { key: "middle_name", label: "Middle Name" },
+  { key: "last_name", label: "Last Name" },
+  { key: "street_no", label: "Street #" },
+  { key: "street_name", label: "Street Name" },
+  { key: "apt", label: "Apt" },
+  { key: "city", label: "City" },
+  { key: "state", label: "State" },
+  { key: "zip", label: "Zip" },
+];
+
+interface PayeeEditFormProps {
+  payee: Payee;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function PayeeEditForm({ payee, open, onOpenChange }: PayeeEditFormProps) {
+  const [form, setForm] = useState<Record<string, any>>({ ...payee });
+  const updatePayee = useUpdatePayee();
+  const deletePayee = useDeletePayee();
+
+  const handleChange = (key: string, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: key === "sort_order" || key === "urgent_level" ? Number(value) || 0 : value || null,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const { id, created_at, updated_at, ...rest } = form;
+    if (!(rest.payee_name as string)?.trim()) return;
+    updatePayee.mutate(
+      { id: payee.id, ...rest },
+      { onSuccess: () => onOpenChange(false) }
+    );
+  };
+
+  const handleDelete = () => {
+    if (!confirm("Delete this payee?")) return;
+    deletePayee.mutate(payee.id, { onSuccess: () => onOpenChange(false) });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Payee</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3 pt-2">
+          {FIELDS.map((f) => (
+            <div key={f.key} className={f.key === "payee_name" ? "col-span-2" : ""}>
+              <Label className="text-xs mb-1 block" dir={f.dir}>
+                {f.label}
+              </Label>
+              <Input
+                dir={f.dir}
+                type={f.type === "number" ? "number" : "text"}
+                value={
+                  f.type === "number"
+                    ? (form[f.key] as number) ?? 0
+                    : (form[f.key] as string) ?? ""
+                }
+                onChange={(e) => handleChange(f.key, e.target.value)}
+                placeholder={f.label}
+                required={f.key === "payee_name"}
+              />
+            </div>
+          ))}
+          <div className="col-span-2 flex justify-between pt-2">
+            <Button type="button" variant="destructive" size="sm" onClick={handleDelete} disabled={deletePayee.isPending}>
+              <Trash2 className="h-4 w-4 mr-1" /> Delete
+            </Button>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updatePayee.isPending}>
+                {updatePayee.isPending ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
