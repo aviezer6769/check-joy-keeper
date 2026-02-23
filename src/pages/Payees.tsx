@@ -7,6 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Search, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PayeeForm } from "@/components/PayeeForm";
+import { PayeeBulkImport } from "@/components/PayeeBulkImport";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
@@ -63,6 +65,10 @@ const Payees = () => {
                   {filtered.length} payee{filtered.length !== 1 ? "s" : ""}
                 </p>
               </div>
+            </div>
+            <div className="flex gap-2">
+              <PayeeForm />
+              <PayeeBulkImport />
             </div>
           </div>
         </div>
