@@ -28,6 +28,49 @@ const COLUMN_LABELS: Record<string, string> = {
   city: "City", state: "State", zip: "Zip",
 };
 
+// Additional alternate header names (case-insensitive) that map to column keys
+const HEADER_ALIASES: Record<string, keyof PayeeInsert> = {
+  "payeename": "payee_name", "payee name": "payee_name", "payee_name": "payee_name",
+  "recordid": "record_id", "record id": "record_id", "record_id": "record_id",
+  "sortorder": "sort_order", "sort order": "sort_order", "sort_order": "sort_order",
+  "urgentlevel": "urgent_level", "urgent level": "urgent_level", "urgent_level": "urgent_level",
+  "טיטל 1": "title_1_yiddish", "title_1_yiddish": "title_1_yiddish",
+  "ערשטע נאמען": "first_name_yiddish", "first_name_yiddish": "first_name_yiddish",
+  "מיטעלסטע": "middle_name_yiddish", "middle_name_yiddish": "middle_name_yiddish",
+  "לעצטע": "last_name_yiddish", "last_name_yiddish": "last_name_yiddish",
+  "טיטל 2": "title_2_yiddish", "title_2_yiddish": "title_2_yiddish",
+  "title": "title", "titletouse": "title_to_use", "titleto use": "title_to_use", "title_to_use": "title_to_use",
+  "firstname": "first_name", "first name": "first_name", "first_name": "first_name",
+  "middlename": "middle_name", "middle name": "middle_name", "middle_name": "middle_name",
+  "lastname": "last_name", "last name": "last_name", "last_name": "last_name",
+  "streetno": "street_no", "street no": "street_no", "street_no": "street_no", "st #": "street_no",
+  "streetname": "street_name", "street name": "street_name", "street_name": "street_name", "street": "street_name",
+  "apt": "apt",
+  "city": "city",
+  "state": "state",
+  "zip": "zip",
+};
+
+function matchHeader(header: string): keyof PayeeInsert | undefined {
+  const trimmed = header.trim();
+  // 1. Exact match against aliases (preserving Unicode)
+  const lower = trimmed.toLowerCase();
+  if (HEADER_ALIASES[lower]) return HEADER_ALIASES[lower];
+  // 2. Exact match against column labels
+  for (const [key, label] of Object.entries(COLUMN_LABELS)) {
+    if (trimmed === label || lower === label.toLowerCase()) return key as keyof PayeeInsert;
+  }
+  // 3. Normalized Latin-only fallback (only if result is non-empty)
+  const normalized = lower.replace(/[^a-z0-9_]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
+  if (normalized) {
+    const match = COLUMN_KEYS.find(
+      (k) => k === normalized || k.replace(/_/g, "") === normalized.replace(/_/g, "")
+    );
+    if (match) return match;
+  }
+  return undefined;
+}
+
 const EMPTY_ROW = (): Record<string, string> =>
   Object.fromEntries(COLUMN_KEYS.map((k) => [k, ""]));
 
@@ -37,15 +80,13 @@ function parseCSV(text: string): Record<string, string>[] {
 
   const firstLine = lines[0];
   const delimiter = firstLine.includes("\t") ? "\t" : ",";
-  const headerRow = firstLine.split(delimiter).map((h) => h.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_"));
+  const rawHeaders = firstLine.split(delimiter).map((h) => h.trim());
 
   // Try to map headers to column keys
   const keyMap = new Map<number, keyof PayeeInsert>();
-  headerRow.forEach((h, i) => {
-    const match = COLUMN_KEYS.find(
-      (k) => k === h || k.replace(/_/g, "") === h.replace(/_/g, "") || COLUMN_LABELS[k]?.toLowerCase().replace(/[^a-z0-9]/g, "") === h.replace(/[^a-z0-9]/g, "")
-    );
-    if (match) keyMap.set(i, match);
+  rawHeaders.forEach((h, i) => {
+    const match = matchHeader(h);
+    if (match && !Array.from(keyMap.values()).includes(match)) keyMap.set(i, match);
   });
 
   // If no headers matched, assume column order matches COLUMN_KEYS
@@ -152,22 +193,17 @@ export function PayeeBulkImport() {
         const jsonRows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: "" });
 
         // Map spreadsheet headers to our column keys
+        const usedKeys = new Set<string>();
         const mapped = jsonRows.map((row) => {
-          const mapped: Record<string, string> = {};
+          const result: Record<string, string> = {};
           Object.entries(row).forEach(([header, value]) => {
-            const normalized = header.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
-            const match = COLUMN_KEYS.find(
-              (k) =>
-                k === normalized ||
-                k.replace(/_/g, "") === normalized.replace(/_/g, "") ||
-                COLUMN_LABELS[k]?.toLowerCase().replace(/[^a-z0-9]/g, "") === normalized.replace(/[^a-z0-9]/g, "")
-            );
-            if (match) mapped[match] = String(value);
+            const match = matchHeader(header);
+            if (match) result[match] = String(value);
           });
-          if (!mapped.payee_name && mapped.first_name && mapped.last_name) {
-            mapped.payee_name = `${mapped.first_name} ${mapped.last_name}`.trim();
+          if (!result.payee_name && result.first_name && result.last_name) {
+            result.payee_name = `${result.first_name} ${result.last_name}`.trim();
           }
-          return mapped;
+          return result;
         });
 
         setFileRows(mapped);
