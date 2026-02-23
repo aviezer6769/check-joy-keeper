@@ -154,17 +154,17 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
         onOpenChange(v);
       }}
     >
-      <DialogContent className="max-w-[95vw] max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>Bulk Edit {payees.length} Payee(s)</DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="apply-all" onValueChange={(v) => v === "grid" && initGrid()}>
+        <Tabs defaultValue="apply-all" onValueChange={(v) => v === "grid" && initGrid()} className="flex flex-col min-h-0 flex-1">
           <TabsList>
             <TabsTrigger value="apply-all">Apply to All</TabsTrigger>
             <TabsTrigger value="grid">Edit Grid</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="apply-all" className="pt-2">
+          <TabsContent value="apply-all" className="pt-2 overflow-y-auto">
             <p className="text-sm text-muted-foreground mb-3">
               Check the fields you want to update. The new value will be applied to all selected payees.
             </p>
@@ -201,14 +201,14 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
             </form>
           </TabsContent>
 
-          <TabsContent value="grid" className="pt-2">
+          <TabsContent value="grid" className="pt-2 flex flex-col min-h-0 flex-1">
             <p className="text-sm text-muted-foreground mb-3">
               Edit each payee individually in the grid below.
             </p>
-            <div className="overflow-x-auto rounded border border-border">
+            <div className="overflow-auto rounded border border-border flex-1 min-h-0">
               <table className="w-full text-xs">
-                <thead>
-                  <tr className="bg-muted/50">
+                <thead className="sticky top-0 z-10 bg-muted">
+                  <tr>
                     <th className="text-left px-2 py-1.5 font-semibold text-muted-foreground whitespace-nowrap">#</th>
                     {GRID_FIELDS.map((f) => (
                       <th
@@ -245,7 +245,7 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                 </tbody>
               </table>
             </div>
-            <div className="flex justify-end gap-2 pt-3">
+            <div className="flex justify-end gap-2 pt-3 shrink-0">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
