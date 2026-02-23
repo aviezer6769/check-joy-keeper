@@ -6,12 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PayeeForm } from "@/components/PayeeForm";
 import { PayeeBulkImport } from "@/components/PayeeBulkImport";
 import { PayeeEditForm } from "@/components/PayeeEditForm";
 import { PayeeBulkEdit } from "@/components/PayeeBulkEdit";
+import { useDeletePayee } from "@/hooks/usePayees";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
@@ -33,6 +37,9 @@ const Payees = () => {
   const [editingPayee, setEditingPayee] = useState<Payee | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const deletePayee = useDeletePayee();
+  const qc = useQueryClient();
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const checksByPayee = checks.reduce<Record<string, Check[]>>((acc, c) => {
     (acc[c.payee] ??= []).push(c);
@@ -74,6 +81,21 @@ const Payees = () => {
 
   const selectedPayees = payees.filter((p) => selectedIds.has(p.id));
 
+  const handleBulkDelete = async () => {
+    if (!confirm(`Delete ${selectedIds.size} payee(s)? This cannot be undone.`)) return;
+    setBulkDeleting(true);
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from("payees").delete().in("id", ids);
+    setBulkDeleting(false);
+    if (error) {
+      toast.error("Bulk delete failed: " + error.message);
+    } else {
+      toast.success(`Deleted ${ids.length} payee(s)`);
+      setSelectedIds(new Set());
+      qc.invalidateQueries({ queryKey: ["payees"] });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
@@ -94,9 +116,14 @@ const Payees = () => {
             </div>
             <div className="flex gap-2">
               {selectedIds.size > 0 && (
-                <Button size="sm" variant="secondary" onClick={() => setBulkEditOpen(true)}>
-                  <Pencil className="h-4 w-4 mr-1" /> Edit {selectedIds.size} Selected
-                </Button>
+                <>
+                  <Button size="sm" variant="destructive" onClick={handleBulkDelete} disabled={bulkDeleting}>
+                    <Trash2 className="h-4 w-4 mr-1" /> Delete {selectedIds.size}
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => setBulkEditOpen(true)}>
+                    <Pencil className="h-4 w-4 mr-1" /> Edit {selectedIds.size}
+                  </Button>
+                </>
               )}
               <PayeeForm />
               <PayeeBulkImport />
