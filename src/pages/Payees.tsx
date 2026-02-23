@@ -5,10 +5,13 @@ import { useChecks, type Check } from "@/hooks/useChecks";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Search, ChevronDown, ChevronRight } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PayeeForm } from "@/components/PayeeForm";
 import { PayeeBulkImport } from "@/components/PayeeBulkImport";
+import { PayeeEditForm } from "@/components/PayeeEditForm";
+import { PayeeBulkEdit } from "@/components/PayeeBulkEdit";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
@@ -27,8 +30,10 @@ const Payees = () => {
   const { data: checks = [] } = useChecks();
   const [search, setSearch] = useState("");
   const [expandedPayee, setExpandedPayee] = useState<string | null>(null);
+  const [editingPayee, setEditingPayee] = useState<Payee | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
 
-  // Build a map of checks by payee name for the expanded detail view
   const checksByPayee = checks.reduce<Record<string, Check[]>>((acc, c) => {
     (acc[c.payee] ??= []).push(c);
     return acc;
@@ -47,6 +52,27 @@ const Payees = () => {
         );
       })
     : payees;
+
+  const allSelected = filtered.length > 0 && filtered.every((p) => selectedIds.has(p.id));
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((p) => p.id)));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectedPayees = payees.filter((p) => selectedIds.has(p.id));
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,6 +93,11 @@ const Payees = () => {
               </div>
             </div>
             <div className="flex gap-2">
+              {selectedIds.size > 0 && (
+                <Button size="sm" variant="secondary" onClick={() => setBulkEditOpen(true)}>
+                  <Pencil className="h-4 w-4 mr-1" /> Edit {selectedIds.size} Selected
+                </Button>
+              )}
               <PayeeForm />
               <PayeeBulkImport />
             </div>
@@ -97,7 +128,11 @@ const Payees = () => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
+                  <TableHead className="w-10 px-2">
+                    <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
+                  </TableHead>
                   <TableHead className="font-semibold w-8"></TableHead>
+                  <TableHead className="font-semibold w-10"></TableHead>
                   <TableHead className="font-semibold">Record ID</TableHead>
                   <TableHead className="font-semibold">Sort</TableHead>
                   <TableHead className="font-semibold">Urgent</TableHead>
@@ -129,12 +164,28 @@ const Payees = () => {
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => setExpandedPayee(expandedPayee === p.id ? null : p.id)}
                       >
+                        <TableCell className="px-2" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedIds.has(p.id)}
+                            onCheckedChange={() => toggleOne(p.id)}
+                          />
+                        </TableCell>
                         <TableCell className="px-2">
                           {expandedPayee === p.id ? (
                             <ChevronDown className="h-4 w-4 text-muted-foreground" />
                           ) : (
                             <ChevronRight className="h-4 w-4 text-muted-foreground" />
                           )}
+                        </TableCell>
+                        <TableCell className="px-2" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => setEditingPayee(p)}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
                         </TableCell>
                         <TableCell className="font-mono text-sm">{p.record_id || "—"}</TableCell>
                         <TableCell className="text-center">{p.sort_order}</TableCell>
@@ -164,7 +215,7 @@ const Payees = () => {
                       </TableRow>
                       {expandedPayee === p.id && (
                         <TableRow key={`${p.id}-details`}>
-                          <TableCell colSpan={20} className="bg-muted/30 p-0">
+                          <TableCell colSpan={22} className="bg-muted/30 p-0">
                             <div className="px-8 py-3">
                               <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
                                 Check History for {p.payee_name}
@@ -218,6 +269,21 @@ const Payees = () => {
           </div>
         )}
       </main>
+
+      {editingPayee && (
+        <PayeeEditForm
+          payee={editingPayee}
+          open={!!editingPayee}
+          onOpenChange={(open) => !open && setEditingPayee(null)}
+        />
+      )}
+
+      <PayeeBulkEdit
+        payees={selectedPayees}
+        open={bulkEditOpen}
+        onOpenChange={setBulkEditOpen}
+        onDone={() => setSelectedIds(new Set())}
+      />
     </div>
   );
 };
