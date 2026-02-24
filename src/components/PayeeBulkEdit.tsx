@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type Payee } from "@/hooks/usePayees";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -206,49 +206,46 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
             <p className="text-sm text-muted-foreground mb-3 shrink-0">
               Edit each payee individually in the grid below.
             </p>
-            <ScrollArea type="always" className="rounded border border-border flex-1 min-h-0">
-              <div className="min-w-max">
-                <table className="w-full text-xs">
-                  <thead className="sticky top-0 z-10 bg-muted">
-                    <tr>
-                      <th className="text-left px-2 py-1.5 font-semibold text-muted-foreground whitespace-nowrap">#</th>
+            <div className="rounded border border-border flex-1 min-h-0 overflow-auto" style={{ scrollbarGutter: 'stable' }}>
+              <table className="w-full text-xs min-w-max">
+                <thead className="sticky top-0 z-10 bg-muted">
+                  <tr>
+                    <th className="text-left px-2 py-1.5 font-semibold text-muted-foreground whitespace-nowrap">#</th>
+                    {GRID_FIELDS.map((f) => (
+                      <th
+                        key={f.key}
+                        className="text-left px-1 py-1.5 font-semibold text-muted-foreground whitespace-nowrap"
+                        dir={f.dir}
+                      >
+                        {f.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {gridRows.map((row, idx) => (
+                    <tr key={row.id} className="border-t border-border">
+                      <td className="px-2 py-0.5 text-muted-foreground">{idx + 1}</td>
                       {GRID_FIELDS.map((f) => (
-                        <th
-                          key={f.key}
-                          className="text-left px-1 py-1.5 font-semibold text-muted-foreground whitespace-nowrap"
-                          dir={f.dir}
-                        >
-                          {f.label}
-                        </th>
+                        <td key={f.key} className="px-0.5 py-0.5">
+                          <Input
+                            dir={f.dir}
+                            type={f.type === "number" ? "number" : "text"}
+                            value={
+                              f.type === "number"
+                                ? (row[f.key] as number) ?? 0
+                                : (row[f.key] as string) ?? ""
+                            }
+                            onChange={(e) => updateGridCell(idx, f.key, e.target.value)}
+                            className="h-7 text-xs min-w-[80px] px-1.5"
+                          />
+                        </td>
                       ))}
                     </tr>
-                  </thead>
-                  <tbody>
-                    {gridRows.map((row, idx) => (
-                      <tr key={row.id} className="border-t border-border">
-                        <td className="px-2 py-0.5 text-muted-foreground">{idx + 1}</td>
-                        {GRID_FIELDS.map((f) => (
-                          <td key={f.key} className="px-0.5 py-0.5">
-                            <Input
-                              dir={f.dir}
-                              type={f.type === "number" ? "number" : "text"}
-                              value={
-                                f.type === "number"
-                                  ? (row[f.key] as number) ?? 0
-                                  : (row[f.key] as string) ?? ""
-                              }
-                              onChange={(e) => updateGridCell(idx, f.key, e.target.value)}
-                              className="h-7 text-xs min-w-[80px] px-1.5"
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <div className="flex justify-end gap-2 pt-3 shrink-0">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
