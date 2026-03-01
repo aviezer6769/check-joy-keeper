@@ -16,7 +16,7 @@ function FilterCell({ col, w, value, options, onChange }: {
   options?: string[];
   onChange: (val: string) => void;
 }) {
-  const useDropdown = options && options.length > 0 && options.length <= MAX_DROPDOWN_OPTIONS;
+  const hasOptions = options && options.length > 0 && options.length <= MAX_DROPDOWN_OPTIONS;
 
   return (
     <TableHead
@@ -24,26 +24,27 @@ function FilterCell({ col, w, value, options, onChange }: {
       className="py-1 px-1"
       style={w ? { width: w, minWidth: w, maxWidth: w } : undefined}
     >
-      {useDropdown ? (
-        <Select value={value || "__all__"} onValueChange={(v) => onChange(v === "__all__" ? "" : v)}>
-          <SelectTrigger className="h-6 text-xs border-muted bg-background">
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all__">All</SelectItem>
-            {options.map((opt) => (
-              <SelectItem key={opt} value={opt}>{opt || "(empty)"}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ) : (
+      <div className="flex flex-col gap-0.5">
         <Input
-          placeholder="Filter..."
+          placeholder="Search..."
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="h-6 text-xs border-muted bg-background"
         />
-      )}
+        {hasOptions && (
+          <Select value={value || "__all__"} onValueChange={(v) => onChange(v === "__all__" ? "" : v)}>
+            <SelectTrigger className="h-6 text-xs border-muted bg-background">
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All</SelectItem>
+              {options.map((opt) => (
+                <SelectItem key={opt} value={opt}>{opt || "(empty)"}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
     </TableHead>
   );
 }
