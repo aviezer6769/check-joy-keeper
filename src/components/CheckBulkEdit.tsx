@@ -21,6 +21,7 @@ interface FieldDef {
 const APPLY_ALL_FIELDS: FieldDef[] = [
   { key: "check_date", label: "Date", type: "date" },
   { key: "check_given", label: "Check Given", type: "boolean" },
+  { key: "voided", label: "Voided", type: "boolean" },
   { key: "chalikah_id", label: "Chalikah", type: "chalikah" },
   { key: "memo", label: "Memo" },
 ];
@@ -89,6 +90,38 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
         updates[key] = values[key] || null;
       }
     });
+
+    // Handle voiding specially — each check needs its own original_amount
+    if (enabledFields.has("voided")) {
+      const shouldVoid = boolValues["voided"] ?? false;
+      setSaving(true);
+      const promises = checks.map((c) => {
+        const perCheckUpdates = { ...updates };
+        delete perCheckUpdates["voided"];
+        if (shouldVoid && !c.voided) {
+          perCheckUpdates.voided = true;
+          perCheckUpdates.original_amount = c.amount;
+          perCheckUpdates.amount = 0;
+        } else if (!shouldVoid && c.voided) {
+          perCheckUpdates.voided = false;
+          perCheckUpdates.amount = c.original_amount ?? 0;
+          perCheckUpdates.original_amount = null;
+        }
+        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id);
+      });
+      const results = await Promise.all(promises);
+      setSaving(false);
+      const errors = results.filter((r) => r.error);
+      if (errors.length > 0) {
+        toast.error(`${errors.length} row(s) failed to update`);
+      } else {
+        toast.success(`Updated ${checks.length} check(s)`);
+        qc.invalidateQueries({ queryKey: ["checks"] });
+        onDone();
+        onOpenChange(false);
+      }
+      return;
+    }
 
     setSaving(true);
     const ids = checks.map((c) => c.id);
