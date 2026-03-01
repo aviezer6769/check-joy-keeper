@@ -156,6 +156,23 @@ const Payees = () => {
     });
   }, [filteredBase, colLayout.sort, colLayout.filters]);
 
+  // Compute unique values per column for dropdown filters
+  const filterOptions = useMemo(() => {
+    const opts: Record<string, Set<string>> = {};
+    for (const col of PAYEE_COLUMNS) opts[col.key] = new Set();
+    for (const p of payees) {
+      for (const col of PAYEE_COLUMNS) {
+        const val = getPayeeTextValue(p, col.key);
+        if (val) opts[col.key].add(val);
+      }
+    }
+    const result: Record<string, string[]> = {};
+    for (const [key, set] of Object.entries(opts)) {
+      result[key] = Array.from(set).sort();
+    }
+    return result;
+  }, [payees]);
+
   const renderPayeeCell = (p: Payee, key: string) => {
     switch (key) {
       case "record_id": return p.record_id || "—";
@@ -374,6 +391,7 @@ const Payees = () => {
                   filters={colLayout.filters}
                   onFilterChange={colLayout.setFilter}
                   showFilters={showFilters}
+                  filterOptions={filterOptions}
                   prefix={
                     <>
                       <TableHead className="w-10 px-2">

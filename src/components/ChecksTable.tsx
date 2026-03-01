@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -117,6 +117,23 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
     });
   }, [filteredChecks, colLayout.sort, chalikahMap]);
 
+  // Compute unique values per column for dropdown filters
+  const filterOptions = useMemo(() => {
+    const opts: Record<string, Set<string>> = {};
+    for (const col of CHECK_COLUMNS) opts[col.key] = new Set();
+    for (const check of checks) {
+      for (const col of CHECK_COLUMNS) {
+        const val = getCheckTextValue(check, col.key, chalikahMap);
+        if (val) opts[col.key].add(val);
+      }
+    }
+    const result: Record<string, string[]> = {};
+    for (const [key, set] of Object.entries(opts)) {
+      result[key] = Array.from(set).sort();
+    }
+    return result;
+  }, [checks, chalikahMap]);
+
   if (checks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
@@ -227,6 +244,7 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
               filters={colLayout.filters}
               onFilterChange={colLayout.setFilter}
               showFilters={showFilters}
+              filterOptions={filterOptions}
               prefix={
                 <TableHead className="w-10 px-2">
                   <Checkbox checked={allSelected} onCheckedChange={onToggleAll} />
