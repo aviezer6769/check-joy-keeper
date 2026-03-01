@@ -251,7 +251,7 @@ const Payees = () => {
                         <TableCell>
                           {[
                             [p.street_no, p.street_name].filter(Boolean).join(" "),
-                            p.apt ? `Apt ${p.apt}` : "",
+                            p.apt ? `#${p.apt}` : "",
                             [p.city, p.state].filter(Boolean).join(", "),
                             p.zip,
                           ].filter(Boolean).join(", ") || "—"}
