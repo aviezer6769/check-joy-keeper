@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUpdatePayee, useDeletePayee, type Payee } from "@/hooks/usePayees";
 import { Trash2 } from "lucide-react";
+import { buildPayeeName } from "@/lib/payee-utils";
 
 interface FieldDef {
   key: keyof Omit<Payee, "id" | "created_at" | "updated_at">;
@@ -14,7 +15,6 @@ interface FieldDef {
 }
 
 const FIELDS: FieldDef[] = [
-  { key: "payee_name", label: "Payee Name" },
   { key: "record_id", label: "Record ID" },
   { key: "sort_order", label: "Sort Order", type: "number" },
   { key: "urgent_level", label: "Urgent Level", type: "number" },
@@ -54,12 +54,14 @@ export function PayeeEditForm({ payee, open, onOpenChange }: PayeeEditFormProps)
     }));
   };
 
+  const computedName = buildPayeeName(form);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!computedName) return;
     const { id, created_at, updated_at, ...rest } = form;
-    if (!(rest.payee_name as string)?.trim()) return;
     updatePayee.mutate(
-      { id: payee.id, ...rest },
+      { id: payee.id, ...rest, payee_name: computedName },
       { onSuccess: () => onOpenChange(false) }
     );
   };
@@ -76,8 +78,12 @@ export function PayeeEditForm({ payee, open, onOpenChange }: PayeeEditFormProps)
           <DialogTitle>Edit Payee</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3 pt-2">
+          <div className="col-span-2">
+            <Label className="text-xs mb-1 block">Payee Name (auto-generated)</Label>
+            <Input value={computedName} readOnly disabled className="bg-muted" />
+          </div>
           {FIELDS.map((f) => (
-            <div key={f.key} className={f.key === "payee_name" ? "col-span-2" : ""}>
+            <div key={f.key}>
               <Label className="text-xs mb-1 block" dir={f.dir}>
                 {f.label}
               </Label>
@@ -91,7 +97,6 @@ export function PayeeEditForm({ payee, open, onOpenChange }: PayeeEditFormProps)
                 }
                 onChange={(e) => handleChange(f.key, e.target.value)}
                 placeholder={f.label}
-                required={f.key === "payee_name"}
               />
             </div>
           ))}

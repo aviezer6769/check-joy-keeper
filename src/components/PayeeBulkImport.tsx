@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
+import { buildPayeeName } from "@/lib/payee-utils";
 
 const COLUMN_KEYS: (keyof PayeeInsert)[] = [
   "payee_name", "record_id", "sort_order", "urgent_level",
@@ -105,10 +106,8 @@ function parseCSV(text: string): Record<string, string>[] {
         row[key] = values[idx] || "";
       });
     }
-    // Ensure payee_name exists
-    if (!row.payee_name && row.first_name && row.last_name) {
-      row.payee_name = `${row.first_name} ${row.last_name}`.trim();
-    }
+    // Auto-generate payee_name from components
+    row.payee_name = buildPayeeName(row) || row.payee_name || "";
     return row;
   });
 }
@@ -200,9 +199,7 @@ export function PayeeBulkImport() {
             const match = matchHeader(header);
             if (match) result[match] = String(value);
           });
-          if (!result.payee_name && result.first_name && result.last_name) {
-            result.payee_name = `${result.first_name} ${result.last_name}`.trim();
-          }
+          result.payee_name = buildPayeeName(result) || result.payee_name || "";
           return result;
         });
 

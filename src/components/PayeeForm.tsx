@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAddPayee, type PayeeInsert } from "@/hooks/usePayees";
 import { Plus } from "lucide-react";
+import { buildPayeeName } from "@/lib/payee-utils";
 
 const EMPTY_PAYEE: PayeeInsert = {
   payee_name: "",
@@ -37,7 +38,6 @@ interface FieldDef {
 }
 
 const FIELDS: FieldDef[] = [
-  { key: "payee_name", label: "Payee Name" },
   { key: "record_id", label: "Record ID" },
   { key: "sort_order", label: "Sort Order", type: "number" },
   { key: "urgent_level", label: "Urgent Level", type: "number" },
@@ -71,11 +71,13 @@ export function PayeeForm() {
     }));
   };
 
+  const computedName = buildPayeeName(form);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.payee_name.trim()) return;
+    if (!computedName) return;
     addPayee.mutate(
-      { ...form, payee_name: form.payee_name.trim() },
+      { ...form, payee_name: computedName },
       {
         onSuccess: () => {
           setForm({ ...EMPTY_PAYEE });
@@ -97,8 +99,12 @@ export function PayeeForm() {
           <DialogTitle>Add New Payee</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3 pt-2">
+          <div className="col-span-2">
+            <Label className="text-xs mb-1 block">Payee Name (auto-generated)</Label>
+            <Input value={computedName} readOnly disabled className="bg-muted" />
+          </div>
           {FIELDS.map((f) => (
-            <div key={f.key} className={f.key === "payee_name" ? "col-span-2" : ""}>
+            <div key={f.key}>
               <Label className="text-xs mb-1 block" dir={f.dir}>
                 {f.label}
               </Label>
@@ -112,7 +118,6 @@ export function PayeeForm() {
                 }
                 onChange={(e) => handleChange(f.key, e.target.value)}
                 placeholder={f.label}
-                required={f.key === "payee_name"}
               />
             </div>
           ))}
