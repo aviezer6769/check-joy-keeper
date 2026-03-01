@@ -67,7 +67,7 @@ export function CheckPrintView({ check }: CheckPrintViewProps) {
       <div className="border-2 border-foreground rounded-lg p-6 space-y-6">
         <div className="flex justify-between items-start">
           <div>
-            <p className="text-lg font-bold">{check.charity || "Charity Organization"}</p>
+            <p className="text-lg font-bold">Check</p>
           </div>
           <div className="text-right">
             <p className="text-sm">Check # {check.check_number || "N/A"}</p>

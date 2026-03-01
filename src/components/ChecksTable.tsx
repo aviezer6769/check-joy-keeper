@@ -46,7 +46,6 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid, onUnvoi
             <TableHead className="font-semibold">Check #</TableHead>
             <TableHead className="font-semibold">Date</TableHead>
             <TableHead className="font-semibold">Payee</TableHead>
-            <TableHead className="font-semibold">Charity</TableHead>
             <TableHead className="font-semibold">Chalikah</TableHead>
             <TableHead className="font-semibold text-right">Amount</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
@@ -65,7 +64,6 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid, onUnvoi
               <TableCell className="font-mono text-sm">{check.check_number || "—"}</TableCell>
               <TableCell className="text-sm">{formatDate(check.check_date)}</TableCell>
               <TableCell className="font-medium">{check.payee}</TableCell>
-              <TableCell className="text-sm">{check.charity || "—"}</TableCell>
               <TableCell className="text-sm">{check.chalikah_id ? chalikahMap[check.chalikah_id] || "—" : "—"}</TableCell>
               <TableCell className="text-right font-mono font-medium">
                 {check.voided ? (
