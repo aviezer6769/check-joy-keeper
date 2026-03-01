@@ -18,6 +18,33 @@ import { useDeletePayee } from "@/hooks/usePayees";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
+import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
+
+const PAYEE_COLUMNS: ColumnDef[] = [
+  { key: "record_id", label: "Record ID" },
+  { key: "sort_order", label: "Sort" },
+  { key: "urgent_level", label: "Urgent" },
+  { key: "yiddish_name", label: "Yiddish Name" },
+  { key: "payee_name", label: "Payee" },
+  { key: "address", label: "Address" },
+  { key: "title_1_yiddish", label: "טיטל 1", defaultVisible: false },
+  { key: "first_name_yiddish", label: "ערשטע נאמען", defaultVisible: false },
+  { key: "middle_name_yiddish", label: "מיטעלסטע", defaultVisible: false },
+  { key: "last_name_yiddish", label: "לעצטע", defaultVisible: false },
+  { key: "title_2_yiddish", label: "טיטל 2", defaultVisible: false },
+  { key: "title", label: "Title", defaultVisible: false },
+  { key: "title_to_use", label: "TitleToUse", defaultVisible: false },
+  { key: "first_name", label: "First Name", defaultVisible: false },
+  { key: "middle_name", label: "Middle", defaultVisible: false },
+  { key: "last_name", label: "Last Name", defaultVisible: false },
+  { key: "street_no", label: "St #", defaultVisible: false },
+  { key: "street_name", label: "Street", defaultVisible: false },
+  { key: "apt", label: "Apt", defaultVisible: false },
+  { key: "city", label: "City", defaultVisible: false },
+  { key: "state", label: "State", defaultVisible: false },
+  { key: "zip", label: "Zip", defaultVisible: false },
+];
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
@@ -46,7 +73,7 @@ const Payees = () => {
   const deletePayee = useDeletePayee();
   const qc = useQueryClient();
   const [bulkDeleting, setBulkDeleting] = useState(false);
-
+  const colLayout = useColumnLayout("payees", PAYEE_COLUMNS);
   const chalikahMap = useMemo(() => Object.fromEntries(chalikahList.map((c) => [c.id, c.name])), [chalikahList]);
 
   // Match checks to payee by record number (given_to_record_number first, then payee_record_number)
@@ -71,6 +98,38 @@ const Payees = () => {
         );
       })
     : payees;
+
+  const renderPayeeCell = (p: Payee, key: string) => {
+    switch (key) {
+      case "record_id": return p.record_id || "—";
+      case "sort_order": return p.sort_order;
+      case "urgent_level":
+        return p.urgent_level > 0 ? <Badge variant="destructive">{p.urgent_level}</Badge> : <span className="text-muted-foreground">0</span>;
+      case "yiddish_name":
+        return [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ") || "—";
+      case "payee_name":
+        return [p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ") || "—";
+      case "address":
+        return [[p.street_no, p.street_name].filter(Boolean).join(" "), p.apt ? `#${p.apt}` : "", [p.city, p.state].filter(Boolean).join(", "), p.zip].filter(Boolean).join(", ") || "—";
+      case "title_1_yiddish": return p.title_1_yiddish || "—";
+      case "first_name_yiddish": return p.first_name_yiddish || "—";
+      case "middle_name_yiddish": return p.middle_name_yiddish || "—";
+      case "last_name_yiddish": return p.last_name_yiddish || "—";
+      case "title_2_yiddish": return p.title_2_yiddish || "—";
+      case "title": return p.title || "—";
+      case "title_to_use": return p.title_to_use || "—";
+      case "first_name": return p.first_name || "—";
+      case "middle_name": return p.middle_name || "—";
+      case "last_name": return p.last_name || "—";
+      case "street_no": return p.street_no || "—";
+      case "street_name": return p.street_name || "—";
+      case "apt": return p.apt || "—";
+      case "city": return p.city || "—";
+      case "state": return p.state || "—";
+      case "zip": return p.zip || "—";
+      default: return "—";
+    }
+  };
 
   const allSelected = filtered.length > 0 && filtered.every((p) => selectedIds.has(p.id));
 
@@ -108,28 +167,41 @@ const Payees = () => {
     }
   };
 
+  const getPayeeExportValue = (p: Payee, key: string): any => {
+    switch (key) {
+      case "record_id": return p.record_id || "";
+      case "sort_order": return p.sort_order;
+      case "urgent_level": return p.urgent_level;
+      case "yiddish_name": return [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ");
+      case "payee_name": return [p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ") || p.payee_name;
+      case "address": return [[p.street_no, p.street_name].filter(Boolean).join(" "), p.apt ? `#${p.apt}` : "", [p.city, p.state].filter(Boolean).join(", "), p.zip].filter(Boolean).join(", ");
+      case "title_1_yiddish": return p.title_1_yiddish || "";
+      case "first_name_yiddish": return p.first_name_yiddish || "";
+      case "middle_name_yiddish": return p.middle_name_yiddish || "";
+      case "last_name_yiddish": return p.last_name_yiddish || "";
+      case "title_2_yiddish": return p.title_2_yiddish || "";
+      case "title": return p.title || "";
+      case "title_to_use": return p.title_to_use || "";
+      case "first_name": return p.first_name || "";
+      case "middle_name": return p.middle_name || "";
+      case "last_name": return p.last_name || "";
+      case "street_no": return p.street_no || "";
+      case "street_name": return p.street_name || "";
+      case "apt": return p.apt || "";
+      case "city": return p.city || "";
+      case "state": return p.state || "";
+      case "zip": return p.zip || "";
+      default: return "";
+    }
+  };
+
   const handleExport = () => {
-    const rows = filtered.map((p) => ({
-      "Record ID": p.record_id || "",
-      "Sort": p.sort_order,
-      "Urgent": p.urgent_level,
-      "טיטל 1": p.title_1_yiddish || "",
-      "ערשטע נאמען": p.first_name_yiddish || "",
-      "מיטעלסטע": p.middle_name_yiddish || "",
-      "לעצטע": p.last_name_yiddish || "",
-      "טיטל 2": p.title_2_yiddish || "",
-      "Title": p.title || "",
-      "TitleToUse": p.title_to_use || "",
-      "First Name": p.first_name || "",
-      "Middle": p.middle_name || "",
-      "Last Name": p.last_name || "",
-      "St #": p.street_no || "",
-      "Street": p.street_name || "",
-      "Apt": p.apt || "",
-      "City": p.city || "",
-      "State": p.state || "",
-      "Zip": p.zip || "",
-    }));
+    const cols = colLayout.visibleColumns;
+    const rows = filtered.map((p) => {
+      const row: Record<string, any> = {};
+      cols.forEach((col) => { row[col.label] = getPayeeExportValue(p, col.key); });
+      return row;
+    });
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Payees");
@@ -179,14 +251,26 @@ const Payees = () => {
       </header>
 
       <main className="container py-6 space-y-6">
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search payees..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex items-center gap-3">
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search payees..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="ml-auto">
+            <ColumnLayoutManager
+              visibleColumns={colLayout.visibleColumns}
+              hiddenColumns={colLayout.hiddenColumns}
+              allColumns={colLayout.allColumns}
+              onToggle={colLayout.toggleColumn}
+              onMove={colLayout.moveColumn}
+              onReset={colLayout.resetLayout}
+            />
+          </div>
         </div>
 
         {isLoading ? (
@@ -206,12 +290,15 @@ const Payees = () => {
                   </TableHead>
                   <TableHead className="font-semibold w-8"></TableHead>
                   <TableHead className="font-semibold w-10"></TableHead>
-                  <TableHead className="font-semibold">Record ID</TableHead>
-                  <TableHead className="font-semibold">Sort</TableHead>
-                  <TableHead className="font-semibold">Urgent</TableHead>
-                  <TableHead className="font-semibold" dir="rtl">Yiddish Name</TableHead>
-                  <TableHead className="font-semibold">Payee</TableHead>
-                  <TableHead className="font-semibold">Address</TableHead>
+                  {colLayout.visibleColumns.map((col) => (
+                    <TableHead
+                      key={col.key}
+                      className="font-semibold"
+                      dir={col.key === "yiddish_name" || col.key.endsWith("_yiddish") ? "rtl" : undefined}
+                    >
+                      {col.label}
+                    </TableHead>
+                  ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -247,33 +334,19 @@ const Payees = () => {
                             <Pencil className="h-3 w-3" />
                           </Button>
                         </TableCell>
-                        <TableCell className="font-mono text-sm">{p.record_id || "—"}</TableCell>
-                        <TableCell className="text-center">{p.sort_order}</TableCell>
-                        <TableCell className="text-center">
-                          {p.urgent_level > 0 ? (
-                            <Badge variant="destructive">{p.urgent_level}</Badge>
-                          ) : (
-                            <span className="text-muted-foreground">0</span>
-                          )}
-                        </TableCell>
-                        <TableCell dir="rtl">
-                          {[p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ") || "—"}
-                        </TableCell>
-                        <TableCell>
-                          {[p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ") || "—"}
-                        </TableCell>
-                        <TableCell>
-                          {[
-                            [p.street_no, p.street_name].filter(Boolean).join(" "),
-                            p.apt ? `#${p.apt}` : "",
-                            [p.city, p.state].filter(Boolean).join(", "),
-                            p.zip,
-                          ].filter(Boolean).join(", ") || "—"}
-                        </TableCell>
+                        {colLayout.visibleColumns.map((col) => (
+                          <TableCell
+                            key={col.key}
+                            dir={col.key === "yiddish_name" || col.key.endsWith("_yiddish") ? "rtl" : undefined}
+                            className={col.key === "sort_order" || col.key === "urgent_level" ? "text-center" : col.key === "record_id" ? "font-mono text-sm" : ""}
+                          >
+                            {renderPayeeCell(p, col.key)}
+                          </TableCell>
+                        ))}
                       </TableRow>
                       {expandedPayee === p.id && (
                         <TableRow key={`${p.id}-details`}>
-                          <TableCell colSpan={9} className="bg-muted/30 p-0">
+                          <TableCell colSpan={colLayout.visibleColumns.length + 3} className="bg-muted/30 p-0">
                             <div className="px-8 py-3">
                               <div
                                 className="flex items-center gap-2 cursor-pointer mb-2"

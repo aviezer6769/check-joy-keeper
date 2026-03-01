@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert, type CheckStatus } from "@/hooks/useChecks";
 import { useAccounts } from "@/hooks/useAccounts";
 import { CheckForm } from "@/components/CheckForm";
-import { ChecksTable } from "@/components/ChecksTable";
+import { ChecksTable, CHECK_COLUMNS } from "@/components/ChecksTable";
 import { CheckPrintView } from "@/components/CheckPrintView";
 import { StatsCards } from "@/components/StatsCards";
 import { AccountManager } from "@/components/AccountManager";
@@ -16,6 +16,7 @@ import { CheckBulkImport } from "@/components/CheckBulkImport";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as XLSX from "xlsx";
 import { useChalikah } from "@/hooks/useChalikah";
+import { useColumnLayout } from "@/hooks/useColumnLayout";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,21 +50,31 @@ const Index = () => {
   const deleteCheck = useDeleteCheck();
 
   const chalikahMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
+  const checkColLayout = useColumnLayout("checks", CHECK_COLUMNS);
+
+  const getCheckExportValue = (c: Check, key: string): any => {
+    switch (key) {
+      case "check_number": return c.check_number || "";
+      case "check_date": return c.check_date;
+      case "payee": return c.payee;
+      case "chalikah": return c.chalikah_id ? chalikahMap[c.chalikah_id] || "" : "";
+      case "amount": return c.status === "Void" ? 0 : c.amount;
+      case "status": return c.status;
+      case "given_to": return c.given_to_payee || "";
+      case "memo": return c.memo || "";
+      case "record_number": return c.payee_record_number || "";
+      case "given_to_record": return c.given_to_record_number || "";
+      default: return "";
+    }
+  };
 
   const handleExportChecks = () => {
-    const rows = checks.map((c) => ({
-      "Check #": c.check_number || "",
-      "Date": c.check_date,
-      "Payee": c.payee,
-      "Payee Record #": c.payee_record_number || "",
-      "Amount": c.status === "Void" ? 0 : c.amount,
-      "Original Amount": c.original_amount ?? "",
-      "Status": c.status,
-      "Chalikah": c.chalikah_id ? chalikahMap[c.chalikah_id] || "" : "",
-      "Memo": c.memo || "",
-      "Given To": c.given_to_payee || "",
-      "Given To Record #": c.given_to_record_number || "",
-    }));
+    const cols = checkColLayout.visibleColumns;
+    const rows = checks.map((c) => {
+      const row: Record<string, any> = {};
+      cols.forEach((col) => { row[col.label] = getCheckExportValue(c, col.key); });
+      return row;
+    });
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Checks");
