@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { type Check, type CheckInsert } from "@/hooks/useChecks";
+import { type Check, type CheckInsert, CHECK_STATUSES } from "@/hooks/useChecks";
 import { usePayees, type Payee } from "@/hooks/usePayees";
 import { useChalikah, useAddChalikah } from "@/hooks/useChalikah";
 import { buildPayeeName } from "@/lib/payee-utils";
@@ -54,7 +54,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
   const [amount, setAmount] = useState(initialData?.amount?.toString() ?? "");
   const [checkNumber, setCheckNumber] = useState(nextCheckNumber);
   const [checkDate, setCheckDate] = useState(initialData?.check_date ?? new Date().toISOString().split("T")[0]);
-  const [checkGiven, setCheckGiven] = useState(initialData?.check_given ?? false);
+  const [status, setStatus] = useState<string>(initialData?.status ?? "Open");
   const [memo, setMemo] = useState(initialData?.memo ?? "");
   const [chalikahId, setChalikahId] = useState(initialData?.chalikah_id ?? "");
   const [newChalikahName, setNewChalikahName] = useState("");
@@ -111,7 +111,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       check_number: checkNumber || null,
       check_date: checkDate,
       chalikah_id: chalikahId || null,
-      check_given: checkGiven,
+      status: status as any,
       memo: memo || null,
       payee_record_number: payeeRecordNumber || null,
       account_id: initialData?.account_id ?? null,
@@ -122,7 +122,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       setCheckNumber("");
       setCheckDate(new Date().toISOString().split("T")[0]);
       setChalikahId("");
-      setCheckGiven(false);
+      setStatus("Open");
       setMemo("");
       setPayeeRecordNumber("");
       setSearchQuery("");
@@ -279,9 +279,18 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
             <Label htmlFor="memo">Memo</Label>
             <Textarea id="memo" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="Purpose or notes" rows={2} />
           </div>
-          <div className="flex items-center gap-2">
-            <Checkbox id="checkGiven" checked={checkGiven} onCheckedChange={(v) => setCheckGiven(v === true)} />
-            <Label htmlFor="checkGiven" className="cursor-pointer">Check has been given</Label>
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CHECK_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

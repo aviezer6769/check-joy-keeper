@@ -2,6 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+export const CHECK_STATUSES = ["Open", "Printed", "Given", "Cleared", "Void"] as const;
+export type CheckStatus = typeof CHECK_STATUSES[number];
+
 export interface Check {
   id: string;
   payee: string;
@@ -9,17 +12,16 @@ export interface Check {
   check_number: string | null;
   check_date: string;
   chalikah_id: string | null;
-  check_given: boolean;
+  status: CheckStatus;
   memo: string | null;
   payee_record_number: string | null;
   account_id: string | null;
-  voided: boolean;
   original_amount: number | null;
   created_at: string;
   updated_at: string;
 }
 
-export type CheckInsert = Omit<Check, "id" | "created_at" | "updated_at" | "voided" | "original_amount">;
+export type CheckInsert = Omit<Check, "id" | "created_at" | "updated_at" | "original_amount">;
 
 export function useChecks(search?: string, accountId?: string | null) {
   return useQuery({

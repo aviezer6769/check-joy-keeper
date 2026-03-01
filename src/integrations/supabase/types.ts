@@ -89,7 +89,6 @@ export type Database = {
           amount: number
           chalikah_id: string | null
           check_date: string
-          check_given: boolean
           check_number: string | null
           created_at: string
           id: string
@@ -97,15 +96,14 @@ export type Database = {
           original_amount: number | null
           payee: string
           payee_record_number: string | null
+          status: string
           updated_at: string
-          voided: boolean
         }
         Insert: {
           account_id?: string | null
           amount?: number
           chalikah_id?: string | null
           check_date?: string
-          check_given?: boolean
           check_number?: string | null
           created_at?: string
           id?: string
@@ -113,15 +111,14 @@ export type Database = {
           original_amount?: number | null
           payee: string
           payee_record_number?: string | null
+          status?: string
           updated_at?: string
-          voided?: boolean
         }
         Update: {
           account_id?: string | null
           amount?: number
           chalikah_id?: string | null
           check_date?: string
-          check_given?: boolean
           check_number?: string | null
           created_at?: string
           id?: string
@@ -129,8 +126,8 @@ export type Database = {
           original_amount?: number | null
           payee?: string
           payee_record_number?: string | null
+          status?: string
           updated_at?: string
-          voided?: boolean
         }
         Relationships: [
           {
