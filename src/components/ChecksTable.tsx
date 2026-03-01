@@ -83,8 +83,14 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
   const { data: chalikahList = [] } = useChalikah();
   const chalikahMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
   const allSelected = checks.length > 0 && checks.every((c) => selectedIds.has(c.id));
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(() => localStorage.getItem("checks-show-filters") === "true");
   const [filterColumn, setFilterColumn] = useState(CHECK_COLUMNS[0].key);
+  const toggleFilters = () => {
+    setShowFilters((prev) => {
+      localStorage.setItem("checks-show-filters", String(!prev));
+      return !prev;
+    });
+  };
 
   const colLayout = useColumnLayout("checks", CHECK_COLUMNS);
 
@@ -196,7 +202,7 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
           <Button
             variant={showFilters ? "secondary" : "outline"}
             size="sm"
-            onClick={() => setShowFilters(!showFilters)}
+            onClick={toggleFilters}
             className={hasActiveFilters ? "border-primary text-primary" : ""}
           >
             Filter
