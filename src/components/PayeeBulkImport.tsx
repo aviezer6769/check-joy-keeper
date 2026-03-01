@@ -136,6 +136,7 @@ function rowToPayee(row: Record<string, string>): PayeeInsert | null {
     city: row.city || null,
     state: row.state || null,
     zip: row.zip || null,
+    is_active: row.is_active === "false" ? false : true,
   };
 }
 
