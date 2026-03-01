@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Users, Pencil, Trash2, List } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert } from "@/hooks/useChecks";
 import { useAccounts } from "@/hooks/useAccounts";
@@ -134,6 +134,12 @@ const Index = () => {
                 <Button variant="outline">
                   <Users className="h-4 w-4 mr-2" />
                   Payees
+                </Button>
+              </Link>
+              <Link to="/chalikah">
+                <Button variant="outline">
+                  <List className="h-4 w-4 mr-2" />
+                  Chalikah
                 </Button>
               </Link>
               <Button onClick={() => { setEditingCheck(null); setFormOpen(true); }}>
