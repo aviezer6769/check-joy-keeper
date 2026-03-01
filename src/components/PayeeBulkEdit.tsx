@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { type Payee } from "@/hooks/usePayees";
+import { type Payee, usePayees } from "@/hooks/usePayees";
 import { buildPayeeName } from "@/lib/payee-utils";
+import { FieldSuggestInput } from "@/components/FieldSuggestInput";
 
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -64,7 +65,18 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
   const [saving, setSaving] = useState(false);
   const [gridRows, setGridRows] = useState<Record<string, any>[]>([]);
   const [gridInitialized, setGridInitialized] = useState(false);
+  const { data: allPayees = [] } = usePayees();
   const qc = useQueryClient();
+
+  const suggestionsByField = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    [...APPLY_ALL_FIELDS, ...GRID_FIELDS].forEach((f) => {
+      if (f.type !== "number" && !map[f.key]) {
+        map[f.key] = allPayees.map((p) => (p as any)[f.key]).filter(Boolean) as string[];
+      }
+    });
+    return map;
+  }, [allPayees]);
 
   // Initialize grid rows when switching to grid tab
   const initGrid = () => {
@@ -183,15 +195,25 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                   <Label htmlFor={`bulk-${f.key}`} className="text-sm w-24 shrink-0" dir={f.dir}>
                     {f.label}
                   </Label>
-                  <Input
-                    dir={f.dir}
-                    type={f.type === "number" ? "number" : "text"}
-                    value={values[f.key] ?? ""}
-                    onChange={(e) => setValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                    placeholder={f.label}
-                    disabled={!enabledFields.has(f.key)}
-                    className="h-8 text-sm"
-                  />
+                  {f.type === "number" ? (
+                    <Input
+                      type="number"
+                      value={values[f.key] ?? ""}
+                      onChange={(e) => setValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                      placeholder={f.label}
+                      disabled={!enabledFields.has(f.key)}
+                      className="h-8 text-sm"
+                    />
+                  ) : (
+                    <FieldSuggestInput
+                      dir={f.dir}
+                      value={values[f.key] ?? ""}
+                      onChange={(v) => setValues((prev) => ({ ...prev, [f.key]: v }))}
+                      suggestions={enabledFields.has(f.key) ? (suggestionsByField[f.key] || []) : []}
+                      placeholder={f.label}
+                      className={`h-8 text-sm ${!enabledFields.has(f.key) ? "opacity-50 pointer-events-none" : ""}`}
+                    />
+                  )}
                 </div>
               ))}
               <div className="flex justify-end gap-2 pt-2">
@@ -231,17 +253,23 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                       <td className="px-2 py-0.5 text-muted-foreground">{idx + 1}</td>
                       {GRID_FIELDS.map((f) => (
                         <td key={f.key} className="px-0.5 py-0.5">
-                          <Input
-                            dir={f.dir}
-                            type={f.type === "number" ? "number" : "text"}
-                            value={
-                              f.type === "number"
-                                ? (row[f.key] as number) ?? 0
-                                : (row[f.key] as string) ?? ""
-                            }
-                            onChange={(e) => updateGridCell(idx, f.key, e.target.value)}
-                            className="h-7 text-xs min-w-[80px] px-1.5"
-                          />
+                          {f.type === "number" ? (
+                            <Input
+                              type="number"
+                              value={(row[f.key] as number) ?? 0}
+                              onChange={(e) => updateGridCell(idx, f.key, e.target.value)}
+                              className="h-7 text-xs min-w-[80px] px-1.5"
+                            />
+                          ) : (
+                            <FieldSuggestInput
+                              dir={f.dir}
+                              value={(row[f.key] as string) ?? ""}
+                              onChange={(v) => updateGridCell(idx, f.key, v)}
+                              suggestions={suggestionsByField[f.key] || []}
+                              placeholder={f.label}
+                              className="h-7 text-xs min-w-[80px] px-1.5"
+                            />
+                          )}
                         </td>
                       ))}
                     </tr>
