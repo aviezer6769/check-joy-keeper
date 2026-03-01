@@ -68,7 +68,7 @@ export function PayeeAutocomplete({
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActiveIndex((prev) => (prev > 0 ? prev - 1 : filtered.length - 1));
-    } else if (e.key === "Enter" && activeIndex >= 0) {
+    } else if ((e.key === "Enter" || e.key === "Tab") && activeIndex >= 0) {
       e.preventDefault();
       onSelectPayee?.(filtered[activeIndex]);
       setShowSuggestions(false);
