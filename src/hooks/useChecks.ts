@@ -13,11 +13,13 @@ export interface Check {
   memo: string | null;
   payee_record_number: string | null;
   account_id: string | null;
+  voided: boolean;
+  original_amount: number | null;
   created_at: string;
   updated_at: string;
 }
 
-export type CheckInsert = Omit<Check, "id" | "created_at" | "updated_at">;
+export type CheckInsert = Omit<Check, "id" | "created_at" | "updated_at" | "voided" | "original_amount">;
 
 export function useChecks(search?: string, accountId?: string | null) {
   return useQuery({

@@ -73,9 +73,11 @@ export type Database = {
           created_at: string
           id: string
           memo: string | null
+          original_amount: number | null
           payee: string
           payee_record_number: string | null
           updated_at: string
+          voided: boolean
         }
         Insert: {
           account_id?: string | null
@@ -87,9 +89,11 @@ export type Database = {
           created_at?: string
           id?: string
           memo?: string | null
+          original_amount?: number | null
           payee: string
           payee_record_number?: string | null
           updated_at?: string
+          voided?: boolean
         }
         Update: {
           account_id?: string | null
@@ -101,9 +105,11 @@ export type Database = {
           created_at?: string
           id?: string
           memo?: string | null
+          original_amount?: number | null
           payee?: string
           payee_record_number?: string | null
           updated_at?: string
+          voided?: boolean
         }
         Relationships: [
           {

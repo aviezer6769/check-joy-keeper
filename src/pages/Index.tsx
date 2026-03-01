@@ -68,6 +68,16 @@ const Index = () => {
     setTimeout(() => handlePrint(), 100);
   };
 
+  const handleVoid = (check: Check) => {
+    if (!confirm(`Void check #${check.check_number || "—"} for ${check.payee}? This will set the amount to $0.`)) return;
+    updateCheck.mutate({
+      id: check.id,
+      voided: true,
+      original_amount: check.amount,
+      amount: 0,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -129,7 +139,7 @@ const Index = () => {
         {isLoading ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>
         ) : (
-          <ChecksTable checks={checks} onEdit={handleEdit} onDelete={(id) => setDeleteId(id)} onPrint={handlePrintCheck} />
+          <ChecksTable checks={checks} onEdit={handleEdit} onDelete={(id) => setDeleteId(id)} onPrint={handlePrintCheck} onVoid={handleVoid} />
         )}
       </main>
 
