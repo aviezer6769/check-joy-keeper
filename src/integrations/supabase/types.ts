@@ -91,6 +91,8 @@ export type Database = {
           check_date: string
           check_number: string | null
           created_at: string
+          given_to_payee: string | null
+          given_to_record_number: string | null
           id: string
           memo: string | null
           original_amount: number | null
@@ -106,6 +108,8 @@ export type Database = {
           check_date?: string
           check_number?: string | null
           created_at?: string
+          given_to_payee?: string | null
+          given_to_record_number?: string | null
           id?: string
           memo?: string | null
           original_amount?: number | null
@@ -121,6 +125,8 @@ export type Database = {
           check_date?: string
           check_number?: string | null
           created_at?: string
+          given_to_payee?: string | null
+          given_to_record_number?: string | null
           id?: string
           memo?: string | null
           original_amount?: number | null

@@ -59,6 +59,8 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
   const [chalikahId, setChalikahId] = useState(initialData?.chalikah_id ?? "");
   const [newChalikahName, setNewChalikahName] = useState("");
   const [payeeRecordNumber, setPayeeRecordNumber] = useState(initialData?.payee_record_number ?? "");
+  const [givenToPayee, setGivenToPayee] = useState(initialData?.given_to_payee ?? "");
+  const [givenToRecordNumber, setGivenToRecordNumber] = useState(initialData?.given_to_record_number ?? "");
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -114,6 +116,8 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       status: status as any,
       memo: memo || null,
       payee_record_number: payeeRecordNumber || null,
+      given_to_payee: givenToPayee || null,
+      given_to_record_number: givenToRecordNumber || null,
       account_id: initialData?.account_id ?? null,
     });
     if (!initialData) {
@@ -125,6 +129,8 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       setStatus("Open");
       setMemo("");
       setPayeeRecordNumber("");
+      setGivenToPayee("");
+      setGivenToRecordNumber("");
       setSearchQuery("");
       setSelectedPayee(null);
     }
@@ -279,19 +285,31 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
             <Label htmlFor="memo">Memo</Label>
             <Textarea id="memo" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="Purpose or notes" rows={2} />
           </div>
-          <div className="space-y-2">
-            <Label>Status</Label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CHECK_STATUSES.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CHECK_STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="givenTo">Given To (different payee)</Label>
+              <Input id="givenTo" value={givenToPayee} onChange={(e) => setGivenToPayee(e.target.value)} placeholder="If given to someone else" />
+            </div>
           </div>
+          {givenToPayee && (
+            <div className="space-y-2">
+              <Label htmlFor="givenToRecord">Given To Record #</Label>
+              <Input id="givenToRecord" value={givenToRecordNumber} onChange={(e) => setGivenToRecordNumber(e.target.value)} placeholder="Record number" />
+            </div>
+          )}
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isPending}>

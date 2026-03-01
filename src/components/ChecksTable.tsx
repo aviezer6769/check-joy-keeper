@@ -57,6 +57,7 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
             <TableHead className="font-semibold">Chalikah</TableHead>
             <TableHead className="font-semibold text-right">Amount</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
+            <TableHead className="font-semibold">Given To</TableHead>
             <TableHead className="font-semibold">Memo</TableHead>
             <TableHead className="font-semibold">Record #</TableHead>
             <TableHead className="font-semibold text-right">Actions</TableHead>
@@ -102,6 +103,11 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
                     ))}
                   </SelectContent>
                 </Select>
+              </TableCell>
+              <TableCell className="text-sm">
+                {check.given_to_payee ? (
+                  <span className="text-primary font-medium">{check.given_to_payee}</span>
+                ) : "—"}
               </TableCell>
               <TableCell className="text-sm max-w-[200px] truncate">{check.memo || "—"}</TableCell>
               <TableCell className="font-mono text-sm">{check.payee_record_number || "—"}</TableCell>

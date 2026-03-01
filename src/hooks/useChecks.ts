@@ -15,6 +15,8 @@ export interface Check {
   status: CheckStatus;
   memo: string | null;
   payee_record_number: string | null;
+  given_to_payee: string | null;
+  given_to_record_number: string | null;
   account_id: string | null;
   original_amount: number | null;
   created_at: string;
