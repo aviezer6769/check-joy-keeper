@@ -30,6 +30,7 @@ const EMPTY_PAYEE: PayeeInsert = {
   city: null,
   state: null,
   zip: null,
+  memo: null,
 };
 
 interface FieldDef {

@@ -163,6 +163,7 @@ export type Database = {
           is_active: boolean
           last_name: string | null
           last_name_yiddish: string | null
+          memo: string | null
           middle_name: string | null
           middle_name_yiddish: string | null
           payee_name: string
@@ -189,6 +190,7 @@ export type Database = {
           is_active?: boolean
           last_name?: string | null
           last_name_yiddish?: string | null
+          memo?: string | null
           middle_name?: string | null
           middle_name_yiddish?: string | null
           payee_name: string
@@ -215,6 +217,7 @@ export type Database = {
           is_active?: boolean
           last_name?: string | null
           last_name_yiddish?: string | null
+          memo?: string | null
           middle_name?: string | null
           middle_name_yiddish?: string | null
           payee_name?: string
