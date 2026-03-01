@@ -174,6 +174,28 @@ export function DraggableTableHeader({
                     resizingCol === col.key && "opacity-100 bg-primary/60"
                   )}
                   onMouseDown={(e) => handleResizeStart(e, col.key, w || (e.currentTarget.parentElement?.offsetWidth ?? 120))}
+                  onDoubleClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Find the table and measure max content width for this column
+                    const th = e.currentTarget.closest("th");
+                    const table = th?.closest("table");
+                    if (!table || !th) return;
+                    const headerRow = th.closest("tr");
+                    if (!headerRow) return;
+                    const headers = Array.from(headerRow.querySelectorAll("th"));
+                    const colIndex = headers.indexOf(th);
+                    if (colIndex < 0) return;
+                    const rows = table.querySelectorAll("tbody tr");
+                    let maxW = th.scrollWidth;
+                    rows.forEach((row) => {
+                      const cells = row.querySelectorAll("td");
+                      if (cells[colIndex]) {
+                        maxW = Math.max(maxW, cells[colIndex].scrollWidth + 16);
+                      }
+                    });
+                    onSetWidth?.(col.key, Math.max(40, Math.min(600, maxW)));
+                  }}
                 />
               )}
             </TableHead>
