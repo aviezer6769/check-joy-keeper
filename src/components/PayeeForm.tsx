@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAddPayee, type PayeeInsert } from "@/hooks/usePayees";
+import { useAddPayee, usePayees, type PayeeInsert } from "@/hooks/usePayees";
 import { Plus } from "lucide-react";
 import { buildPayeeName } from "@/lib/payee-utils";
+import { FieldSuggestInput } from "@/components/FieldSuggestInput";
 
 const EMPTY_PAYEE: PayeeInsert = {
   payee_name: "",
@@ -63,6 +64,17 @@ export function PayeeForm() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<PayeeInsert>({ ...EMPTY_PAYEE });
   const addPayee = useAddPayee();
+  const { data: allPayees = [] } = usePayees();
+
+  const suggestionsByField = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    FIELDS.forEach((f) => {
+      if (f.type !== "number") {
+        map[f.key] = allPayees.map((p) => (p as any)[f.key]).filter(Boolean) as string[];
+      }
+    });
+    return map;
+  }, [allPayees]);
 
   const handleChange = (key: keyof PayeeInsert, value: string) => {
     setForm((prev) => ({
@@ -108,17 +120,22 @@ export function PayeeForm() {
               <Label className="text-xs mb-1 block" dir={f.dir}>
                 {f.label}
               </Label>
-              <Input
-                dir={f.dir}
-                type={f.type === "number" ? "number" : "text"}
-                value={
-                  f.type === "number"
-                    ? (form[f.key] as number) ?? 0
-                    : (form[f.key] as string) ?? ""
-                }
-                onChange={(e) => handleChange(f.key, e.target.value)}
-                placeholder={f.label}
-              />
+              {f.type === "number" ? (
+                <Input
+                  type="number"
+                  value={(form[f.key] as number) ?? 0}
+                  onChange={(e) => handleChange(f.key, e.target.value)}
+                  placeholder={f.label}
+                />
+              ) : (
+                <FieldSuggestInput
+                  dir={f.dir}
+                  value={(form[f.key] as string) ?? ""}
+                  onChange={(v) => handleChange(f.key, v)}
+                  suggestions={suggestionsByField[f.key] || []}
+                  placeholder={f.label}
+                />
+              )}
             </div>
           ))}
           <div className="col-span-2 flex justify-end gap-2 pt-2">
