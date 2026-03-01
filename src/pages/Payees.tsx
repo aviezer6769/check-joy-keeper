@@ -195,22 +195,9 @@ const Payees = () => {
                   <TableHead className="font-semibold">Record ID</TableHead>
                   <TableHead className="font-semibold">Sort</TableHead>
                   <TableHead className="font-semibold">Urgent</TableHead>
-                  <TableHead className="font-semibold">טיטל 1</TableHead>
-                  <TableHead className="font-semibold">ערשטע נאמען</TableHead>
-                  <TableHead className="font-semibold">מיטעלסטע</TableHead>
-                  <TableHead className="font-semibold">לעצטע</TableHead>
-                  <TableHead className="font-semibold">טיטל 2</TableHead>
-                  <TableHead className="font-semibold">Title</TableHead>
-                  <TableHead className="font-semibold">TitleToUse</TableHead>
-                  <TableHead className="font-semibold">First Name</TableHead>
-                  <TableHead className="font-semibold">Middle</TableHead>
-                  <TableHead className="font-semibold">Last Name</TableHead>
-                  <TableHead className="font-semibold">St #</TableHead>
-                  <TableHead className="font-semibold">Street</TableHead>
-                  <TableHead className="font-semibold">Apt</TableHead>
-                  <TableHead className="font-semibold">City</TableHead>
-                  <TableHead className="font-semibold">State</TableHead>
-                  <TableHead className="font-semibold">Zip</TableHead>
+                  <TableHead className="font-semibold" dir="rtl">Yiddish Name</TableHead>
+                  <TableHead className="font-semibold">Payee</TableHead>
+                  <TableHead className="font-semibold">Address</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -255,26 +242,24 @@ const Payees = () => {
                             <span className="text-muted-foreground">0</span>
                           )}
                         </TableCell>
-                        <TableCell dir="rtl">{p.title_1_yiddish || "—"}</TableCell>
-                        <TableCell dir="rtl">{p.first_name_yiddish || "—"}</TableCell>
-                        <TableCell dir="rtl">{p.middle_name_yiddish || "—"}</TableCell>
-                        <TableCell dir="rtl">{p.last_name_yiddish || "—"}</TableCell>
-                        <TableCell dir="rtl">{p.title_2_yiddish || "—"}</TableCell>
-                        <TableCell>{p.title || "—"}</TableCell>
-                        <TableCell>{p.title_to_use || "—"}</TableCell>
-                        <TableCell>{p.first_name || "—"}</TableCell>
-                        <TableCell>{p.middle_name || "—"}</TableCell>
-                        <TableCell>{p.last_name || "—"}</TableCell>
-                        <TableCell>{p.street_no || "—"}</TableCell>
-                        <TableCell>{p.street_name || "—"}</TableCell>
-                        <TableCell>{p.apt || "—"}</TableCell>
-                        <TableCell>{p.city || "—"}</TableCell>
-                        <TableCell>{p.state || "—"}</TableCell>
-                        <TableCell>{p.zip || "—"}</TableCell>
+                        <TableCell dir="rtl">
+                          {[p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ") || "—"}
+                        </TableCell>
+                        <TableCell>
+                          {[p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ") || "—"}
+                        </TableCell>
+                        <TableCell>
+                          {[
+                            [p.street_no, p.street_name].filter(Boolean).join(" "),
+                            p.apt ? `Apt ${p.apt}` : "",
+                            [p.city, p.state].filter(Boolean).join(", "),
+                            p.zip,
+                          ].filter(Boolean).join(", ") || "—"}
+                        </TableCell>
                       </TableRow>
                       {expandedPayee === p.id && (
                         <TableRow key={`${p.id}-details`}>
-                          <TableCell colSpan={22} className="bg-muted/30 p-0">
+                          <TableCell colSpan={9} className="bg-muted/30 p-0">
                             <div className="px-8 py-3">
                               <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
                                 Check History for {p.payee_name}
