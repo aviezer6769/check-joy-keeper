@@ -62,10 +62,32 @@ export type Database = {
         }
         Relationships: []
       }
+      chalikah: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       checks: {
         Row: {
           account_id: string | null
           amount: number
+          chalikah_id: string | null
           charity: string | null
           check_date: string
           check_given: boolean
@@ -82,6 +104,7 @@ export type Database = {
         Insert: {
           account_id?: string | null
           amount?: number
+          chalikah_id?: string | null
           charity?: string | null
           check_date?: string
           check_given?: boolean
@@ -98,6 +121,7 @@ export type Database = {
         Update: {
           account_id?: string | null
           amount?: number
+          chalikah_id?: string | null
           charity?: string | null
           check_date?: string
           check_given?: boolean
@@ -117,6 +141,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checks_chalikah_id_fkey"
+            columns: ["chalikah_id"]
+            isOneToOne: false
+            referencedRelation: "chalikah"
             referencedColumns: ["id"]
           },
         ]

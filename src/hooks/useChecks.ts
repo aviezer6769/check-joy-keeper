@@ -9,6 +9,7 @@ export interface Check {
   check_number: string | null;
   check_date: string;
   charity: string | null;
+  chalikah_id: string | null;
   check_given: boolean;
   memo: string | null;
   payee_record_number: string | null;

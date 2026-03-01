@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { type Check, type CheckInsert } from "@/hooks/useChecks";
 import { usePayees, type Payee } from "@/hooks/usePayees";
+import { useChalikah, useAddChalikah } from "@/hooks/useChalikah";
 import { buildPayeeName } from "@/lib/payee-utils";
-import { Search } from "lucide-react";
+import { Search, Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function buildYiddishName(p: Payee) {
   return [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish]
@@ -36,6 +38,8 @@ interface CheckFormProps {
 
 export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending, existingChecks = [] }: CheckFormProps) {
   const { data: payees = [] } = usePayees();
+  const { data: chalikahList = [] } = useChalikah();
+  const addChalikah = useAddChalikah();
 
   // Compute next check number from existing checks
   const nextCheckNumber = (() => {
@@ -53,6 +57,8 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
   const [charity, setCharity] = useState(initialData?.charity ?? "");
   const [checkGiven, setCheckGiven] = useState(initialData?.check_given ?? false);
   const [memo, setMemo] = useState(initialData?.memo ?? "");
+  const [chalikahId, setChalikahId] = useState(initialData?.chalikah_id ?? "");
+  const [newChalikahName, setNewChalikahName] = useState("");
   const [payeeRecordNumber, setPayeeRecordNumber] = useState(initialData?.payee_record_number ?? "");
 
   // Search state
@@ -106,6 +112,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       check_number: checkNumber || null,
       check_date: checkDate,
       charity: charity || null,
+      chalikah_id: chalikahId || null,
       check_given: checkGiven,
       memo: memo || null,
       payee_record_number: payeeRecordNumber || null,
@@ -117,6 +124,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       setCheckNumber("");
       setCheckDate(new Date().toISOString().split("T")[0]);
       setCharity("");
+      setChalikahId("");
       setCheckGiven(false);
       setMemo("");
       setPayeeRecordNumber("");
@@ -220,6 +228,54 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
             <div className="space-y-2">
               <Label htmlFor="charity">Charity</Label>
               <Input id="charity" value={charity} onChange={(e) => setCharity(e.target.value)} placeholder="Charity name" />
+            </div>
+            <div className="space-y-2">
+              <Label>Chalikah</Label>
+              <div className="flex gap-2">
+                <Select value={chalikahId} onValueChange={setChalikahId}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select chalikah..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {chalikahList.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {chalikahId && (
+                  <Button type="button" variant="ghost" size="icon" onClick={() => setChalikahId("")} title="Clear">
+                    ×
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Add New Chalikah</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newChalikahName}
+                  onChange={(e) => setNewChalikahName(e.target.value)}
+                  placeholder="New chalikah name..."
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  disabled={!newChalikahName.trim() || addChalikah.isPending}
+                  onClick={() => {
+                    addChalikah.mutate(newChalikahName.trim(), {
+                      onSuccess: (data) => {
+                        setChalikahId(data.id);
+                        setNewChalikahName("");
+                      },
+                    });
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="payeeRecord">Payee Record #</Label>
