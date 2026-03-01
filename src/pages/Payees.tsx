@@ -71,8 +71,14 @@ const Payees = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [groupByChalikah, setGroupByChalikah] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(() => localStorage.getItem("payees-show-filters") === "true");
   const [filterColumn, setFilterColumn] = useState(PAYEE_COLUMNS[0].key);
+  const toggleFilters = () => {
+    setShowFilters((prev) => {
+      localStorage.setItem("payees-show-filters", String(!prev));
+      return !prev;
+    });
+  };
   const [checksCollapsed, setChecksCollapsed] = useState<Set<string>>(new Set());
   const [collapsedChalikahs, setCollapsedChalikahs] = useState<Set<string>>(new Set());
   const deletePayee = useDeletePayee();
@@ -320,7 +326,7 @@ const Payees = () => {
             <Button
               variant={showFilters ? "secondary" : "outline"}
               size="sm"
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={toggleFilters}
               className={Object.values(colLayout.filters).some((v) => v.length > 0) ? "border-primary text-primary" : ""}
             >
               Filter
