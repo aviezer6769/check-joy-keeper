@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { type Check } from "@/hooks/useChecks";
+import { type Check, CHECK_STATUSES } from "@/hooks/useChecks";
 import { useChalikah } from "@/hooks/useChalikah";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,13 +15,12 @@ import { supabase } from "@/integrations/supabase/client";
 interface FieldDef {
   key: string;
   label: string;
-  type?: "number" | "date" | "boolean" | "chalikah";
+  type?: "number" | "date" | "boolean" | "chalikah" | "status";
 }
 
 const APPLY_ALL_FIELDS: FieldDef[] = [
   { key: "check_date", label: "Date", type: "date" },
-  { key: "check_given", label: "Check Given", type: "boolean" },
-  { key: "voided", label: "Voided", type: "boolean" },
+  { key: "status", label: "Status", type: "status" },
   { key: "chalikah_id", label: "Chalikah", type: "chalikah" },
   { key: "memo", label: "Memo" },
 ];
@@ -32,7 +31,7 @@ const GRID_FIELDS: FieldDef[] = [
   { key: "amount", label: "Amount", type: "number" },
   { key: "check_date", label: "Date", type: "date" },
   { key: "chalikah_id", label: "Chalikah", type: "chalikah" },
-  { key: "check_given", label: "Given", type: "boolean" },
+  { key: "status", label: "Status", type: "status" },
   { key: "memo", label: "Memo" },
   { key: "payee_record_number", label: "Record #" },
 ];
@@ -82,7 +81,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
       const field = APPLY_ALL_FIELDS.find((f) => f.key === key);
       if (field?.type === "boolean") {
         updates[key] = boolValues[key] ?? false;
-      } else if (field?.type === "chalikah") {
+      } else if (field?.type === "chalikah" || field?.type === "status") {
         updates[key] = values[key] || null;
       } else if (field?.type === "number") {
         updates[key] = Number(values[key]) || 0;
@@ -91,19 +90,37 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
       }
     });
 
-    // Handle voiding specially — each check needs its own original_amount
-    if (enabledFields.has("voided")) {
-      const shouldVoid = boolValues["voided"] ?? false;
+    // Handle status=Void specially — each check needs its own original_amount
+    if (enabledFields.has("status") && values["status"] === "Void") {
       setSaving(true);
       const promises = checks.map((c) => {
         const perCheckUpdates = { ...updates };
-        delete perCheckUpdates["voided"];
-        if (shouldVoid && !c.voided) {
-          perCheckUpdates.voided = true;
+        if (c.status !== "Void") {
           perCheckUpdates.original_amount = c.amount;
           perCheckUpdates.amount = 0;
-        } else if (!shouldVoid && c.voided) {
-          perCheckUpdates.voided = false;
+        }
+        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id);
+      });
+      const results = await Promise.all(promises);
+      setSaving(false);
+      const errors = results.filter((r) => r.error);
+      if (errors.length > 0) {
+        toast.error(`${errors.length} row(s) failed to update`);
+      } else {
+        toast.success(`Updated ${checks.length} check(s)`);
+        qc.invalidateQueries({ queryKey: ["checks"] });
+        onDone();
+        onOpenChange(false);
+      }
+      return;
+    }
+
+    // Handle unvoiding
+    if (enabledFields.has("status") && values["status"] !== "Void") {
+      setSaving(true);
+      const promises = checks.map((c) => {
+        const perCheckUpdates = { ...updates };
+        if (c.status === "Void") {
           perCheckUpdates.amount = c.original_amount ?? 0;
           perCheckUpdates.original_amount = null;
         }
@@ -207,6 +224,24 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
         </Select>
       );
     }
+    if (f.type === "status") {
+      return (
+        <Select
+          value={values[f.key] ?? ""}
+          onValueChange={(v) => setValues((prev) => ({ ...prev, [f.key]: v }))}
+          disabled={!enabled}
+        >
+          <SelectTrigger className="h-8 text-sm">
+            <SelectValue placeholder="Select..." />
+          </SelectTrigger>
+          <SelectContent>
+            {CHECK_STATUSES.map((s) => (
+              <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
     return (
       <Input
         type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
@@ -240,6 +275,23 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
           <SelectContent>
             {chalikahList.map((c) => (
               <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+    if (f.type === "status") {
+      return (
+        <Select
+          value={row[f.key] ?? "Open"}
+          onValueChange={(v) => updateGridCell(idx, f.key, v)}
+        >
+          <SelectTrigger className="h-7 text-xs min-w-[90px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CHECK_STATUSES.map((s) => (
+              <SelectItem key={s} value={s}>{s}</SelectItem>
             ))}
           </SelectContent>
         </Select>

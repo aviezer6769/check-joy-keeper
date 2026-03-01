@@ -12,8 +12,8 @@ function formatCurrency(amount: number) {
 
 export function StatsCards({ checks }: StatsCardsProps) {
   const totalAmount = checks.reduce((sum, c) => sum + Number(c.amount), 0);
-  const givenCount = checks.filter((c) => c.check_given).length;
-  const pendingCount = checks.filter((c) => !c.check_given).length;
+  const givenCount = checks.filter((c) => c.status === "Given" || c.status === "Cleared").length;
+  const pendingCount = checks.filter((c) => c.status === "Open" || c.status === "Printed").length;
 
   const stats = [
     { label: "Total Checks", value: checks.length.toString(), icon: FileText, color: "text-primary" },

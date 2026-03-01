@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Users, Pencil, Trash2, List } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert } from "@/hooks/useChecks";
+import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert, type CheckStatus } from "@/hooks/useChecks";
 import { useAccounts } from "@/hooks/useAccounts";
 import { CheckForm } from "@/components/CheckForm";
 import { ChecksTable } from "@/components/ChecksTable";
@@ -71,24 +71,16 @@ const Index = () => {
     setTimeout(() => handlePrint(), 100);
   };
 
-  const handleVoid = (check: Check) => {
-    if (!confirm(`Void check #${check.check_number || "—"} for ${check.payee}? This will set the amount to $0.`)) return;
-    updateCheck.mutate({
-      id: check.id,
-      voided: true,
-      original_amount: check.amount,
-      amount: 0,
-    });
-  };
-
-  const handleUnvoid = (check: Check) => {
-    if (!confirm(`Unvoid check #${check.check_number || "—"} for ${check.payee}? This will restore the original amount.`)) return;
-    updateCheck.mutate({
-      id: check.id,
-      voided: false,
-      amount: check.original_amount ?? 0,
-      original_amount: null,
-    });
+  const handleStatusChange = (check: Check, newStatus: CheckStatus) => {
+    const updates: Partial<Check> & { id: string } = { id: check.id, status: newStatus };
+    if (newStatus === "Void" && check.status !== "Void") {
+      updates.original_amount = check.amount;
+      updates.amount = 0;
+    } else if (newStatus !== "Void" && check.status === "Void") {
+      updates.amount = check.original_amount ?? 0;
+      updates.original_amount = null;
+    }
+    updateCheck.mutate(updates);
   };
 
   const toggleSelect = (id: string) => {
@@ -203,8 +195,7 @@ const Index = () => {
             onEdit={handleEdit}
             onDelete={(id) => setDeleteId(id)}
             onPrint={handlePrintCheck}
-            onVoid={handleVoid}
-            onUnvoid={handleUnvoid}
+            onStatusChange={handleStatusChange}
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             onToggleAll={toggleAll}

@@ -287,23 +287,19 @@ const Payees = () => {
                                           <TableCell className="text-xs">{formatDate(c.check_date)}</TableCell>
                                           <TableCell className="text-xs">—</TableCell>
                                           <TableCell className="text-right font-mono text-xs">
-                                            {c.voided ? (
+                                            {c.status === "Void" ? (
                                               <span className="line-through text-muted-foreground">{formatCurrency(c.original_amount ?? 0)}</span>
                                             ) : (
                                               formatCurrency(c.amount)
                                             )}
                                           </TableCell>
                                           <TableCell>
-                                            {c.voided ? (
-                                              <Badge variant="destructive" className="text-xs">Voided</Badge>
-                                            ) : (
-                                              <Badge
-                                                variant={c.check_given ? "default" : "secondary"}
-                                                className={c.check_given ? "bg-success text-success-foreground text-xs" : "text-xs"}
-                                              >
-                                                {c.check_given ? "Given" : "Pending"}
-                                              </Badge>
-                                            )}
+                                            <Badge
+                                              variant={c.status === "Void" ? "destructive" : c.status === "Given" || c.status === "Cleared" ? "default" : "secondary"}
+                                              className={c.status === "Given" || c.status === "Cleared" ? "bg-success text-success-foreground text-xs" : "text-xs"}
+                                            >
+                                              {c.status}
+                                            </Badge>
                                           </TableCell>
                                           <TableCell className="text-xs max-w-[200px] truncate">{c.memo || "—"}</TableCell>
                                         </TableRow>
