@@ -88,7 +88,6 @@ export type Database = {
           account_id: string | null
           amount: number
           chalikah_id: string | null
-          charity: string | null
           check_date: string
           check_given: boolean
           check_number: string | null
@@ -105,7 +104,6 @@ export type Database = {
           account_id?: string | null
           amount?: number
           chalikah_id?: string | null
-          charity?: string | null
           check_date?: string
           check_given?: boolean
           check_number?: string | null
@@ -122,7 +120,6 @@ export type Database = {
           account_id?: string | null
           amount?: number
           chalikah_id?: string | null
-          charity?: string | null
           check_date?: string
           check_given?: boolean
           check_number?: string | null

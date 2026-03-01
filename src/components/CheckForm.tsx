@@ -54,7 +54,6 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
   const [amount, setAmount] = useState(initialData?.amount?.toString() ?? "");
   const [checkNumber, setCheckNumber] = useState(nextCheckNumber);
   const [checkDate, setCheckDate] = useState(initialData?.check_date ?? new Date().toISOString().split("T")[0]);
-  const [charity, setCharity] = useState(initialData?.charity ?? "");
   const [checkGiven, setCheckGiven] = useState(initialData?.check_given ?? false);
   const [memo, setMemo] = useState(initialData?.memo ?? "");
   const [chalikahId, setChalikahId] = useState(initialData?.chalikah_id ?? "");
@@ -111,7 +110,6 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       amount: parseFloat(amount) || 0,
       check_number: checkNumber || null,
       check_date: checkDate,
-      charity: charity || null,
       chalikah_id: chalikahId || null,
       check_given: checkGiven,
       memo: memo || null,
@@ -123,7 +121,6 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       setAmount("");
       setCheckNumber("");
       setCheckDate(new Date().toISOString().split("T")[0]);
-      setCharity("");
       setChalikahId("");
       setCheckGiven(false);
       setMemo("");
@@ -225,10 +222,6 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="charity">Charity</Label>
-              <Input id="charity" value={charity} onChange={(e) => setCharity(e.target.value)} placeholder="Charity name" />
-            </div>
             <div className="space-y-2">
               <Label>Chalikah</Label>
               <div className="flex gap-2">

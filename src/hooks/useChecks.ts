@@ -8,7 +8,6 @@ export interface Check {
   amount: number;
   check_number: string | null;
   check_date: string;
-  charity: string | null;
   chalikah_id: string | null;
   check_given: boolean;
   memo: string | null;
@@ -37,7 +36,7 @@ export function useChecks(search?: string, accountId?: string | null) {
 
       if (search) {
         query = query.or(
-          `payee.ilike.%${search}%,check_number.ilike.%${search}%,memo.ilike.%${search}%,charity.ilike.%${search}%`
+          `payee.ilike.%${search}%,check_number.ilike.%${search}%,memo.ilike.%${search}%`
         );
       }
 

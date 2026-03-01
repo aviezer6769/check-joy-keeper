@@ -285,7 +285,7 @@ const Payees = () => {
                                         <TableRow key={c.id}>
                                           <TableCell className="font-mono text-xs">{c.check_number || "—"}</TableCell>
                                           <TableCell className="text-xs">{formatDate(c.check_date)}</TableCell>
-                                          <TableCell className="text-xs">{c.charity || "—"}</TableCell>
+                                          <TableCell className="text-xs">—</TableCell>
                                           <TableCell className="text-right font-mono text-xs">
                                             {c.voided ? (
                                               <span className="line-through text-muted-foreground">{formatCurrency(c.original_amount ?? 0)}</span>

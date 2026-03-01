@@ -1,0 +1,1 @@
+ALTER TABLE public.checks DROP COLUMN charity;
