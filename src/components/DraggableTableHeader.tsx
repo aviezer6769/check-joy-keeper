@@ -1,8 +1,9 @@
 import { useState, useCallback, useRef, useMemo } from "react";
 import { TableHead, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown, ArrowUp, ArrowDown, ListFilter } from "lucide-react";
 import { type ColumnDef, type SortState } from "@/hooks/useColumnLayout";
 import { cn } from "@/lib/utils";
 import React from "react";
@@ -24,25 +25,38 @@ function FilterCell({ col, w, value, options, onChange }: {
       className="py-1 px-1"
       style={w ? { width: w, minWidth: w, maxWidth: w } : undefined}
     >
-      <div className="flex flex-col gap-0.5">
+      <div className="flex items-center gap-0.5">
         <Input
           placeholder="Search..."
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-6 text-xs border-muted bg-background"
+          className="h-6 text-xs border-muted bg-background flex-1"
         />
         {hasOptions && (
-          <Select value={value || "__all__"} onValueChange={(v) => onChange(v === "__all__" ? "" : v)}>
-            <SelectTrigger className="h-6 text-xs border-muted bg-background">
-              <SelectValue placeholder="All" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">All</SelectItem>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className={cn("h-6 w-6 shrink-0", value && "text-primary")}>
+                <ListFilter className="h-3 w-3" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-1 max-h-60 overflow-y-auto" align="start">
+              <button
+                className={cn("w-full text-left text-xs px-2 py-1 rounded hover:bg-muted", !value && "font-semibold text-primary")}
+                onClick={() => onChange("")}
+              >
+                All
+              </button>
               {options.map((opt) => (
-                <SelectItem key={opt} value={opt}>{opt || "(empty)"}</SelectItem>
+                <button
+                  key={opt}
+                  className={cn("w-full text-left text-xs px-2 py-1 rounded hover:bg-muted truncate", value === opt && "font-semibold text-primary")}
+                  onClick={() => onChange(opt)}
+                >
+                  {opt || "(empty)"}
+                </button>
               ))}
-            </SelectContent>
-          </Select>
+            </PopoverContent>
+          </Popover>
         )}
       </div>
     </TableHead>
