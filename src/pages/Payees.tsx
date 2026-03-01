@@ -335,7 +335,7 @@ const Payees = () => {
 
                                     return (
                                       <div className="space-y-3">
-                                        {Object.entries(groups).map(([name, items]) => {
+                                        {Object.entries(groups).reverse().map(([name, items]) => {
                                           const groupTotal = items.reduce((s, c) => s + (c.status === "Void" ? 0 : c.amount), 0);
                                           const chalikahKey = `${p.id}::${name}`;
                                           const isCollapsed = collapsedChalikahs.has(chalikahKey);
