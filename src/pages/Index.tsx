@@ -2,13 +2,15 @@ import { useState, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users } from "lucide-react";
+import { Plus, Search, Users, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert } from "@/hooks/useChecks";
+import { useAccounts } from "@/hooks/useAccounts";
 import { CheckForm } from "@/components/CheckForm";
 import { ChecksTable } from "@/components/ChecksTable";
 import { CheckPrintView } from "@/components/CheckPrintView";
 import { StatsCards } from "@/components/StatsCards";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +23,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Index = () => {
+  const { data: accounts = [] } = useAccounts();
+  const [activeAccountId, setActiveAccountId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editingCheck, setEditingCheck] = useState<Check | null>(null);
@@ -28,7 +32,10 @@ const Index = () => {
   const [printCheck, setPrintCheck] = useState<Check | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
-  const { data: checks = [], isLoading } = useChecks(search);
+  // Use first account as default once loaded
+  const selectedAccountId = activeAccountId || accounts[0]?.id || null;
+
+  const { data: checks = [], isLoading } = useChecks(search, selectedAccountId);
   const addCheck = useAddCheck();
   const updateCheck = useUpdateCheck();
   const deleteCheck = useDeleteCheck();
@@ -44,7 +51,7 @@ const Index = () => {
         onSuccess: () => { setFormOpen(false); setEditingCheck(null); },
       });
     } else {
-      addCheck.mutate(data, {
+      addCheck.mutate({ ...data, account_id: selectedAccountId }, {
         onSuccess: () => setFormOpen(false),
       });
     }
@@ -87,6 +94,19 @@ const Index = () => {
       </header>
 
       <main className="container py-6 space-y-6 no-print">
+        {/* Account tabs */}
+        {accounts.length > 0 && (
+          <Tabs value={selectedAccountId || ""} onValueChange={setActiveAccountId}>
+            <TabsList>
+              {accounts.map((a) => (
+                <TabsTrigger key={a.id} value={a.id}>
+                  {a.account_name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        )}
+
         {/* Stats */}
         <StatsCards checks={checks} />
 
