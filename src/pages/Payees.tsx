@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { PayeeForm } from "@/components/PayeeForm";
@@ -18,7 +18,7 @@ import { useDeletePayee } from "@/hooks/usePayees";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
+import { useColumnLayout, type ColumnDef, type SortState } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 
 const PAYEE_COLUMNS: ColumnDef[] = [
@@ -86,7 +86,7 @@ const Payees = () => {
     }, {});
   }, [checks]);
 
-  const filtered = search
+  const filteredBase = search
     ? payees.filter((p) => {
         const q = search.toLowerCase();
         return (
@@ -99,6 +99,31 @@ const Payees = () => {
         );
       })
     : payees;
+
+  const getPayeeSortValue = (p: Payee, key: string): string | number => {
+    switch (key) {
+      case "record_id": return (p.record_id || "").toLowerCase();
+      case "sort_order": return p.sort_order ?? 0;
+      case "urgent_level": return p.urgent_level ?? 0;
+      case "yiddish_name": return [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ").toLowerCase();
+      case "payee_name": return [p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ").toLowerCase() || p.payee_name.toLowerCase();
+      case "address": return [p.city, p.state].filter(Boolean).join(", ").toLowerCase();
+      case "is_active": return p.is_active ? 1 : 0;
+      default: return ((p as any)[key] || "").toString().toLowerCase();
+    }
+  };
+
+  const filtered = useMemo(() => {
+    if (!colLayout.sort) return filteredBase;
+    const { key, dir } = colLayout.sort;
+    return [...filteredBase].sort((a, b) => {
+      const va = getPayeeSortValue(a, key);
+      const vb = getPayeeSortValue(b, key);
+      if (va < vb) return dir === "asc" ? -1 : 1;
+      if (va > vb) return dir === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [filteredBase, colLayout.sort]);
 
   const renderPayeeCell = (p: Payee, key: string) => {
     switch (key) {
@@ -269,9 +294,11 @@ const Payees = () => {
               visibleColumns={colLayout.visibleColumns}
               hiddenColumns={colLayout.hiddenColumns}
               allColumns={colLayout.allColumns}
+              widths={colLayout.widths}
               onToggle={colLayout.toggleColumn}
               onMove={colLayout.moveColumn}
               onReset={colLayout.resetLayout}
+              onSetWidth={colLayout.setColumnWidth}
             />
           </div>
         </div>
@@ -293,15 +320,28 @@ const Payees = () => {
                   </TableHead>
                   <TableHead className="font-semibold w-8"></TableHead>
                   <TableHead className="font-semibold w-10"></TableHead>
-                  {colLayout.visibleColumns.map((col) => (
-                    <TableHead
-                      key={col.key}
-                      className="font-semibold"
-                      dir={col.key === "yiddish_name" || col.key.endsWith("_yiddish") ? "rtl" : undefined}
-                    >
-                      {col.label}
-                    </TableHead>
-                  ))}
+                  {colLayout.visibleColumns.map((col) => {
+                    const w = colLayout.widths[col.key];
+                    const isRtl = col.key === "yiddish_name" || col.key.endsWith("_yiddish");
+                    return (
+                      <TableHead
+                        key={col.key}
+                        className="font-semibold cursor-pointer select-none hover:bg-muted/80"
+                        dir={isRtl ? "rtl" : undefined}
+                        style={w ? { width: w, minWidth: w, maxWidth: w } : undefined}
+                        onClick={() => colLayout.toggleSort(col.key)}
+                      >
+                        <span className="inline-flex items-center">
+                          {col.label}
+                          {colLayout.sort?.key === col.key ? (
+                            colLayout.sort.dir === "asc" ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />
+                          ) : (
+                            <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />
+                          )}
+                        </span>
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -337,15 +377,19 @@ const Payees = () => {
                             <Pencil className="h-3 w-3" />
                           </Button>
                         </TableCell>
-                        {colLayout.visibleColumns.map((col) => (
-                          <TableCell
-                            key={col.key}
-                            dir={col.key === "yiddish_name" || col.key.endsWith("_yiddish") ? "rtl" : undefined}
-                            className={col.key === "sort_order" || col.key === "urgent_level" ? "text-center" : col.key === "record_id" ? "font-mono text-sm" : ""}
-                          >
-                            {renderPayeeCell(p, col.key)}
-                          </TableCell>
-                        ))}
+                        {colLayout.visibleColumns.map((col) => {
+                          const w = colLayout.widths[col.key];
+                          return (
+                            <TableCell
+                              key={col.key}
+                              dir={col.key === "yiddish_name" || col.key.endsWith("_yiddish") ? "rtl" : undefined}
+                              className={col.key === "sort_order" || col.key === "urgent_level" ? "text-center" : col.key === "record_id" ? "font-mono text-sm" : ""}
+                              style={w ? { width: w, minWidth: w, maxWidth: w, overflow: "hidden" } : undefined}
+                            >
+                              {renderPayeeCell(p, col.key)}
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                       {expandedPayee === p.id && (
                         <TableRow key={`${p.id}-details`}>
