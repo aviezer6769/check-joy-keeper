@@ -140,7 +140,8 @@ const Index = () => {
         onSubmit={handleSubmit}
         initialData={editingCheck}
         isPending={addCheck.isPending || updateCheck.isPending}
-        key={editingCheck?.id ?? "new"}
+        existingChecks={checks}
+        key={editingCheck?.id ?? `new-${checks.length}`}
       />
 
       {/* Delete confirmation */}
