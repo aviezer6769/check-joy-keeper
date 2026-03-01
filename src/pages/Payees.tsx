@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers, Filter } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { PayeeForm } from "@/components/PayeeForm";
@@ -18,9 +18,10 @@ import { useDeletePayee } from "@/hooks/usePayees";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useColumnLayout, type ColumnDef, type SortState } from "@/hooks/useColumnLayout";
+import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
+import { ColumnFilterBar } from "@/components/ColumnFilterBar";
 
 const PAYEE_COLUMNS: ColumnDef[] = [
   { key: "record_id", label: "Record ID" },
@@ -71,6 +72,7 @@ const Payees = () => {
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [groupByChalikah, setGroupByChalikah] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [filterColumn, setFilterColumn] = useState(PAYEE_COLUMNS[0].key);
   const [checksCollapsed, setChecksCollapsed] = useState<Set<string>>(new Set());
   const [collapsedChalikahs, setCollapsedChalikahs] = useState<Set<string>>(new Set());
   const deletePayee = useDeletePayee();
@@ -321,7 +323,6 @@ const Payees = () => {
               onClick={() => setShowFilters(!showFilters)}
               className={Object.values(colLayout.filters).some((v) => v.length > 0) ? "border-primary text-primary" : ""}
             >
-              <Filter className="h-4 w-4 mr-1" />
               Filter
               {Object.values(colLayout.filters).some((v) => v.length > 0) && (
                 <span className="ml-1 text-[10px] bg-primary text-primary-foreground rounded-full px-1.5">
@@ -342,6 +343,17 @@ const Payees = () => {
           </div>
         </div>
 
+        {showFilters && (
+          <ColumnFilterBar
+            columns={colLayout.visibleColumns}
+            filters={colLayout.filters}
+            onFilterChange={colLayout.setFilter}
+            onClearFilters={colLayout.clearFilters}
+            filterColumn={filterColumn}
+            onFilterColumnChange={setFilterColumn}
+          />
+        )}
+
         {isLoading ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>
         ) : filtered.length === 0 ? (
@@ -357,12 +369,8 @@ const Payees = () => {
                   columns={colLayout.visibleColumns}
                   widths={colLayout.widths}
                   sort={colLayout.sort}
-                  filters={colLayout.filters}
                   onToggleSort={colLayout.toggleSort}
                   onReorder={colLayout.reorderColumn}
-                  onFilterChange={colLayout.setFilter}
-                  showFilters={showFilters}
-                  onToggleFilters={() => setShowFilters(!showFilters)}
                   isRtl={(key) => key === "yiddish_name" || key.endsWith("_yiddish")}
                   prefix={
                     <>

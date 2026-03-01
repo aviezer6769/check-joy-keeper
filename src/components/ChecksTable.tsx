@@ -2,13 +2,14 @@ import { useMemo, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Trash2, Printer, Filter } from "lucide-react";
+import { Pencil, Trash2, Printer } from "lucide-react";
 import { type Check, type CheckStatus } from "@/hooks/useChecks";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useChalikah } from "@/hooks/useChalikah";
 import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
+import { ColumnFilterBar } from "@/components/ColumnFilterBar";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
@@ -83,6 +84,7 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
   const chalikahMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
   const allSelected = checks.length > 0 && checks.every((c) => selectedIds.has(c.id));
   const [showFilters, setShowFilters] = useState(false);
+  const [filterColumn, setFilterColumn] = useState(CHECK_COLUMNS[0].key);
 
   const colLayout = useColumnLayout("checks", CHECK_COLUMNS);
 
@@ -177,31 +179,44 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-end gap-2">
-        <Button
-          variant={showFilters ? "secondary" : "outline"}
-          size="sm"
-          onClick={() => setShowFilters(!showFilters)}
-          className={hasActiveFilters ? "border-primary text-primary" : ""}
-        >
-          <Filter className="h-4 w-4 mr-1" />
-          Filter
-          {hasActiveFilters && (
-            <span className="ml-1 text-[10px] bg-primary text-primary-foreground rounded-full px-1.5">
-              {Object.values(colLayout.filters).filter((v) => v.length > 0).length}
-            </span>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex-1">
+          {showFilters && (
+            <ColumnFilterBar
+              columns={colLayout.visibleColumns}
+              filters={colLayout.filters}
+              onFilterChange={colLayout.setFilter}
+              onClearFilters={colLayout.clearFilters}
+              filterColumn={filterColumn}
+              onFilterColumnChange={setFilterColumn}
+            />
           )}
-        </Button>
-        <ColumnLayoutManager
-          visibleColumns={colLayout.visibleColumns}
-          hiddenColumns={colLayout.hiddenColumns}
-          allColumns={colLayout.allColumns}
-          widths={colLayout.widths}
-          onToggle={colLayout.toggleColumn}
-          onReorder={colLayout.reorderColumn}
-          onReset={colLayout.resetLayout}
-          onSetWidth={colLayout.setColumnWidth}
-        />
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <Button
+            variant={showFilters ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className={hasActiveFilters ? "border-primary text-primary" : ""}
+          >
+            Filter
+            {hasActiveFilters && (
+              <span className="ml-1 text-[10px] bg-primary text-primary-foreground rounded-full px-1.5">
+                {Object.values(colLayout.filters).filter((v) => v.length > 0).length}
+              </span>
+            )}
+          </Button>
+          <ColumnLayoutManager
+            visibleColumns={colLayout.visibleColumns}
+            hiddenColumns={colLayout.hiddenColumns}
+            allColumns={colLayout.allColumns}
+            widths={colLayout.widths}
+            onToggle={colLayout.toggleColumn}
+            onReorder={colLayout.reorderColumn}
+            onReset={colLayout.resetLayout}
+            onSetWidth={colLayout.setColumnWidth}
+          />
+        </div>
       </div>
       <div className="overflow-x-auto rounded-lg border border-border">
         <Table>
@@ -210,12 +225,8 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
               columns={colLayout.visibleColumns}
               widths={colLayout.widths}
               sort={colLayout.sort}
-              filters={colLayout.filters}
               onToggleSort={colLayout.toggleSort}
               onReorder={colLayout.reorderColumn}
-              onFilterChange={colLayout.setFilter}
-              showFilters={showFilters}
-              onToggleFilters={() => setShowFilters(!showFilters)}
               columnClassName={(key) => key === "amount" ? "text-right" : ""}
               prefix={
                 <TableHead className="w-10 px-2">
