@@ -222,6 +222,7 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
               sort={colLayout.sort}
               onToggleSort={colLayout.toggleSort}
               onReorder={colLayout.reorderColumn}
+              onSetWidth={colLayout.setColumnWidth}
               columnClassName={(key) => key === "amount" ? "text-right" : ""}
               filters={colLayout.filters}
               onFilterChange={colLayout.setFilter}

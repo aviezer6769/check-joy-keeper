@@ -369,6 +369,7 @@ const Payees = () => {
                   sort={colLayout.sort}
                   onToggleSort={colLayout.toggleSort}
                   onReorder={colLayout.reorderColumn}
+                  onSetWidth={colLayout.setColumnWidth}
                   isRtl={(key) => key === "yiddish_name" || key.endsWith("_yiddish")}
                   filters={colLayout.filters}
                   onFilterChange={colLayout.setFilter}
