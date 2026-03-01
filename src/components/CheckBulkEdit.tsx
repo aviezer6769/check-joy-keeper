@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type Check, CHECK_STATUSES } from "@/hooks/useChecks";
 import { useChalikah } from "@/hooks/useChalikah";
+import { usePayees } from "@/hooks/usePayees";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,13 +28,15 @@ const APPLY_ALL_FIELDS: FieldDef[] = [
 
 const GRID_FIELDS: FieldDef[] = [
   { key: "check_number", label: "Check #" },
+  { key: "payee_record_number", label: "Record #" },
   { key: "payee", label: "Payee" },
   { key: "amount", label: "Amount", type: "number" },
   { key: "check_date", label: "Date", type: "date" },
   { key: "chalikah_id", label: "Chalikah", type: "chalikah" },
   { key: "status", label: "Status", type: "status" },
   { key: "memo", label: "Memo" },
-  { key: "payee_record_number", label: "Record #" },
+  { key: "given_to_record_number", label: "Given To #" },
+  { key: "given_to_payee", label: "Given To" },
 ];
 
 interface CheckBulkEditProps {
@@ -51,7 +54,13 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
   const [gridRows, setGridRows] = useState<Record<string, any>[]>([]);
   const [gridInitialized, setGridInitialized] = useState(false);
   const { data: chalikahList = [] } = useChalikah();
+  const { data: payees = [] } = usePayees();
   const qc = useQueryClient();
+
+  const payeeByRecordId = useMemo(
+    () => Object.fromEntries(payees.filter((p) => p.record_id).map((p) => [p.record_id!, p])),
+    [payees]
+  );
 
   const initGrid = () => {
     if (!gridInitialized || gridRows.length !== checks.length) {
@@ -157,7 +166,25 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
 
   const updateGridCell = (idx: number, key: string, value: any) => {
     setGridRows((prev) =>
-      prev.map((r, i) => (i === idx ? { ...r, [key]: value } : r))
+      prev.map((r, i) => {
+        if (i !== idx) return r;
+        const updated = { ...r, [key]: value };
+        // Auto-fill payee info from record ID
+        if (key === "payee_record_number") {
+          const p = payeeByRecordId[value];
+          if (p) {
+            updated.payee = p.payee_name;
+          }
+        }
+        // Auto-fill given-to payee from given-to record ID
+        if (key === "given_to_record_number") {
+          const p = payeeByRecordId[value];
+          if (p) {
+            updated.given_to_payee = p.payee_name;
+          }
+        }
+        return updated;
+      })
     );
   };
 
