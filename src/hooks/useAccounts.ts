@@ -8,6 +8,12 @@ export interface Account {
   bank_name: string | null;
   account_number: string | null;
   routing_number: string | null;
+  payer_name: string | null;
+  payer_address: string | null;
+  payer_city: string | null;
+  payer_state: string | null;
+  payer_zip: string | null;
+  payer_phone: string | null;
   created_at: string;
   updated_at: string;
 }
