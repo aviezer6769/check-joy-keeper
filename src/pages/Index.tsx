@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users } from "lucide-react";
+import { Plus, Search, Users, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert } from "@/hooks/useChecks";
 import { useAccounts } from "@/hooks/useAccounts";
@@ -11,6 +11,7 @@ import { ChecksTable } from "@/components/ChecksTable";
 import { CheckPrintView } from "@/components/CheckPrintView";
 import { StatsCards } from "@/components/StatsCards";
 import { AccountManager } from "@/components/AccountManager";
+import { CheckBulkEdit } from "@/components/CheckBulkEdit";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
@@ -31,6 +32,8 @@ const Index = () => {
   const [editingCheck, setEditingCheck] = useState<Check | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [printCheck, setPrintCheck] = useState<Check | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   // Use first account as default once loaded
@@ -88,6 +91,34 @@ const Index = () => {
     });
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (checks.length > 0 && checks.every((c) => selectedIds.has(c.id))) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(checks.map((c) => c.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`Delete ${selectedIds.size} check(s)? This cannot be undone.`)) return;
+    const ids = Array.from(selectedIds);
+    for (const id of ids) {
+      deleteCheck.mutate(id);
+    }
+    setSelectedIds(new Set());
+  };
+
+  const selectedChecks = checks.filter((c) => selectedIds.has(c.id));
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -134,22 +165,44 @@ const Index = () => {
         {/* Stats */}
         <StatsCards checks={checks} />
 
-        {/* Search */}
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search checks..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+        {/* Search + bulk actions */}
+        <div className="flex items-center gap-3">
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search checks..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          {selectedIds.size > 0 && (
+            <div className="flex gap-2">
+              <Button size="sm" variant="destructive" onClick={handleBulkDelete}>
+                <Trash2 className="h-4 w-4 mr-1" /> Delete {selectedIds.size}
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => setBulkEditOpen(true)}>
+                <Pencil className="h-4 w-4 mr-1" /> Edit {selectedIds.size}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Table */}
         {isLoading ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>
         ) : (
-          <ChecksTable checks={checks} onEdit={handleEdit} onDelete={(id) => setDeleteId(id)} onPrint={handlePrintCheck} onVoid={handleVoid} onUnvoid={handleUnvoid} />
+          <ChecksTable
+            checks={checks}
+            onEdit={handleEdit}
+            onDelete={(id) => setDeleteId(id)}
+            onPrint={handlePrintCheck}
+            onVoid={handleVoid}
+            onUnvoid={handleUnvoid}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
+            onToggleAll={toggleAll}
+          />
         )}
       </main>
 
@@ -189,6 +242,13 @@ const Index = () => {
           {printCheck && <CheckPrintView check={printCheck} />}
         </div>
       </div>
+
+      <CheckBulkEdit
+        checks={selectedChecks}
+        open={bulkEditOpen}
+        onOpenChange={setBulkEditOpen}
+        onDone={() => setSelectedIds(new Set())}
+      />
     </div>
   );
 };

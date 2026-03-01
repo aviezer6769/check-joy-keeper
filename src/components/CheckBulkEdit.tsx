@@ -1,0 +1,315 @@
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { type Check } from "@/hooks/useChecks";
+import { useChalikah } from "@/hooks/useChalikah";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+interface FieldDef {
+  key: string;
+  label: string;
+  type?: "number" | "date" | "boolean" | "chalikah";
+}
+
+const APPLY_ALL_FIELDS: FieldDef[] = [
+  { key: "check_date", label: "Date", type: "date" },
+  { key: "check_given", label: "Check Given", type: "boolean" },
+  { key: "chalikah_id", label: "Chalikah", type: "chalikah" },
+  { key: "memo", label: "Memo" },
+];
+
+const GRID_FIELDS: FieldDef[] = [
+  { key: "check_number", label: "Check #" },
+  { key: "payee", label: "Payee" },
+  { key: "amount", label: "Amount", type: "number" },
+  { key: "check_date", label: "Date", type: "date" },
+  { key: "chalikah_id", label: "Chalikah", type: "chalikah" },
+  { key: "check_given", label: "Given", type: "boolean" },
+  { key: "memo", label: "Memo" },
+  { key: "payee_record_number", label: "Record #" },
+];
+
+interface CheckBulkEditProps {
+  checks: Check[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDone: () => void;
+}
+
+export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkEditProps) {
+  const [enabledFields, setEnabledFields] = useState<Set<string>>(new Set());
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [boolValues, setBoolValues] = useState<Record<string, boolean>>({});
+  const [saving, setSaving] = useState(false);
+  const [gridRows, setGridRows] = useState<Record<string, any>[]>([]);
+  const [gridInitialized, setGridInitialized] = useState(false);
+  const { data: chalikahList = [] } = useChalikah();
+  const qc = useQueryClient();
+
+  const initGrid = () => {
+    if (!gridInitialized || gridRows.length !== checks.length) {
+      setGridRows(checks.map((c) => ({ ...c })));
+      setGridInitialized(true);
+    }
+  };
+
+  const toggleField = (key: string) => {
+    setEnabledFields((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const handleApplyAll = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (enabledFields.size === 0) {
+      toast.error("Select at least one field to update");
+      return;
+    }
+
+    const updates: Record<string, any> = {};
+    enabledFields.forEach((key) => {
+      const field = APPLY_ALL_FIELDS.find((f) => f.key === key);
+      if (field?.type === "boolean") {
+        updates[key] = boolValues[key] ?? false;
+      } else if (field?.type === "chalikah") {
+        updates[key] = values[key] || null;
+      } else if (field?.type === "number") {
+        updates[key] = Number(values[key]) || 0;
+      } else {
+        updates[key] = values[key] || null;
+      }
+    });
+
+    setSaving(true);
+    const ids = checks.map((c) => c.id);
+    const { error } = await supabase.from("checks").update(updates).in("id", ids);
+    setSaving(false);
+
+    if (error) {
+      toast.error("Bulk update failed: " + error.message);
+    } else {
+      toast.success(`Updated ${checks.length} check(s)`);
+      qc.invalidateQueries({ queryKey: ["checks"] });
+      onDone();
+      onOpenChange(false);
+    }
+  };
+
+  const updateGridCell = (idx: number, key: string, value: any) => {
+    setGridRows((prev) =>
+      prev.map((r, i) => (i === idx ? { ...r, [key]: value } : r))
+    );
+  };
+
+  const handleGridSave = async () => {
+    setSaving(true);
+    const promises = gridRows.map((row) => {
+      const { id, created_at, updated_at, ...rest } = row;
+      GRID_FIELDS.forEach((f) => {
+        if (f.type === "number") {
+          rest[f.key] = Number(rest[f.key]) || 0;
+        } else if (f.type === "boolean") {
+          rest[f.key] = !!rest[f.key];
+        } else if (f.type === "chalikah") {
+          rest[f.key] = rest[f.key] || null;
+        } else {
+          rest[f.key] = rest[f.key] || null;
+        }
+      });
+      return supabase.from("checks").update(rest).eq("id", id);
+    });
+
+    const results = await Promise.all(promises);
+    setSaving(false);
+
+    const errors = results.filter((r) => r.error);
+    if (errors.length > 0) {
+      toast.error(`${errors.length} row(s) failed to update`);
+    } else {
+      toast.success(`Updated ${gridRows.length} check(s)`);
+      qc.invalidateQueries({ queryKey: ["checks"] });
+      onDone();
+      onOpenChange(false);
+    }
+  };
+
+  const chalikahMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
+
+  const renderApplyField = (f: FieldDef) => {
+    const enabled = enabledFields.has(f.key);
+    if (f.type === "boolean") {
+      return (
+        <Checkbox
+          checked={boolValues[f.key] ?? false}
+          onCheckedChange={(v) => setBoolValues((prev) => ({ ...prev, [f.key]: v === true }))}
+          disabled={!enabled}
+        />
+      );
+    }
+    if (f.type === "chalikah") {
+      return (
+        <Select
+          value={values[f.key] ?? ""}
+          onValueChange={(v) => setValues((prev) => ({ ...prev, [f.key]: v }))}
+          disabled={!enabled}
+        >
+          <SelectTrigger className="h-8 text-sm">
+            <SelectValue placeholder="Select..." />
+          </SelectTrigger>
+          <SelectContent>
+            {chalikahList.map((c) => (
+              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+    return (
+      <Input
+        type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
+        value={values[f.key] ?? ""}
+        onChange={(e) => setValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
+        placeholder={f.label}
+        disabled={!enabled}
+        className="h-8 text-sm"
+      />
+    );
+  };
+
+  const renderGridCell = (row: Record<string, any>, idx: number, f: FieldDef) => {
+    if (f.type === "boolean") {
+      return (
+        <Checkbox
+          checked={!!row[f.key]}
+          onCheckedChange={(v) => updateGridCell(idx, f.key, v === true)}
+        />
+      );
+    }
+    if (f.type === "chalikah") {
+      return (
+        <Select
+          value={row[f.key] ?? ""}
+          onValueChange={(v) => updateGridCell(idx, f.key, v)}
+        >
+          <SelectTrigger className="h-7 text-xs min-w-[100px]">
+            <SelectValue placeholder="—" />
+          </SelectTrigger>
+          <SelectContent>
+            {chalikahList.map((c) => (
+              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+    return (
+      <Input
+        type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
+        value={f.type === "number" ? (row[f.key] as number) ?? 0 : (row[f.key] as string) ?? ""}
+        onChange={(e) => updateGridCell(idx, f.key, e.target.value)}
+        className="h-7 text-xs min-w-[80px] px-1.5"
+      />
+    );
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) setGridInitialized(false);
+        onOpenChange(v);
+      }}
+    >
+      <DialogContent className="max-w-[95vw] max-h-[85vh] flex flex-col overflow-hidden">
+        <DialogHeader>
+          <DialogTitle>Bulk Edit {checks.length} Check(s)</DialogTitle>
+        </DialogHeader>
+        <Tabs defaultValue="apply-all" onValueChange={(v) => v === "grid" && initGrid()} className="flex flex-col min-h-0 flex-1">
+          <TabsList>
+            <TabsTrigger value="apply-all">Apply to All</TabsTrigger>
+            <TabsTrigger value="grid">Edit Grid</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="apply-all" className="pt-2 overflow-y-auto">
+            <p className="text-sm text-muted-foreground mb-3">
+              Check the fields you want to update. The new value will be applied to all selected checks.
+            </p>
+            <form onSubmit={handleApplyAll} className="space-y-3">
+              {APPLY_ALL_FIELDS.map((f) => (
+                <div key={f.key} className="flex items-center gap-3">
+                  <Checkbox
+                    checked={enabledFields.has(f.key)}
+                    onCheckedChange={() => toggleField(f.key)}
+                    id={`bulk-check-${f.key}`}
+                  />
+                  <Label htmlFor={`bulk-check-${f.key}`} className="text-sm w-24 shrink-0">
+                    {f.label}
+                  </Label>
+                  {renderApplyField(f)}
+                </div>
+              ))}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={saving || enabledFields.size === 0}>
+                  {saving ? "Updating..." : "Update All"}
+                </Button>
+              </div>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="grid" className="pt-2 flex flex-col min-h-0 flex-1" style={{ display: "flex" }}>
+            <p className="text-sm text-muted-foreground mb-3 shrink-0">
+              Edit each check individually in the grid below.
+            </p>
+            <div className="rounded border border-border flex-1 min-h-0 overflow-auto" style={{ scrollbarGutter: "stable" }}>
+              <table className="w-full text-xs min-w-max">
+                <thead className="sticky top-0 z-10 bg-muted">
+                  <tr>
+                    <th className="text-left px-2 py-1.5 font-semibold text-muted-foreground whitespace-nowrap">#</th>
+                    {GRID_FIELDS.map((f) => (
+                      <th key={f.key} className="text-left px-1 py-1.5 font-semibold text-muted-foreground whitespace-nowrap">
+                        {f.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {gridRows.map((row, idx) => (
+                    <tr key={row.id} className="border-t border-border">
+                      <td className="px-2 py-0.5 text-muted-foreground">{idx + 1}</td>
+                      {GRID_FIELDS.map((f) => (
+                        <td key={f.key} className="px-0.5 py-0.5">
+                          {renderGridCell(row, idx, f)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-end gap-2 pt-3 shrink-0">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleGridSave} disabled={saving}>
+                {saving ? "Saving..." : `Save ${gridRows.length} Check(s)`}
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
