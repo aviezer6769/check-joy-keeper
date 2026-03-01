@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Printer } from "lucide-react";
+import { Pencil, Trash2, Printer, Ban } from "lucide-react";
 import { type Check } from "@/hooks/useChecks";
 
 interface ChecksTableProps {
@@ -9,6 +9,7 @@ interface ChecksTableProps {
   onEdit: (check: Check) => void;
   onDelete: (id: string) => void;
   onPrint: (check: Check) => void;
+  onVoid: (check: Check) => void;
 }
 
 function formatCurrency(amount: number) {
@@ -23,7 +24,7 @@ function formatDate(date: string) {
   });
 }
 
-export function ChecksTable({ checks, onEdit, onDelete, onPrint }: ChecksTableProps) {
+export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid }: ChecksTableProps) {
   if (checks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
@@ -51,16 +52,32 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint }: ChecksTablePr
         </TableHeader>
         <TableBody>
           {checks.map((check, i) => (
-            <TableRow key={check.id} className="animate-fade-in" style={{ animationDelay: `${i * 30}ms` }}>
+            <TableRow
+              key={check.id}
+              className={`animate-fade-in ${check.voided ? "opacity-60" : ""}`}
+              style={{ animationDelay: `${i * 30}ms` }}
+            >
               <TableCell className="font-mono text-sm">{check.check_number || "—"}</TableCell>
               <TableCell className="text-sm">{formatDate(check.check_date)}</TableCell>
               <TableCell className="font-medium">{check.payee}</TableCell>
               <TableCell className="text-sm">{check.charity || "—"}</TableCell>
-              <TableCell className="text-right font-mono font-medium">{formatCurrency(check.amount)}</TableCell>
+              <TableCell className="text-right font-mono font-medium">
+                {check.voided ? (
+                  <span className="line-through text-muted-foreground">
+                    {formatCurrency(check.original_amount ?? 0)}
+                  </span>
+                ) : (
+                  formatCurrency(check.amount)
+                )}
+              </TableCell>
               <TableCell>
-                <Badge variant={check.check_given ? "default" : "secondary"} className={check.check_given ? "bg-success text-success-foreground" : ""}>
-                  {check.check_given ? "Given" : "Pending"}
-                </Badge>
+                {check.voided ? (
+                  <Badge variant="destructive">Voided</Badge>
+                ) : (
+                  <Badge variant={check.check_given ? "default" : "secondary"} className={check.check_given ? "bg-success text-success-foreground" : ""}>
+                    {check.check_given ? "Given" : "Pending"}
+                  </Badge>
+                )}
               </TableCell>
               <TableCell className="text-sm max-w-[200px] truncate">{check.memo || "—"}</TableCell>
               <TableCell className="font-mono text-sm">{check.payee_record_number || "—"}</TableCell>
@@ -69,9 +86,16 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint }: ChecksTablePr
                   <Button variant="ghost" size="icon" onClick={() => onPrint(check)} title="Print">
                     <Printer className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => onEdit(check)} title="Edit">
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+                  {!check.voided && (
+                    <>
+                      <Button variant="ghost" size="icon" onClick={() => onEdit(check)} title="Edit">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => onVoid(check)} title="Void" className="text-orange-500 hover:text-orange-600">
+                        <Ban className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
                   <Button variant="ghost" size="icon" onClick={() => onDelete(check.id)} title="Delete" className="text-destructive hover:text-destructive">
                     <Trash2 className="h-4 w-4" />
                   </Button>

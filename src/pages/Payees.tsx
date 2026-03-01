@@ -286,14 +286,24 @@ const Payees = () => {
                                           <TableCell className="font-mono text-xs">{c.check_number || "—"}</TableCell>
                                           <TableCell className="text-xs">{formatDate(c.check_date)}</TableCell>
                                           <TableCell className="text-xs">{c.charity || "—"}</TableCell>
-                                          <TableCell className="text-right font-mono text-xs">{formatCurrency(c.amount)}</TableCell>
+                                          <TableCell className="text-right font-mono text-xs">
+                                            {c.voided ? (
+                                              <span className="line-through text-muted-foreground">{formatCurrency(c.original_amount ?? 0)}</span>
+                                            ) : (
+                                              formatCurrency(c.amount)
+                                            )}
+                                          </TableCell>
                                           <TableCell>
-                                            <Badge
-                                              variant={c.check_given ? "default" : "secondary"}
-                                              className={c.check_given ? "bg-success text-success-foreground text-xs" : "text-xs"}
-                                            >
-                                              {c.check_given ? "Given" : "Pending"}
-                                            </Badge>
+                                            {c.voided ? (
+                                              <Badge variant="destructive" className="text-xs">Voided</Badge>
+                                            ) : (
+                                              <Badge
+                                                variant={c.check_given ? "default" : "secondary"}
+                                                className={c.check_given ? "bg-success text-success-foreground text-xs" : "text-xs"}
+                                              >
+                                                {c.check_given ? "Given" : "Pending"}
+                                              </Badge>
+                                            )}
                                           </TableCell>
                                           <TableCell className="text-xs max-w-[200px] truncate">{c.memo || "—"}</TableCell>
                                         </TableRow>
