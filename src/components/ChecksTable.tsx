@@ -1,12 +1,12 @@
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Trash2, Printer } from "lucide-react";
+import { Pencil, Trash2, Printer, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { type Check, type CheckStatus } from "@/hooks/useChecks";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useChalikah } from "@/hooks/useChalikah";
-import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
+import { useColumnLayout, type ColumnDef, type SortState } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 
 function formatCurrency(amount: number) {
@@ -45,12 +45,45 @@ interface ChecksTableProps {
   onToggleAll: () => void;
 }
 
+function getSortValue(check: Check, key: string, chalikahMap: Record<string, string>): string | number {
+  switch (key) {
+    case "check_number": return check.check_number || "";
+    case "check_date": return check.check_date;
+    case "payee": return check.payee.toLowerCase();
+    case "chalikah": return (check.chalikah_id ? chalikahMap[check.chalikah_id] || "" : "").toLowerCase();
+    case "amount": return check.status === "Void" ? 0 : check.amount;
+    case "status": return check.status;
+    case "given_to": return (check.given_to_payee || "").toLowerCase();
+    case "memo": return (check.memo || "").toLowerCase();
+    case "record_number": return check.payee_record_number || "";
+    case "given_to_record": return check.given_to_record_number || "";
+    default: return "";
+  }
+}
+
+function SortIcon({ sort, colKey }: { sort: SortState | null; colKey: string }) {
+  if (sort?.key !== colKey) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
+  return sort.dir === "asc" ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
+}
+
 export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange, selectedIds, onToggleSelect, onToggleAll }: ChecksTableProps) {
   const { data: chalikahList = [] } = useChalikah();
   const chalikahMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
   const allSelected = checks.length > 0 && checks.every((c) => selectedIds.has(c.id));
 
   const colLayout = useColumnLayout("checks", CHECK_COLUMNS);
+
+  const sortedChecks = useMemo(() => {
+    if (!colLayout.sort) return checks;
+    const { key, dir } = colLayout.sort;
+    return [...checks].sort((a, b) => {
+      const va = getSortValue(a, key, chalikahMap);
+      const vb = getSortValue(b, key, chalikahMap);
+      if (va < vb) return dir === "asc" ? -1 : 1;
+      if (va > vb) return dir === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [checks, colLayout.sort, chalikahMap]);
 
   if (checks.length === 0) {
     return (
@@ -121,9 +154,11 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
           visibleColumns={colLayout.visibleColumns}
           hiddenColumns={colLayout.hiddenColumns}
           allColumns={colLayout.allColumns}
+          widths={colLayout.widths}
           onToggle={colLayout.toggleColumn}
           onMove={colLayout.moveColumn}
           onReset={colLayout.resetLayout}
+          onSetWidth={colLayout.setColumnWidth}
         />
       </div>
       <div className="overflow-x-auto rounded-lg border border-border">
@@ -133,16 +168,27 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
               <TableHead className="w-10 px-2">
                 <Checkbox checked={allSelected} onCheckedChange={onToggleAll} />
               </TableHead>
-              {colLayout.visibleColumns.map((col) => (
-                <TableHead key={col.key} className={`font-semibold ${col.key === "amount" ? "text-right" : ""}`}>
-                  {col.label}
-                </TableHead>
-              ))}
+              {colLayout.visibleColumns.map((col) => {
+                const w = colLayout.widths[col.key];
+                return (
+                  <TableHead
+                    key={col.key}
+                    className={`font-semibold cursor-pointer select-none hover:bg-muted/80 ${col.key === "amount" ? "text-right" : ""}`}
+                    style={w ? { width: w, minWidth: w, maxWidth: w } : undefined}
+                    onClick={() => colLayout.toggleSort(col.key)}
+                  >
+                    <span className="inline-flex items-center">
+                      {col.label}
+                      <SortIcon sort={colLayout.sort} colKey={col.key} />
+                    </span>
+                  </TableHead>
+                );
+              })}
               <TableHead className="font-semibold text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {checks.map((check, i) => (
+            {sortedChecks.map((check, i) => (
               <TableRow
                 key={check.id}
                 className={`animate-fade-in ${check.status === "Void" ? "opacity-60" : ""}`}
@@ -154,9 +200,17 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
                     onCheckedChange={() => onToggleSelect(check.id)}
                   />
                 </TableCell>
-                {colLayout.visibleColumns.map((col) => (
-                  <TableCell key={col.key}>{renderCell(check, col.key)}</TableCell>
-                ))}
+                {colLayout.visibleColumns.map((col) => {
+                  const w = colLayout.widths[col.key];
+                  return (
+                    <TableCell
+                      key={col.key}
+                      style={w ? { width: w, minWidth: w, maxWidth: w, overflow: "hidden" } : undefined}
+                    >
+                      {renderCell(check, col.key)}
+                    </TableCell>
+                  );
+                })}
                 <TableCell>
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" onClick={() => onPrint(check)} title="Print">
@@ -179,6 +233,5 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
   );
 }
 
-// Export column layout for use in export function
 export { CHECK_COLUMNS };
 export { useColumnLayout };

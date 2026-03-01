@@ -4,11 +4,20 @@ export interface ColumnDef {
   key: string;
   label: string;
   defaultVisible?: boolean; // defaults to true
+  defaultWidth?: number; // px, optional
+}
+
+export type SortDir = "asc" | "desc";
+
+export interface SortState {
+  key: string;
+  dir: SortDir;
 }
 
 export interface ColumnLayout {
-  /** ordered list of visible column keys */
   visibleKeys: string[];
+  widths?: Record<string, number>;
+  sort?: SortState | null;
 }
 
 const STORAGE_PREFIX = "col-layout-";
@@ -31,16 +40,21 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
       visibleKeys: allColumns
         .filter((c) => c.defaultVisible !== false)
         .map((c) => c.key),
+      widths: {},
+      sort: null,
     };
   }, [allColumns]);
 
   const [layout, setLayoutState] = useState<ColumnLayout>(() => {
     const saved = loadLayout(storageKey);
     if (saved) {
-      // filter out keys that no longer exist, keep order
       const validKeys = new Set(allColumns.map((c) => c.key));
       const filtered = saved.visibleKeys.filter((k) => validKeys.has(k));
-      return { visibleKeys: filtered.length > 0 ? filtered : defaultLayout.visibleKeys };
+      return {
+        visibleKeys: filtered.length > 0 ? filtered : defaultLayout.visibleKeys,
+        widths: saved.widths || {},
+        sort: saved.sort || null,
+      };
     }
     return defaultLayout;
   });
@@ -66,6 +80,7 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
   const toggleColumn = useCallback(
     (key: string) => {
       setLayout({
+        ...layout,
         visibleKeys: layout.visibleKeys.includes(key)
           ? layout.visibleKeys.filter((k) => k !== key)
           : [...layout.visibleKeys, key],
@@ -82,7 +97,32 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
       if (newIdx < 0 || newIdx >= layout.visibleKeys.length) return;
       const next = [...layout.visibleKeys];
       [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
-      setLayout({ visibleKeys: next });
+      setLayout({ ...layout, visibleKeys: next });
+    },
+    [layout, setLayout]
+  );
+
+  const setColumnWidth = useCallback(
+    (key: string, width: number) => {
+      setLayout({
+        ...layout,
+        widths: { ...(layout.widths || {}), [key]: width },
+      });
+    },
+    [layout, setLayout]
+  );
+
+  const toggleSort = useCallback(
+    (key: string) => {
+      const current = layout.sort;
+      let next: SortState | null;
+      if (current?.key === key) {
+        if (current.dir === "asc") next = { key, dir: "desc" };
+        else next = null; // remove sort
+      } else {
+        next = { key, dir: "asc" };
+      }
+      setLayout({ ...layout, sort: next });
     },
     [layout, setLayout]
   );
@@ -99,5 +139,9 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
     moveColumn,
     resetLayout,
     allColumns,
+    setColumnWidth,
+    toggleSort,
+    sort: layout.sort || null,
+    widths: layout.widths || {},
   };
 }
