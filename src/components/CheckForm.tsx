@@ -62,17 +62,40 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
   const [givenToPayee, setGivenToPayee] = useState(initialData?.given_to_payee ?? "");
   const [givenToRecordNumber, setGivenToRecordNumber] = useState(initialData?.given_to_record_number ?? "");
 
-  // Search state
+  // Search state for payee
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedPayee, setSelectedPayee] = useState<Payee | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Search state for given-to payee
+  const [givenToSearchQuery, setGivenToSearchQuery] = useState("");
+  const [showGivenToDropdown, setShowGivenToDropdown] = useState(false);
+  const [selectedGivenTo, setSelectedGivenTo] = useState<Payee | null>(null);
+  const givenToDropdownRef = useRef<HTMLDivElement>(null);
+
   // Filter payees based on search
   const filteredPayees = searchQuery.trim()
     ? payees.filter((p) => {
         const q = searchQuery.toLowerCase();
+        const yiddish = buildYiddishName(p).toLowerCase();
+        const payeeName = buildPayeeName(p).toLowerCase();
+        const address = buildAddress(p).toLowerCase();
+        return (
+          p.record_id?.toLowerCase().includes(q) ||
+          yiddish.includes(q) ||
+          payeeName.includes(q) ||
+          address.includes(q) ||
+          p.payee_name.toLowerCase().includes(q)
+        );
+      })
+    : [];
+
+  // Filter payees for given-to search
+  const filteredGivenToPayees = givenToSearchQuery.trim()
+    ? payees.filter((p) => {
+        const q = givenToSearchQuery.toLowerCase();
         const yiddish = buildYiddishName(p).toLowerCase();
         const payeeName = buildPayeeName(p).toLowerCase();
         const address = buildAddress(p).toLowerCase();
@@ -94,11 +117,22 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
     setShowDropdown(false);
   };
 
-  // Close dropdown on outside click
+  const selectGivenTo = (p: Payee) => {
+    setSelectedGivenTo(p);
+    setGivenToPayee(p.payee_name);
+    setGivenToRecordNumber(p.record_id || "");
+    setGivenToSearchQuery(p.payee_name);
+    setShowGivenToDropdown(false);
+  };
+
+  // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setShowDropdown(false);
+      }
+      if (givenToDropdownRef.current && !givenToDropdownRef.current.contains(e.target as Node)) {
+        setShowGivenToDropdown(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -133,6 +167,8 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       setGivenToRecordNumber("");
       setSearchQuery("");
       setSelectedPayee(null);
+      setGivenToSearchQuery("");
+      setSelectedGivenTo(null);
     }
   };
 
@@ -299,15 +335,62 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="givenTo">Given To (different payee)</Label>
-              <Input id="givenTo" value={givenToPayee} onChange={(e) => setGivenToPayee(e.target.value)} placeholder="If given to someone else" />
+            <div className="space-y-2 relative" ref={givenToDropdownRef}>
+              <Label>Given To (different payee)</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={givenToSearchQuery}
+                  onChange={(e) => {
+                    setGivenToSearchQuery(e.target.value);
+                    setShowGivenToDropdown(true);
+                    if (!e.target.value.trim()) {
+                      setSelectedGivenTo(null);
+                      setGivenToPayee("");
+                      setGivenToRecordNumber("");
+                    }
+                  }}
+                  onFocus={() => givenToSearchQuery.trim() && setShowGivenToDropdown(true)}
+                  placeholder="Search payee..."
+                  className="pl-9"
+                />
+              </div>
+              {showGivenToDropdown && filteredGivenToPayees.length > 0 && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {filteredGivenToPayees.slice(0, 20).map((p) => {
+                    const yiddish = buildYiddishName(p);
+                    const address = buildAddress(p);
+                    return (
+                      <div
+                        key={p.id}
+                        className="px-3 py-2 hover:bg-accent cursor-pointer border-b border-border last:border-b-0"
+                        onClick={() => selectGivenTo(p)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">{p.payee_name}</span>
+                          {p.record_id && (
+                            <span className="text-xs font-mono text-muted-foreground">{p.record_id}</span>
+                          )}
+                        </div>
+                        {yiddish && <p className="text-xs text-muted-foreground" dir="rtl">{yiddish}</p>}
+                        {address && <p className="text-xs text-muted-foreground">{address}</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {showGivenToDropdown && givenToSearchQuery.trim() && filteredGivenToPayees.length === 0 && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg px-3 py-2 text-sm text-muted-foreground">
+                  No payees found
+                </div>
+              )}
             </div>
           </div>
-          {givenToPayee && (
-            <div className="space-y-2">
-              <Label htmlFor="givenToRecord">Given To Record #</Label>
-              <Input id="givenToRecord" value={givenToRecordNumber} onChange={(e) => setGivenToRecordNumber(e.target.value)} placeholder="Record number" />
+          {selectedGivenTo && (
+            <div className="bg-muted/50 rounded-md px-3 py-2 text-sm space-y-0.5">
+              <p><span className="text-muted-foreground">Given To:</span> {selectedGivenTo.payee_name}</p>
+              {selectedGivenTo.record_id && <p><span className="text-muted-foreground">Record #:</span> {selectedGivenTo.record_id}</p>}
+              {buildAddress(selectedGivenTo) && <p><span className="text-muted-foreground">Address:</span> {buildAddress(selectedGivenTo)}</p>}
             </div>
           )}
           <div className="flex justify-end gap-2 pt-2">
