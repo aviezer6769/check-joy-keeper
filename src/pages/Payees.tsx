@@ -296,7 +296,7 @@ const Payees = () => {
               allColumns={colLayout.allColumns}
               widths={colLayout.widths}
               onToggle={colLayout.toggleColumn}
-              onMove={colLayout.moveColumn}
+              onReorder={colLayout.reorderColumn}
               onReset={colLayout.resetLayout}
               onSetWidth={colLayout.setColumnWidth}
             />

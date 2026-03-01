@@ -156,7 +156,7 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
           allColumns={colLayout.allColumns}
           widths={colLayout.widths}
           onToggle={colLayout.toggleColumn}
-          onMove={colLayout.moveColumn}
+          onReorder={colLayout.reorderColumn}
           onReset={colLayout.resetLayout}
           onSetWidth={colLayout.setColumnWidth}
         />

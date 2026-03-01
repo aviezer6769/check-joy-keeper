@@ -102,6 +102,16 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
     [layout, setLayout]
   );
 
+  const reorderColumn = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      const next = [...layout.visibleKeys];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      setLayout({ ...layout, visibleKeys: next });
+    },
+    [layout, setLayout]
+  );
+
   const setColumnWidth = useCallback(
     (key: string, width: number) => {
       setLayout({
@@ -137,6 +147,7 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
     hiddenColumns,
     toggleColumn,
     moveColumn,
+    reorderColumn,
     resetLayout,
     allColumns,
     setColumnWidth,
