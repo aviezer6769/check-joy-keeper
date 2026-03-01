@@ -1,10 +1,52 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { TableHead, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { type ColumnDef, type SortState } from "@/hooks/useColumnLayout";
 import { cn } from "@/lib/utils";
 import React from "react";
+
+const MAX_DROPDOWN_OPTIONS = 50;
+
+function FilterCell({ col, w, value, options, onChange }: {
+  col: ColumnDef;
+  w: number | undefined;
+  value: string;
+  options?: string[];
+  onChange: (val: string) => void;
+}) {
+  const useDropdown = options && options.length > 0 && options.length <= MAX_DROPDOWN_OPTIONS;
+
+  return (
+    <TableHead
+      key={`filter-${col.key}`}
+      className="py-1 px-1"
+      style={w ? { width: w, minWidth: w, maxWidth: w } : undefined}
+    >
+      {useDropdown ? (
+        <Select value={value || "__all__"} onValueChange={(v) => onChange(v === "__all__" ? "" : v)}>
+          <SelectTrigger className="h-6 text-xs border-muted bg-background">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">All</SelectItem>
+            {options.map((opt) => (
+              <SelectItem key={opt} value={opt}>{opt || "(empty)"}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Input
+          placeholder="Filter..."
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-6 text-xs border-muted bg-background"
+        />
+      )}
+    </TableHead>
+  );
+}
 
 interface DraggableTableHeaderProps {
   columns: ColumnDef[];
@@ -20,6 +62,7 @@ interface DraggableTableHeaderProps {
   filters?: Record<string, string>;
   onFilterChange?: (key: string, value: string) => void;
   showFilters?: boolean;
+  filterOptions?: Record<string, string[]>;
 }
 
 export function DraggableTableHeader({
@@ -36,6 +79,7 @@ export function DraggableTableHeader({
   filters,
   onFilterChange,
   showFilters,
+  filterOptions,
 }: DraggableTableHeaderProps) {
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [overIdx, setOverIdx] = useState<number | null>(null);
@@ -210,23 +254,16 @@ export function DraggableTableHeader({
           {Array.from({ length: prefixCount }, (_, i) => (
             <TableHead key={`pf-${i}`} className="py-1 px-2" />
           ))}
-          {columns.map((col) => {
-            const w = widths[col.key];
-            return (
-              <TableHead
-                key={`filter-${col.key}`}
-                className="py-1 px-1"
-                style={w ? { width: w, minWidth: w, maxWidth: w } : undefined}
-              >
-                <Input
-                  placeholder="Filter..."
-                  value={filters[col.key] || ""}
-                  onChange={(e) => onFilterChange(col.key, e.target.value)}
-                  className="h-6 text-xs border-muted bg-background"
-                />
-              </TableHead>
-            );
-          })}
+          {columns.map((col) => (
+            <FilterCell
+              key={`filter-${col.key}`}
+              col={col}
+              w={widths[col.key]}
+              value={filters[col.key] || ""}
+              options={filterOptions?.[col.key]}
+              onChange={(val) => onFilterChange(col.key, val)}
+            />
+          ))}
           {suffix && <TableHead className="py-1 px-2" />}
         </TableRow>
       )}
