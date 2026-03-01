@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { usePayees, type Payee } from "@/hooks/usePayees";
 import { useChecks, type Check } from "@/hooks/useChecks";
+import { useChalikah } from "@/hooks/useChalikah";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { PayeeForm } from "@/components/PayeeForm";
@@ -33,19 +34,27 @@ function formatDate(date: string) {
 const Payees = () => {
   const { data: payees = [], isLoading } = usePayees();
   const { data: checks = [] } = useChecks();
+  const { data: chalikahList = [] } = useChalikah();
   const [search, setSearch] = useState("");
   const [expandedPayee, setExpandedPayee] = useState<string | null>(null);
   const [editingPayee, setEditingPayee] = useState<Payee | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [groupByChalikah, setGroupByChalikah] = useState(false);
   const deletePayee = useDeletePayee();
   const qc = useQueryClient();
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
-  const checksByPayee = checks.reduce<Record<string, Check[]>>((acc, c) => {
-    (acc[c.payee] ??= []).push(c);
-    return acc;
-  }, {});
+  const chalikahMap = useMemo(() => Object.fromEntries(chalikahList.map((c) => [c.id, c.name])), [chalikahList]);
+
+  // Match checks to payee by given_to_payee first, then by payee name
+  const checksByPayee = useMemo(() => {
+    return checks.reduce<Record<string, Check[]>>((acc, c) => {
+      const key = c.given_to_payee || c.payee;
+      (acc[key] ??= []).push(c);
+      return acc;
+    }, {});
+  }, [checks]);
 
   const filtered = search
     ? payees.filter((p) => {
@@ -154,6 +163,9 @@ const Payees = () => {
                   </Button>
                 </>
               )}
+              <Button size="sm" variant={groupByChalikah ? "default" : "outline"} onClick={() => setGroupByChalikah(!groupByChalikah)}>
+                <Layers className="h-4 w-4 mr-1" /> Group by Chalikah
+              </Button>
               <Button size="sm" variant="outline" onClick={handleExport}>
                 <Download className="h-4 w-4 mr-1" /> Export
               </Button>
@@ -262,50 +274,109 @@ const Payees = () => {
                           <TableCell colSpan={9} className="bg-muted/30 p-0">
                             <div className="px-8 py-3">
                               <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
-                                Check History for {p.payee_name}
+                                Check History for {p.payee_name} (Given)
                               </p>
                               {payeeChecks.length === 0 ? (
                                 <p className="text-sm text-muted-foreground py-2">No checks found for this payee.</p>
                               ) : (
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead className="text-xs">Check #</TableHead>
-                                      <TableHead className="text-xs">Date</TableHead>
-                                      <TableHead className="text-xs">Charity</TableHead>
-                                      <TableHead className="text-xs text-right">Amount</TableHead>
-                                      <TableHead className="text-xs">Status</TableHead>
-                                      <TableHead className="text-xs">Memo</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {payeeChecks
-                                      .sort((a, b) => b.check_date.localeCompare(a.check_date))
-                                      .map((c) => (
-                                        <TableRow key={c.id}>
-                                          <TableCell className="font-mono text-xs">{c.check_number || "—"}</TableCell>
-                                          <TableCell className="text-xs">{formatDate(c.check_date)}</TableCell>
-                                          <TableCell className="text-xs">—</TableCell>
-                                          <TableCell className="text-right font-mono text-xs">
-                                            {c.status === "Void" ? (
-                                              <span className="line-through text-muted-foreground">{formatCurrency(c.original_amount ?? 0)}</span>
-                                            ) : (
-                                              formatCurrency(c.amount)
-                                            )}
-                                          </TableCell>
-                                          <TableCell>
-                                            <Badge
-                                              variant={c.status === "Void" ? "destructive" : c.status === "Given" || c.status === "Cleared" ? "default" : "secondary"}
-                                              className={c.status === "Given" || c.status === "Cleared" ? "bg-success text-success-foreground text-xs" : "text-xs"}
-                                            >
-                                              {c.status}
-                                            </Badge>
-                                          </TableCell>
-                                          <TableCell className="text-xs max-w-[200px] truncate">{c.memo || "—"}</TableCell>
+                                (() => {
+                                  const sorted = [...payeeChecks].sort((a, b) => b.check_date.localeCompare(a.check_date));
+                                  const total = sorted.reduce((sum, c) => sum + (c.status === "Void" ? 0 : c.amount), 0);
+
+                                  const renderCheckRows = (items: Check[]) =>
+                                    items.map((c) => (
+                                      <TableRow key={c.id}>
+                                        <TableCell className="font-mono text-xs">{c.check_number || "—"}</TableCell>
+                                        <TableCell className="text-xs">{formatDate(c.check_date)}</TableCell>
+                                        <TableCell className="text-xs">{c.chalikah_id ? chalikahMap[c.chalikah_id] || "—" : "—"}</TableCell>
+                                        <TableCell className="text-right font-mono text-xs">
+                                          {c.status === "Void" ? (
+                                            <span className="line-through text-muted-foreground">{formatCurrency(c.original_amount ?? 0)}</span>
+                                          ) : (
+                                            formatCurrency(c.amount)
+                                          )}
+                                        </TableCell>
+                                        <TableCell>
+                                          <Badge
+                                            variant={c.status === "Void" ? "destructive" : c.status === "Given" || c.status === "Cleared" ? "default" : "secondary"}
+                                            className={c.status === "Given" || c.status === "Cleared" ? "bg-success text-success-foreground text-xs" : "text-xs"}
+                                          >
+                                            {c.status}
+                                          </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-xs max-w-[200px] truncate">{c.memo || "—"}</TableCell>
+                                      </TableRow>
+                                    ));
+
+                                  if (groupByChalikah) {
+                                    const groups: Record<string, Check[]> = {};
+                                    sorted.forEach((c) => {
+                                      const key = c.chalikah_id ? chalikahMap[c.chalikah_id] || "Unknown" : "No Chalikah";
+                                      (groups[key] ??= []).push(c);
+                                    });
+
+                                    return (
+                                      <div className="space-y-4">
+                                        {Object.entries(groups).map(([name, items]) => {
+                                          const groupTotal = items.reduce((s, c) => s + (c.status === "Void" ? 0 : c.amount), 0);
+                                          return (
+                                            <div key={name}>
+                                              <p className="text-xs font-semibold text-primary mb-1">{name}</p>
+                                              <Table>
+                                                <TableHeader>
+                                                  <TableRow>
+                                                    <TableHead className="text-xs">Check #</TableHead>
+                                                    <TableHead className="text-xs">Date</TableHead>
+                                                    <TableHead className="text-xs">Chalikah</TableHead>
+                                                    <TableHead className="text-xs text-right">Amount</TableHead>
+                                                    <TableHead className="text-xs">Status</TableHead>
+                                                    <TableHead className="text-xs">Memo</TableHead>
+                                                  </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                  {renderCheckRows(items)}
+                                                  <TableRow className="bg-muted/50 font-semibold">
+                                                    <TableCell colSpan={3} className="text-xs">Subtotal ({items.length} checks)</TableCell>
+                                                    <TableCell className="text-right font-mono text-xs">{formatCurrency(groupTotal)}</TableCell>
+                                                    <TableCell colSpan={2} />
+                                                  </TableRow>
+                                                </TableBody>
+                                              </Table>
+                                            </div>
+                                          );
+                                        })}
+                                        <div className="border-t border-border pt-2">
+                                          <p className="text-sm font-semibold text-right">
+                                            Grand Total: <span className="font-mono">{formatCurrency(total)}</span> ({sorted.length} checks)
+                                          </p>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+
+                                  return (
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead className="text-xs">Check #</TableHead>
+                                          <TableHead className="text-xs">Date</TableHead>
+                                          <TableHead className="text-xs">Chalikah</TableHead>
+                                          <TableHead className="text-xs text-right">Amount</TableHead>
+                                          <TableHead className="text-xs">Status</TableHead>
+                                          <TableHead className="text-xs">Memo</TableHead>
                                         </TableRow>
-                                      ))}
-                                  </TableBody>
-                                </Table>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {renderCheckRows(sorted)}
+                                        <TableRow className="bg-muted/50 font-semibold">
+                                          <TableCell colSpan={3} className="text-xs">Total ({sorted.length} checks)</TableCell>
+                                          <TableCell className="text-right font-mono text-xs">{formatCurrency(total)}</TableCell>
+                                          <TableCell colSpan={2} />
+                                        </TableRow>
+                                      </TableBody>
+                                    </Table>
+                                  );
+                                })()
                               )}
                             </div>
                           </TableCell>
