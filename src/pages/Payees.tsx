@@ -49,11 +49,11 @@ const Payees = () => {
 
   const chalikahMap = useMemo(() => Object.fromEntries(chalikahList.map((c) => [c.id, c.name])), [chalikahList]);
 
-  // Match checks to payee by given_to_payee first, then by payee name
-  const checksByPayee = useMemo(() => {
+  // Match checks to payee by record number (given_to_record_number first, then payee_record_number)
+  const checksByRecordId = useMemo(() => {
     return checks.reduce<Record<string, Check[]>>((acc, c) => {
-      const key = c.given_to_payee || c.payee;
-      (acc[key] ??= []).push(c);
+      const key = c.given_to_record_number || c.payee_record_number;
+      if (key) (acc[key] ??= []).push(c);
       return acc;
     }, {});
   }, [checks]);
@@ -216,7 +216,7 @@ const Payees = () => {
               </TableHeader>
               <TableBody>
                 {filtered.map((p) => {
-                  const payeeChecks = checksByPayee[p.payee_name] || [];
+                  const payeeChecks = (p.record_id ? checksByRecordId[p.record_id] : []) || [];
                   return (
                     <>
                       <TableRow
