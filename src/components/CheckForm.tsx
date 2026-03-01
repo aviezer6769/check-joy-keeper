@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,6 +6,24 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { type Check, type CheckInsert } from "@/hooks/useChecks";
+import { usePayees, type Payee } from "@/hooks/usePayees";
+import { buildPayeeName } from "@/lib/payee-utils";
+import { Search } from "lucide-react";
+
+function buildYiddishName(p: Payee) {
+  return [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function buildAddress(p: Payee) {
+  return [
+    [p.street_no, p.street_name].filter(Boolean).join(" "),
+    p.apt ? `#${p.apt}` : "",
+    [p.city, p.state].filter(Boolean).join(", "),
+    p.zip,
+  ].filter(Boolean).join(", ");
+}
 
 interface CheckFormProps {
   open: boolean;
@@ -16,6 +34,7 @@ interface CheckFormProps {
 }
 
 export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending }: CheckFormProps) {
+  const { data: payees = [] } = usePayees();
   const [payee, setPayee] = useState(initialData?.payee ?? "");
   const [amount, setAmount] = useState(initialData?.amount?.toString() ?? "");
   const [checkNumber, setCheckNumber] = useState(initialData?.check_number ?? "");
@@ -24,6 +43,49 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
   const [checkGiven, setCheckGiven] = useState(initialData?.check_given ?? false);
   const [memo, setMemo] = useState(initialData?.memo ?? "");
   const [payeeRecordNumber, setPayeeRecordNumber] = useState(initialData?.payee_record_number ?? "");
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedPayee, setSelectedPayee] = useState<Payee | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Filter payees based on search
+  const filteredPayees = searchQuery.trim()
+    ? payees.filter((p) => {
+        const q = searchQuery.toLowerCase();
+        const yiddish = buildYiddishName(p).toLowerCase();
+        const payeeName = buildPayeeName(p).toLowerCase();
+        const address = buildAddress(p).toLowerCase();
+        return (
+          p.record_id?.toLowerCase().includes(q) ||
+          yiddish.includes(q) ||
+          payeeName.includes(q) ||
+          address.includes(q) ||
+          p.payee_name.toLowerCase().includes(q)
+        );
+      })
+    : [];
+
+  const selectPayee = (p: Payee) => {
+    setSelectedPayee(p);
+    setPayee(p.payee_name);
+    setPayeeRecordNumber(p.record_id || "");
+    setSearchQuery(p.payee_name);
+    setShowDropdown(false);
+  };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +109,8 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       setCheckGiven(false);
       setMemo("");
       setPayeeRecordNumber("");
+      setSearchQuery("");
+      setSelectedPayee(null);
     }
   };
 
@@ -59,6 +123,68 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 pt-2">
+          {/* Payee search */}
+          <div className="space-y-2 relative" ref={dropdownRef}>
+            <Label>Search Payee</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                ref={inputRef}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowDropdown(true);
+                  if (!e.target.value.trim()) {
+                    setSelectedPayee(null);
+                    setPayee("");
+                    setPayeeRecordNumber("");
+                  }
+                }}
+                onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+                placeholder="Search by name, record ID, Yiddish name, or address..."
+                className="pl-9"
+              />
+            </div>
+            {showDropdown && filteredPayees.length > 0 && (
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {filteredPayees.slice(0, 20).map((p) => {
+                  const yiddish = buildYiddishName(p);
+                  const address = buildAddress(p);
+                  return (
+                    <div
+                      key={p.id}
+                      className="px-3 py-2 hover:bg-accent cursor-pointer border-b border-border last:border-b-0"
+                      onClick={() => selectPayee(p)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">{p.payee_name}</span>
+                        {p.record_id && (
+                          <span className="text-xs font-mono text-muted-foreground">{p.record_id}</span>
+                        )}
+                      </div>
+                      {yiddish && <p className="text-xs text-muted-foreground" dir="rtl">{yiddish}</p>}
+                      {address && <p className="text-xs text-muted-foreground">{address}</p>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {showDropdown && searchQuery.trim() && filteredPayees.length === 0 && (
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg px-3 py-2 text-sm text-muted-foreground">
+                No payees found
+              </div>
+            )}
+          </div>
+
+          {/* Selected payee info */}
+          {selectedPayee && (
+            <div className="bg-muted/50 rounded-md px-3 py-2 text-sm space-y-0.5">
+              <p><span className="text-muted-foreground">Payee:</span> {selectedPayee.payee_name}</p>
+              {selectedPayee.record_id && <p><span className="text-muted-foreground">Record #:</span> {selectedPayee.record_id}</p>}
+              {buildAddress(selectedPayee) && <p><span className="text-muted-foreground">Address:</span> {buildAddress(selectedPayee)}</p>}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="payee">Payee *</Label>
