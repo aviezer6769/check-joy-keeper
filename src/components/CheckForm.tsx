@@ -63,14 +63,14 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
   const [givenToRecordNumber, setGivenToRecordNumber] = useState(initialData?.given_to_record_number ?? "");
 
   // Search state for payee
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialData?.payee ?? "");
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedPayee, setSelectedPayee] = useState<Payee | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Search state for given-to payee
-  const [givenToSearchQuery, setGivenToSearchQuery] = useState("");
+  const [givenToSearchQuery, setGivenToSearchQuery] = useState(initialData?.given_to_payee ?? "");
   const [showGivenToDropdown, setShowGivenToDropdown] = useState(false);
   const [selectedGivenTo, setSelectedGivenTo] = useState<Payee | null>(null);
   const givenToDropdownRef = useRef<HTMLDivElement>(null);
