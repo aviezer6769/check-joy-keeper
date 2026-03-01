@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, Printer, Ban, Undo2 } from "lucide-react";
 import { type Check } from "@/hooks/useChecks";
+import { useChalikah } from "@/hooks/useChalikah";
 
 interface ChecksTableProps {
   checks: Check[];
@@ -26,6 +27,8 @@ function formatDate(date: string) {
 }
 
 export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid, onUnvoid }: ChecksTableProps) {
+  const { data: chalikahList = [] } = useChalikah();
+  const chalikahMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
   if (checks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
@@ -44,6 +47,7 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid, onUnvoi
             <TableHead className="font-semibold">Date</TableHead>
             <TableHead className="font-semibold">Payee</TableHead>
             <TableHead className="font-semibold">Charity</TableHead>
+            <TableHead className="font-semibold">Chalikah</TableHead>
             <TableHead className="font-semibold text-right">Amount</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
             <TableHead className="font-semibold">Memo</TableHead>
@@ -62,6 +66,7 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid, onUnvoi
               <TableCell className="text-sm">{formatDate(check.check_date)}</TableCell>
               <TableCell className="font-medium">{check.payee}</TableCell>
               <TableCell className="text-sm">{check.charity || "—"}</TableCell>
+              <TableCell className="text-sm">{check.chalikah_id ? chalikahMap[check.chalikah_id] || "—" : "—"}</TableCell>
               <TableCell className="text-right font-mono font-medium">
                 {check.voided ? (
                   <span className="line-through text-muted-foreground">
