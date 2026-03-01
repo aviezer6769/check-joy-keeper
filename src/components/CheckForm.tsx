@@ -36,6 +36,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       check_given: checkGiven,
       memo: memo || null,
       payee_record_number: payeeRecordNumber || null,
+      account_id: initialData?.account_id ?? null,
     });
     if (!initialData) {
       setPayee("");

@@ -14,8 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          account_name: string
+          account_number: string | null
+          bank_name: string | null
+          created_at: string
+          id: string
+          routing_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          account_number?: string | null
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          routing_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string | null
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          routing_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       checks: {
         Row: {
+          account_id: string | null
           amount: number
           charity: string | null
           check_date: string
@@ -29,6 +60,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_id?: string | null
           amount?: number
           charity?: string | null
           check_date?: string
@@ -42,6 +74,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_id?: string | null
           amount?: number
           charity?: string | null
           check_date?: string
@@ -54,7 +87,15 @@ export type Database = {
           payee_record_number?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "checks_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payees: {
         Row: {

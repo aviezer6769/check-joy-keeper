@@ -12,20 +12,25 @@ export interface Check {
   check_given: boolean;
   memo: string | null;
   payee_record_number: string | null;
+  account_id: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export type CheckInsert = Omit<Check, "id" | "created_at" | "updated_at">;
 
-export function useChecks(search?: string) {
+export function useChecks(search?: string, accountId?: string | null) {
   return useQuery({
-    queryKey: ["checks", search],
+    queryKey: ["checks", search, accountId],
     queryFn: async () => {
       let query = supabase
         .from("checks")
         .select("*")
         .order("check_date", { ascending: false });
+
+      if (accountId) {
+        query = query.eq("account_id", accountId);
+      }
 
       if (search) {
         query = query.or(
