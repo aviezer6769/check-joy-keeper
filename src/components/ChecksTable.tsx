@@ -1,13 +1,14 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Trash2, Printer, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Pencil, Trash2, Printer, Filter } from "lucide-react";
 import { type Check, type CheckStatus } from "@/hooks/useChecks";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useChalikah } from "@/hooks/useChalikah";
-import { useColumnLayout, type ColumnDef, type SortState } from "@/hooks/useColumnLayout";
+import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
+import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
@@ -45,6 +46,22 @@ interface ChecksTableProps {
   onToggleAll: () => void;
 }
 
+function getCheckTextValue(check: Check, key: string, chalikahMap: Record<string, string>): string {
+  switch (key) {
+    case "check_number": return check.check_number || "";
+    case "check_date": return check.check_date;
+    case "payee": return check.payee;
+    case "chalikah": return check.chalikah_id ? chalikahMap[check.chalikah_id] || "" : "";
+    case "amount": return String(check.status === "Void" ? check.original_amount ?? 0 : check.amount);
+    case "status": return check.status;
+    case "given_to": return check.given_to_payee || "";
+    case "memo": return check.memo || "";
+    case "record_number": return check.payee_record_number || "";
+    case "given_to_record": return check.given_to_record_number || "";
+    default: return "";
+  }
+}
+
 function getSortValue(check: Check, key: string, chalikahMap: Record<string, string>): string | number {
   switch (key) {
     case "check_number": return check.check_number || "";
@@ -61,29 +78,38 @@ function getSortValue(check: Check, key: string, chalikahMap: Record<string, str
   }
 }
 
-function SortIcon({ sort, colKey }: { sort: SortState | null; colKey: string }) {
-  if (sort?.key !== colKey) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
-  return sort.dir === "asc" ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
-}
-
 export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange, selectedIds, onToggleSelect, onToggleAll }: ChecksTableProps) {
   const { data: chalikahList = [] } = useChalikah();
   const chalikahMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
   const allSelected = checks.length > 0 && checks.every((c) => selectedIds.has(c.id));
+  const [showFilters, setShowFilters] = useState(false);
 
   const colLayout = useColumnLayout("checks", CHECK_COLUMNS);
 
+  // Apply column filters
+  const filteredChecks = useMemo(() => {
+    const activeFilters = Object.entries(colLayout.filters).filter(([, v]) => v.length > 0);
+    if (activeFilters.length === 0) return checks;
+    return checks.filter((check) =>
+      activeFilters.every(([key, val]) => {
+        const text = getCheckTextValue(check, key, chalikahMap);
+        return text.toLowerCase().includes(val.toLowerCase());
+      })
+    );
+  }, [checks, colLayout.filters, chalikahMap]);
+
+  // Apply sort
   const sortedChecks = useMemo(() => {
-    if (!colLayout.sort) return checks;
+    if (!colLayout.sort) return filteredChecks;
     const { key, dir } = colLayout.sort;
-    return [...checks].sort((a, b) => {
+    return [...filteredChecks].sort((a, b) => {
       const va = getSortValue(a, key, chalikahMap);
       const vb = getSortValue(b, key, chalikahMap);
       if (va < vb) return dir === "asc" ? -1 : 1;
       if (va > vb) return dir === "asc" ? 1 : -1;
       return 0;
     });
-  }, [checks, colLayout.sort, chalikahMap]);
+  }, [filteredChecks, colLayout.sort, chalikahMap]);
 
   if (checks.length === 0) {
     return (
@@ -147,9 +173,25 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
     }
   };
 
+  const hasActiveFilters = Object.values(colLayout.filters).some((v) => v.length > 0);
+
   return (
     <div className="space-y-2">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button
+          variant={showFilters ? "secondary" : "outline"}
+          size="sm"
+          onClick={() => setShowFilters(!showFilters)}
+          className={hasActiveFilters ? "border-primary text-primary" : ""}
+        >
+          <Filter className="h-4 w-4 mr-1" />
+          Filter
+          {hasActiveFilters && (
+            <span className="ml-1 text-[10px] bg-primary text-primary-foreground rounded-full px-1.5">
+              {Object.values(colLayout.filters).filter((v) => v.length > 0).length}
+            </span>
+          )}
+        </Button>
         <ColumnLayoutManager
           visibleColumns={colLayout.visibleColumns}
           hiddenColumns={colLayout.hiddenColumns}
@@ -164,28 +206,26 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
       <div className="overflow-x-auto rounded-lg border border-border">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="w-10 px-2">
-                <Checkbox checked={allSelected} onCheckedChange={onToggleAll} />
-              </TableHead>
-              {colLayout.visibleColumns.map((col) => {
-                const w = colLayout.widths[col.key];
-                return (
-                  <TableHead
-                    key={col.key}
-                    className={`font-semibold cursor-pointer select-none hover:bg-muted/80 ${col.key === "amount" ? "text-right" : ""}`}
-                    style={w ? { width: w, minWidth: w, maxWidth: w } : undefined}
-                    onClick={() => colLayout.toggleSort(col.key)}
-                  >
-                    <span className="inline-flex items-center">
-                      {col.label}
-                      <SortIcon sort={colLayout.sort} colKey={col.key} />
-                    </span>
-                  </TableHead>
-                );
-              })}
-              <TableHead className="font-semibold text-right">Actions</TableHead>
-            </TableRow>
+            <DraggableTableHeader
+              columns={colLayout.visibleColumns}
+              widths={colLayout.widths}
+              sort={colLayout.sort}
+              filters={colLayout.filters}
+              onToggleSort={colLayout.toggleSort}
+              onReorder={colLayout.reorderColumn}
+              onFilterChange={colLayout.setFilter}
+              showFilters={showFilters}
+              onToggleFilters={() => setShowFilters(!showFilters)}
+              columnClassName={(key) => key === "amount" ? "text-right" : ""}
+              prefix={
+                <TableHead className="w-10 px-2">
+                  <Checkbox checked={allSelected} onCheckedChange={onToggleAll} />
+                </TableHead>
+              }
+              suffix={
+                <TableHead className="font-semibold text-right">Actions</TableHead>
+              }
+            />
           </TableHeader>
           <TableBody>
             {sortedChecks.map((check, i) => (
