@@ -41,6 +41,8 @@ const Payees = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [groupByChalikah, setGroupByChalikah] = useState(false);
+  const [checksCollapsed, setChecksCollapsed] = useState<Set<string>>(new Set());
+  const [collapsedChalikahs, setCollapsedChalikahs] = useState<Set<string>>(new Set());
   const deletePayee = useDeletePayee();
   const qc = useQueryClient();
   const [bulkDeleting, setBulkDeleting] = useState(false);
@@ -273,10 +275,26 @@ const Payees = () => {
                         <TableRow key={`${p.id}-details`}>
                           <TableCell colSpan={9} className="bg-muted/30 p-0">
                             <div className="px-8 py-3">
-                              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
-                                Check History for {p.payee_name} (Given)
-                              </p>
-                              {payeeChecks.length === 0 ? (
+                              <div
+                                className="flex items-center gap-2 cursor-pointer mb-2"
+                                onClick={() => {
+                                  setChecksCollapsed((prev) => {
+                                    const next = new Set(prev);
+                                    next.has(p.id) ? next.delete(p.id) : next.add(p.id);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                {checksCollapsed.has(p.id) ? (
+                                  <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                                ) : (
+                                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                                )}
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                  Check History for {p.payee_name} (Given)
+                                </p>
+                              </div>
+                              {checksCollapsed.has(p.id) ? null : payeeChecks.length === 0 ? (
                                 <p className="text-sm text-muted-foreground py-2">No checks found for this payee.</p>
                               ) : (
                                 (() => {
@@ -316,32 +334,53 @@ const Payees = () => {
                                     });
 
                                     return (
-                                      <div className="space-y-4">
+                                      <div className="space-y-3">
                                         {Object.entries(groups).map(([name, items]) => {
                                           const groupTotal = items.reduce((s, c) => s + (c.status === "Void" ? 0 : c.amount), 0);
+                                          const chalikahKey = `${p.id}::${name}`;
+                                          const isCollapsed = collapsedChalikahs.has(chalikahKey);
                                           return (
                                             <div key={name}>
-                                              <p className="text-xs font-semibold text-primary mb-1">{name}</p>
-                                              <Table>
-                                                <TableHeader>
-                                                  <TableRow>
-                                                    <TableHead className="text-xs">Check #</TableHead>
-                                                    <TableHead className="text-xs">Date</TableHead>
-                                                    <TableHead className="text-xs">Chalikah</TableHead>
-                                                    <TableHead className="text-xs text-right">Amount</TableHead>
-                                                    <TableHead className="text-xs">Status</TableHead>
-                                                    <TableHead className="text-xs">Memo</TableHead>
-                                                  </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                  {renderCheckRows(items)}
-                                                  <TableRow className="bg-muted/50 font-semibold">
-                                                    <TableCell colSpan={3} className="text-xs">Subtotal ({items.length} checks)</TableCell>
-                                                    <TableCell className="text-right font-mono text-xs">{formatCurrency(groupTotal)}</TableCell>
-                                                    <TableCell colSpan={2} />
-                                                  </TableRow>
-                                                </TableBody>
-                                              </Table>
+                                              <div
+                                                className="flex items-center gap-2 cursor-pointer mb-1"
+                                                onClick={() => {
+                                                  setCollapsedChalikahs((prev) => {
+                                                    const next = new Set(prev);
+                                                    next.has(chalikahKey) ? next.delete(chalikahKey) : next.add(chalikahKey);
+                                                    return next;
+                                                  });
+                                                }}
+                                              >
+                                                {isCollapsed ? (
+                                                  <ChevronRight className="h-3 w-3 text-primary" />
+                                                ) : (
+                                                  <ChevronDown className="h-3 w-3 text-primary" />
+                                                )}
+                                                <span className="text-xs font-semibold text-primary">{name}</span>
+                                                <span className="text-xs text-muted-foreground">({items.length} checks · {formatCurrency(groupTotal)})</span>
+                                              </div>
+                                              {!isCollapsed && (
+                                                <Table>
+                                                  <TableHeader>
+                                                    <TableRow>
+                                                      <TableHead className="text-xs">Check #</TableHead>
+                                                      <TableHead className="text-xs">Date</TableHead>
+                                                      <TableHead className="text-xs">Chalikah</TableHead>
+                                                      <TableHead className="text-xs text-right">Amount</TableHead>
+                                                      <TableHead className="text-xs">Status</TableHead>
+                                                      <TableHead className="text-xs">Memo</TableHead>
+                                                    </TableRow>
+                                                  </TableHeader>
+                                                  <TableBody>
+                                                    {renderCheckRows(items)}
+                                                    <TableRow className="bg-muted/50 font-semibold">
+                                                      <TableCell colSpan={3} className="text-xs">Subtotal ({items.length} checks)</TableCell>
+                                                      <TableCell className="text-right font-mono text-xs">{formatCurrency(groupTotal)}</TableCell>
+                                                      <TableCell colSpan={2} />
+                                                    </TableRow>
+                                                  </TableBody>
+                                                </Table>
+                                              )}
                                             </div>
                                           );
                                         })}
