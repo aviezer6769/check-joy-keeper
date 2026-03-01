@@ -25,6 +25,7 @@ export interface Payee {
   zip: string | null;
   payee_name: string;
   is_active: boolean;
+  memo: string | null;
   created_at: string;
   updated_at: string;
 }
