@@ -2,9 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Settings2, ArrowUp, ArrowDown, RotateCcw } from "lucide-react";
+import { Settings2, GripVertical, RotateCcw } from "lucide-react";
 import { type ColumnDef } from "@/hooks/useColumnLayout";
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 
 interface ColumnLayoutManagerProps {
   visibleColumns: ColumnDef[];
@@ -12,7 +12,7 @@ interface ColumnLayoutManagerProps {
   allColumns: ColumnDef[];
   widths: Record<string, number>;
   onToggle: (key: string) => void;
-  onMove: (key: string, dir: "up" | "down") => void;
+  onReorder: (fromIndex: number, toIndex: number) => void;
   onReset: () => void;
   onSetWidth: (key: string, width: number) => void;
 }
@@ -23,11 +23,38 @@ export function ColumnLayoutManager({
   allColumns,
   widths,
   onToggle,
-  onMove,
+  onReorder,
   onReset,
   onSetWidth,
 }: ColumnLayoutManagerProps) {
   const [expandedWidth, setExpandedWidth] = useState<string | null>(null);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
+
+  const handleDragStart = useCallback((e: React.DragEvent, idx: number) => {
+    setDragIdx(idx);
+    e.dataTransfer.effectAllowed = "move";
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setOverIdx(idx);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, toIdx: number) => {
+    e.preventDefault();
+    if (dragIdx !== null && dragIdx !== toIdx) {
+      onReorder(dragIdx, toIdx);
+    }
+    setDragIdx(null);
+    setOverIdx(null);
+  }, [dragIdx, onReorder]);
+
+  const handleDragEnd = useCallback(() => {
+    setDragIdx(null);
+    setOverIdx(null);
+  }, []);
 
   return (
     <Popover>
@@ -44,12 +71,22 @@ export function ColumnLayoutManager({
           </Button>
         </div>
 
-        {/* Visible columns — ordered */}
+        {/* Visible columns — drag to reorder */}
         <div className="p-2 space-y-0.5">
           <p className="text-xs text-muted-foreground font-medium px-1 mb-1">Visible</p>
           {visibleColumns.map((col, idx) => (
             <div key={col.key}>
-              <div className="flex items-center gap-1 rounded px-1 py-0.5 hover:bg-accent">
+              <div
+                draggable
+                onDragStart={(e) => handleDragStart(e, idx)}
+                onDragOver={(e) => handleDragOver(e, idx)}
+                onDrop={(e) => handleDrop(e, idx)}
+                onDragEnd={handleDragEnd}
+                className={`flex items-center gap-1 rounded px-1 py-0.5 hover:bg-accent transition-colors ${
+                  dragIdx === idx ? "opacity-40" : ""
+                } ${overIdx === idx && dragIdx !== idx ? "border-t-2 border-primary" : ""}`}
+              >
+                <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground cursor-grab active:cursor-grabbing" />
                 <Checkbox
                   checked
                   onCheckedChange={() => onToggle(col.key)}
@@ -62,24 +99,6 @@ export function ColumnLayoutManager({
                 >
                   {col.label}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-5 w-5 shrink-0"
-                  disabled={idx === 0}
-                  onClick={() => onMove(col.key, "up")}
-                >
-                  <ArrowUp className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-5 w-5 shrink-0"
-                  disabled={idx === visibleColumns.length - 1}
-                  onClick={() => onMove(col.key, "down")}
-                >
-                  <ArrowDown className="h-3 w-3" />
-                </Button>
               </div>
               {expandedWidth === col.key && (
                 <div className="flex items-center gap-2 px-6 py-1">
