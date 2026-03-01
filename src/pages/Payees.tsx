@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers, X } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { PayeeForm } from "@/components/PayeeForm";
@@ -21,7 +21,6 @@ import { toast } from "sonner";
 import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
-import { ColumnFilterBar } from "@/components/ColumnFilterBar";
 
 const PAYEE_COLUMNS: ColumnDef[] = [
   { key: "record_id", label: "Record ID" },
@@ -72,7 +71,6 @@ const Payees = () => {
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [groupByChalikah, setGroupByChalikah] = useState(false);
   const [showFilters, setShowFilters] = useState(() => localStorage.getItem("payees-show-filters") === "true");
-  const [filterColumn, setFilterColumn] = useState(PAYEE_COLUMNS[0].key);
   const toggleFilters = () => {
     setShowFilters((prev) => {
       localStorage.setItem("payees-show-filters", String(!prev));
@@ -336,6 +334,11 @@ const Payees = () => {
                 </span>
               )}
             </Button>
+            {Object.values(colLayout.filters).some((v) => v.length > 0) && (
+              <Button variant="ghost" size="sm" className="h-8 text-xs px-2" onClick={colLayout.clearFilters}>
+                <X className="h-3 w-3 mr-1" /> Clear
+              </Button>
+            )}
             <ColumnLayoutManager
               visibleColumns={colLayout.visibleColumns}
               hiddenColumns={colLayout.hiddenColumns}
@@ -348,17 +351,6 @@ const Payees = () => {
             />
           </div>
         </div>
-
-        {showFilters && (
-          <ColumnFilterBar
-            columns={colLayout.visibleColumns}
-            filters={colLayout.filters}
-            onFilterChange={colLayout.setFilter}
-            onClearFilters={colLayout.clearFilters}
-            filterColumn={filterColumn}
-            onFilterColumnChange={setFilterColumn}
-          />
-        )}
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>
@@ -378,6 +370,9 @@ const Payees = () => {
                   onToggleSort={colLayout.toggleSort}
                   onReorder={colLayout.reorderColumn}
                   isRtl={(key) => key === "yiddish_name" || key.endsWith("_yiddish")}
+                  filters={colLayout.filters}
+                  onFilterChange={colLayout.setFilter}
+                  showFilters={showFilters}
                   prefix={
                     <>
                       <TableHead className="w-10 px-2">
