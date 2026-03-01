@@ -1,6 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, Trash2, Printer, Ban, Undo2 } from "lucide-react";
 import { type Check } from "@/hooks/useChecks";
 import { useChalikah } from "@/hooks/useChalikah";
@@ -12,6 +13,9 @@ interface ChecksTableProps {
   onPrint: (check: Check) => void;
   onVoid: (check: Check) => void;
   onUnvoid: (check: Check) => void;
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+  onToggleAll: () => void;
 }
 
 function formatCurrency(amount: number) {
@@ -26,9 +30,10 @@ function formatDate(date: string) {
   });
 }
 
-export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid, onUnvoid }: ChecksTableProps) {
+export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid, onUnvoid, selectedIds, onToggleSelect, onToggleAll }: ChecksTableProps) {
   const { data: chalikahList = [] } = useChalikah();
   const chalikahMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
+  const allSelected = checks.length > 0 && checks.every((c) => selectedIds.has(c.id));
   if (checks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
@@ -43,6 +48,9 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid, onUnvoi
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
+            <TableHead className="w-10 px-2">
+              <Checkbox checked={allSelected} onCheckedChange={onToggleAll} />
+            </TableHead>
             <TableHead className="font-semibold">Check #</TableHead>
             <TableHead className="font-semibold">Date</TableHead>
             <TableHead className="font-semibold">Payee</TableHead>
@@ -61,6 +69,12 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid, onUnvoi
               className={`animate-fade-in ${check.voided ? "opacity-60" : ""}`}
               style={{ animationDelay: `${i * 30}ms` }}
             >
+              <TableCell className="px-2" onClick={(e) => e.stopPropagation()}>
+                <Checkbox
+                  checked={selectedIds.has(check.id)}
+                  onCheckedChange={() => onToggleSelect(check.id)}
+                />
+              </TableCell>
               <TableCell className="font-mono text-sm">{check.check_number || "—"}</TableCell>
               <TableCell className="text-sm">{formatDate(check.check_date)}</TableCell>
               <TableCell className="font-medium">{check.payee}</TableCell>
