@@ -134,14 +134,6 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
     return result;
   }, [checks, chalikahMap]);
 
-  if (checks.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-        <p className="text-lg font-medium">No checks found</p>
-        <p className="text-sm">Add your first check to get started.</p>
-      </div>
-    );
-  }
 
   const renderCell = (check: Check, key: string) => {
     switch (key) {
@@ -294,6 +286,14 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
                 </TableCell>
               </TableRow>
             ))}
+            {sortedChecks.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={colLayout.visibleColumns.length + 2} className="text-center py-12 text-muted-foreground">
+                  <p className="text-lg font-medium">No checks found</p>
+                  <p className="text-sm">{checks.length === 0 ? "Add your first check to get started." : "Try adjusting your filters."}</p>
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>

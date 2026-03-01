@@ -371,11 +371,6 @@ const Payees = () => {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-            <p className="text-lg font-medium">No payees found</p>
-            <p className="text-sm">Add payees to see them here.</p>
-          </div>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-border">
             <Table>
@@ -603,6 +598,14 @@ const Payees = () => {
                     </>
                   );
                 })}
+                {filtered.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={colLayout.visibleColumns.length + 3} className="text-center py-12 text-muted-foreground">
+                      <p className="text-lg font-medium">No payees found</p>
+                      <p className="text-sm">Try adjusting your filters.</p>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
