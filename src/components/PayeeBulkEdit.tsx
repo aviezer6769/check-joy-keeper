@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type Payee } from "@/hooks/usePayees";
+import { buildPayeeName } from "@/lib/payee-utils";
 
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -130,6 +131,8 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
           rest[f.key] = rest[f.key] || null;
         }
       });
+      // Auto-generate payee_name
+      rest.payee_name = buildPayeeName(rest) || rest.payee_name;
       return supabase.from("payees").update(rest).eq("id", id);
     });
 
