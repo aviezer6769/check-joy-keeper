@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { type Check, CHECK_STATUSES } from "@/hooks/useChecks";
 import { useChalikah } from "@/hooks/useChalikah";
 import { usePayees } from "@/hooks/usePayees";
+import { PayeeAutocomplete } from "@/components/PayeeAutocomplete";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -322,6 +323,33 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
             ))}
           </SelectContent>
         </Select>
+      );
+    }
+    // Payee-related fields with autocomplete
+    const PAYEE_FIELDS: Record<string, "payee_name" | "record_id"> = {
+      payee: "payee_name",
+      payee_record_number: "record_id",
+      given_to_payee: "payee_name",
+      given_to_record_number: "record_id",
+    };
+    if (f.key in PAYEE_FIELDS) {
+      return (
+        <PayeeAutocomplete
+          value={(row[f.key] as string) ?? ""}
+          onChange={(v) => updateGridCell(idx, f.key, v)}
+          onSelectPayee={(p) => {
+            if (f.key === "payee_record_number" || f.key === "payee") {
+              updateGridCell(idx, "payee_record_number", p.record_id || "");
+              updateGridCell(idx, "payee", p.payee_name);
+            } else {
+              updateGridCell(idx, "given_to_record_number", p.record_id || "");
+              updateGridCell(idx, "given_to_payee", p.payee_name);
+            }
+          }}
+          payees={payees}
+          searchField={PAYEE_FIELDS[f.key]}
+          placeholder={f.label}
+        />
       );
     }
     return (
