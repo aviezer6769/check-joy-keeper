@@ -59,6 +59,9 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
     return defaultLayout;
   });
 
+  // Column filters (not persisted — session only)
+  const [filters, setFilters] = useState<Record<string, string>>({});
+
   const setLayout = useCallback(
     (next: ColumnLayout) => {
       setLayoutState(next);
@@ -137,8 +140,20 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
     [layout, setLayout]
   );
 
+  const setFilter = useCallback(
+    (key: string, value: string) => {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+    },
+    []
+  );
+
+  const clearFilters = useCallback(() => {
+    setFilters({});
+  }, []);
+
   const resetLayout = useCallback(() => {
     setLayout(defaultLayout);
+    setFilters({});
   }, [defaultLayout, setLayout]);
 
   return {
@@ -154,5 +169,8 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
     toggleSort,
     sort: layout.sort || null,
     widths: layout.widths || {},
+    filters,
+    setFilter,
+    clearFilters,
   };
 }

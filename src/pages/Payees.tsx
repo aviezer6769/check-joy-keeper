@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers, Filter } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { PayeeForm } from "@/components/PayeeForm";
@@ -20,6 +20,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useColumnLayout, type ColumnDef, type SortState } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
+import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 
 const PAYEE_COLUMNS: ColumnDef[] = [
   { key: "record_id", label: "Record ID" },
@@ -69,6 +70,7 @@ const Payees = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [groupByChalikah, setGroupByChalikah] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [checksCollapsed, setChecksCollapsed] = useState<Set<string>>(new Set());
   const [collapsedChalikahs, setCollapsedChalikahs] = useState<Set<string>>(new Set());
   const deletePayee = useDeletePayee();
@@ -100,6 +102,19 @@ const Payees = () => {
       })
     : payees;
 
+  const getPayeeTextValue = (p: Payee, key: string): string => {
+    switch (key) {
+      case "record_id": return p.record_id || "";
+      case "sort_order": return String(p.sort_order ?? 0);
+      case "urgent_level": return String(p.urgent_level ?? 0);
+      case "yiddish_name": return [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ");
+      case "payee_name": return [p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ") || p.payee_name;
+      case "address": return [p.street_no, p.street_name, p.apt, p.city, p.state, p.zip].filter(Boolean).join(" ");
+      case "is_active": return p.is_active ? "Active" : "Inactive";
+      default: return ((p as any)[key] || "").toString();
+    }
+  };
+
   const getPayeeSortValue = (p: Payee, key: string): string | number => {
     switch (key) {
       case "record_id": return (p.record_id || "").toLowerCase();
@@ -113,17 +128,27 @@ const Payees = () => {
     }
   };
 
+  // Apply column filters then sort
   const filtered = useMemo(() => {
-    if (!colLayout.sort) return filteredBase;
+    const activeFilters = Object.entries(colLayout.filters).filter(([, v]) => v.length > 0);
+    let result = filteredBase;
+    if (activeFilters.length > 0) {
+      result = result.filter((p) =>
+        activeFilters.every(([key, val]) =>
+          getPayeeTextValue(p, key).toLowerCase().includes(val.toLowerCase())
+        )
+      );
+    }
+    if (!colLayout.sort) return result;
     const { key, dir } = colLayout.sort;
-    return [...filteredBase].sort((a, b) => {
+    return [...result].sort((a, b) => {
       const va = getPayeeSortValue(a, key);
       const vb = getPayeeSortValue(b, key);
       if (va < vb) return dir === "asc" ? -1 : 1;
       if (va > vb) return dir === "asc" ? 1 : -1;
       return 0;
     });
-  }, [filteredBase, colLayout.sort]);
+  }, [filteredBase, colLayout.sort, colLayout.filters]);
 
   const renderPayeeCell = (p: Payee, key: string) => {
     switch (key) {
@@ -289,7 +314,21 @@ const Payees = () => {
               className="pl-9"
             />
           </div>
-          <div className="ml-auto">
+          <div className="ml-auto flex gap-2">
+            <Button
+              variant={showFilters ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className={Object.values(colLayout.filters).some((v) => v.length > 0) ? "border-primary text-primary" : ""}
+            >
+              <Filter className="h-4 w-4 mr-1" />
+              Filter
+              {Object.values(colLayout.filters).some((v) => v.length > 0) && (
+                <span className="ml-1 text-[10px] bg-primary text-primary-foreground rounded-full px-1.5">
+                  {Object.values(colLayout.filters).filter((v) => v.length > 0).length}
+                </span>
+              )}
+            </Button>
             <ColumnLayoutManager
               visibleColumns={colLayout.visibleColumns}
               hiddenColumns={colLayout.hiddenColumns}
@@ -314,35 +353,27 @@ const Payees = () => {
           <div className="overflow-x-auto rounded-lg border border-border">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="w-10 px-2">
-                    <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
-                  </TableHead>
-                  <TableHead className="font-semibold w-8"></TableHead>
-                  <TableHead className="font-semibold w-10"></TableHead>
-                  {colLayout.visibleColumns.map((col) => {
-                    const w = colLayout.widths[col.key];
-                    const isRtl = col.key === "yiddish_name" || col.key.endsWith("_yiddish");
-                    return (
-                      <TableHead
-                        key={col.key}
-                        className="font-semibold cursor-pointer select-none hover:bg-muted/80"
-                        dir={isRtl ? "rtl" : undefined}
-                        style={w ? { width: w, minWidth: w, maxWidth: w } : undefined}
-                        onClick={() => colLayout.toggleSort(col.key)}
-                      >
-                        <span className="inline-flex items-center">
-                          {col.label}
-                          {colLayout.sort?.key === col.key ? (
-                            colLayout.sort.dir === "asc" ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />
-                          ) : (
-                            <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />
-                          )}
-                        </span>
+                <DraggableTableHeader
+                  columns={colLayout.visibleColumns}
+                  widths={colLayout.widths}
+                  sort={colLayout.sort}
+                  filters={colLayout.filters}
+                  onToggleSort={colLayout.toggleSort}
+                  onReorder={colLayout.reorderColumn}
+                  onFilterChange={colLayout.setFilter}
+                  showFilters={showFilters}
+                  onToggleFilters={() => setShowFilters(!showFilters)}
+                  isRtl={(key) => key === "yiddish_name" || key.endsWith("_yiddish")}
+                  prefix={
+                    <>
+                      <TableHead className="w-10 px-2">
+                        <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
                       </TableHead>
-                    );
-                  })}
-                </TableRow>
+                      <TableHead className="font-semibold w-8"></TableHead>
+                      <TableHead className="font-semibold w-10"></TableHead>
+                    </>
+                  }
+                />
               </TableHeader>
               <TableBody>
                 {filtered.map((p) => {
