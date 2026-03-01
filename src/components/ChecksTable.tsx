@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Printer, Ban } from "lucide-react";
+import { Pencil, Trash2, Printer, Ban, Undo2 } from "lucide-react";
 import { type Check } from "@/hooks/useChecks";
 
 interface ChecksTableProps {
@@ -10,6 +10,7 @@ interface ChecksTableProps {
   onDelete: (id: string) => void;
   onPrint: (check: Check) => void;
   onVoid: (check: Check) => void;
+  onUnvoid: (check: Check) => void;
 }
 
 function formatCurrency(amount: number) {
@@ -24,7 +25,7 @@ function formatDate(date: string) {
   });
 }
 
-export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid }: ChecksTableProps) {
+export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid, onUnvoid }: ChecksTableProps) {
   if (checks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
@@ -89,7 +90,11 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid }: Check
                   <Button variant="ghost" size="icon" onClick={() => onEdit(check)} title="Edit">
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  {!check.voided && (
+                  {check.voided ? (
+                    <Button variant="ghost" size="icon" onClick={() => onUnvoid(check)} title="Unvoid" className="text-green-600 hover:text-green-700">
+                      <Undo2 className="h-4 w-4" />
+                    </Button>
+                  ) : (
                     <Button variant="ghost" size="icon" onClick={() => onVoid(check)} title="Void" className="text-orange-500 hover:text-orange-600">
                       <Ban className="h-4 w-4" />
                     </Button>

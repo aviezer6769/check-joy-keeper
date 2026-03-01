@@ -78,6 +78,16 @@ const Index = () => {
     });
   };
 
+  const handleUnvoid = (check: Check) => {
+    if (!confirm(`Unvoid check #${check.check_number || "—"} for ${check.payee}? This will restore the original amount.`)) return;
+    updateCheck.mutate({
+      id: check.id,
+      voided: false,
+      amount: check.original_amount ?? 0,
+      original_amount: null,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -139,7 +149,7 @@ const Index = () => {
         {isLoading ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>
         ) : (
-          <ChecksTable checks={checks} onEdit={handleEdit} onDelete={(id) => setDeleteId(id)} onPrint={handlePrintCheck} onVoid={handleVoid} />
+          <ChecksTable checks={checks} onEdit={handleEdit} onDelete={(id) => setDeleteId(id)} onPrint={handlePrintCheck} onVoid={handleVoid} onUnvoid={handleUnvoid} />
         )}
       </main>
 
