@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, Settings } from "lucide-react";
+import { Plus, Search, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert } from "@/hooks/useChecks";
 import { useAccounts } from "@/hooks/useAccounts";
@@ -10,6 +10,7 @@ import { CheckForm } from "@/components/CheckForm";
 import { ChecksTable } from "@/components/ChecksTable";
 import { CheckPrintView } from "@/components/CheckPrintView";
 import { StatsCards } from "@/components/StatsCards";
+import { AccountManager } from "@/components/AccountManager";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
@@ -96,15 +97,18 @@ const Index = () => {
       <main className="container py-6 space-y-6 no-print">
         {/* Account tabs */}
         {accounts.length > 0 && (
-          <Tabs value={selectedAccountId || ""} onValueChange={setActiveAccountId}>
-            <TabsList>
-              {accounts.map((a) => (
-                <TabsTrigger key={a.id} value={a.id}>
-                  {a.account_name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <div className="flex items-center gap-3">
+            <Tabs value={selectedAccountId || ""} onValueChange={setActiveAccountId}>
+              <TabsList>
+                {accounts.map((a) => (
+                  <TabsTrigger key={a.id} value={a.id}>
+                    {a.account_name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+            <AccountManager />
+          </div>
         )}
 
         {/* Stats */}
