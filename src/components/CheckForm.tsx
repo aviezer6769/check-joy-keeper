@@ -31,13 +31,24 @@ interface CheckFormProps {
   onSubmit: (check: CheckInsert) => void;
   initialData?: Check | null;
   isPending?: boolean;
+  existingChecks?: Check[];
 }
 
-export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending }: CheckFormProps) {
+export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending, existingChecks = [] }: CheckFormProps) {
   const { data: payees = [] } = usePayees();
+
+  // Compute next check number from existing checks
+  const nextCheckNumber = (() => {
+    if (initialData) return initialData.check_number ?? "";
+    const nums = existingChecks
+      .map((c) => parseInt(c.check_number || "", 10))
+      .filter((n) => !isNaN(n));
+    return nums.length > 0 ? String(Math.max(...nums) + 1) : "";
+  })();
+
   const [payee, setPayee] = useState(initialData?.payee ?? "");
   const [amount, setAmount] = useState(initialData?.amount?.toString() ?? "");
-  const [checkNumber, setCheckNumber] = useState(initialData?.check_number ?? "");
+  const [checkNumber, setCheckNumber] = useState(nextCheckNumber);
   const [checkDate, setCheckDate] = useState(initialData?.check_date ?? new Date().toISOString().split("T")[0]);
   const [charity, setCharity] = useState(initialData?.charity ?? "");
   const [checkGiven, setCheckGiven] = useState(initialData?.check_given ?? false);
