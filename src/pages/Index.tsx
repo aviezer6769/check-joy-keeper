@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, Pencil, Trash2, List } from "lucide-react";
+import { Plus, Search, Users, Pencil, Trash2, List, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert, type CheckStatus } from "@/hooks/useChecks";
 import { useAccounts } from "@/hooks/useAccounts";
@@ -12,7 +12,10 @@ import { CheckPrintView } from "@/components/CheckPrintView";
 import { StatsCards } from "@/components/StatsCards";
 import { AccountManager } from "@/components/AccountManager";
 import { CheckBulkEdit } from "@/components/CheckBulkEdit";
+import { CheckBulkImport } from "@/components/CheckBulkImport";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import * as XLSX from "xlsx";
+import { useChalikah } from "@/hooks/useChalikah";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,9 +43,32 @@ const Index = () => {
   const selectedAccountId = activeAccountId || accounts[0]?.id || null;
 
   const { data: checks = [], isLoading } = useChecks(search, selectedAccountId);
+  const { data: chalikahList = [] } = useChalikah();
   const addCheck = useAddCheck();
   const updateCheck = useUpdateCheck();
   const deleteCheck = useDeleteCheck();
+
+  const chalikahMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
+
+  const handleExportChecks = () => {
+    const rows = checks.map((c) => ({
+      "Check #": c.check_number || "",
+      "Date": c.check_date,
+      "Payee": c.payee,
+      "Payee Record #": c.payee_record_number || "",
+      "Amount": c.status === "Void" ? 0 : c.amount,
+      "Original Amount": c.original_amount ?? "",
+      "Status": c.status,
+      "Chalikah": c.chalikah_id ? chalikahMap[c.chalikah_id] || "" : "",
+      "Memo": c.memo || "",
+      "Given To": c.given_to_payee || "",
+      "Given To Record #": c.given_to_record_number || "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Checks");
+    XLSX.writeFile(wb, "checks.xlsx");
+  };
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -134,6 +160,11 @@ const Index = () => {
                   Chalikah
                 </Button>
               </Link>
+              <Button variant="outline" onClick={handleExportChecks}>
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+              <CheckBulkImport accountId={selectedAccountId} />
               <Button onClick={() => { setEditingCheck(null); setFormOpen(true); }}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Check
