@@ -1,0 +1,346 @@
+import { useRef, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Upload, Plus, Trash2, FileUp } from "lucide-react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import * as XLSX from "xlsx";
+import { type CheckInsert } from "@/hooks/useChecks";
+
+const CHECK_COLUMN_KEYS = [
+  "payee", "amount", "check_number", "check_date", "status", "memo",
+  "payee_record_number", "given_to_payee", "given_to_record_number",
+] as const;
+
+type CheckColumnKey = typeof CHECK_COLUMN_KEYS[number];
+
+const CHECK_COLUMN_LABELS: Record<CheckColumnKey, string> = {
+  payee: "Payee",
+  amount: "Amount",
+  check_number: "Check #",
+  check_date: "Date",
+  status: "Status",
+  memo: "Memo",
+  payee_record_number: "Payee Record #",
+  given_to_payee: "Given To",
+  given_to_record_number: "Given To Record #",
+};
+
+const CHECK_HEADER_ALIASES: Record<string, CheckColumnKey> = {
+  payee: "payee", "payee name": "payee", payee_name: "payee",
+  amount: "amount",
+  "check #": "check_number", "check number": "check_number", check_number: "check_number", "check#": "check_number",
+  date: "check_date", check_date: "check_date", "check date": "check_date",
+  status: "status",
+  memo: "memo", notes: "memo",
+  "payee record #": "payee_record_number", payee_record_number: "payee_record_number", "record #": "payee_record_number", "record number": "payee_record_number",
+  "given to": "given_to_payee", given_to_payee: "given_to_payee", "given to payee": "given_to_payee",
+  "given to record #": "given_to_record_number", given_to_record_number: "given_to_record_number",
+};
+
+function matchCheckHeader(header: string): CheckColumnKey | undefined {
+  const lower = header.trim().toLowerCase();
+  if (CHECK_HEADER_ALIASES[lower]) return CHECK_HEADER_ALIASES[lower];
+  for (const [key, label] of Object.entries(CHECK_COLUMN_LABELS)) {
+    if (lower === label.toLowerCase()) return key as CheckColumnKey;
+  }
+  const normalized = lower.replace(/[^a-z0-9_]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
+  return CHECK_COLUMN_KEYS.find(
+    (k) => k === normalized || k.replace(/_/g, "") === normalized.replace(/_/g, "")
+  );
+}
+
+const EMPTY_ROW = (): Record<string, string> =>
+  Object.fromEntries(CHECK_COLUMN_KEYS.map((k) => [k, ""]));
+
+function parseCheckCSV(text: string): Record<string, string>[] {
+  const lines = text.trim().split("\n").filter(Boolean);
+  if (lines.length === 0) return [];
+
+  const firstLine = lines[0];
+  const delimiter = firstLine.includes("\t") ? "\t" : ",";
+  const rawHeaders = firstLine.split(delimiter).map((h) => h.trim());
+
+  const keyMap = new Map<number, CheckColumnKey>();
+  rawHeaders.forEach((h, i) => {
+    const match = matchCheckHeader(h);
+    if (match && !Array.from(keyMap.values()).includes(match)) keyMap.set(i, match);
+  });
+
+  const hasHeaders = keyMap.size > 0;
+  const dataLines = hasHeaders ? lines.slice(1) : lines;
+
+  return dataLines.map((line) => {
+    const values = line.split(delimiter).map((v) => v.trim());
+    const row: Record<string, string> = {};
+    if (hasHeaders) {
+      keyMap.forEach((key, idx) => { row[key] = values[idx] || ""; });
+    } else {
+      CHECK_COLUMN_KEYS.forEach((key, idx) => { row[key] = values[idx] || ""; });
+    }
+    return row;
+  });
+}
+
+function rowToCheck(row: Record<string, string>, accountId: string | null): CheckInsert | null {
+  const payee = (row.payee || "").trim();
+  if (!payee) return null;
+  return {
+    payee,
+    amount: parseFloat(row.amount) || 0,
+    check_number: row.check_number || null,
+    check_date: row.check_date || new Date().toISOString().split("T")[0],
+    status: (["Open", "Printed", "Given", "Cleared", "Void"].includes(row.status) ? row.status : "Open") as any,
+    memo: row.memo || null,
+    payee_record_number: row.payee_record_number || null,
+    given_to_payee: row.given_to_payee || null,
+    given_to_record_number: row.given_to_record_number || null,
+    chalikah_id: null,
+    account_id: accountId,
+  };
+}
+
+interface CheckBulkImportProps {
+  accountId: string | null;
+}
+
+export function CheckBulkImport({ accountId }: CheckBulkImportProps) {
+  const [open, setOpen] = useState(false);
+  const [csvText, setCsvText] = useState("");
+  const [rows, setRows] = useState<Record<string, string>[]>([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()]);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [fileRows, setFileRows] = useState<Record<string, string>[]>([]);
+  const qc = useQueryClient();
+
+  const importChecks = async (checks: CheckInsert[], onDone: () => void) => {
+    if (checks.length === 0) {
+      toast.error("No valid checks found");
+      return;
+    }
+    setImporting(true);
+    const { error } = await supabase.from("checks").insert(checks);
+    setImporting(false);
+    if (error) {
+      toast.error("Import failed: " + error.message);
+    } else {
+      toast.success(`${checks.length} check(s) imported`);
+      qc.invalidateQueries({ queryKey: ["checks"] });
+      onDone();
+      setOpen(false);
+    }
+  };
+
+  const handleCSVImport = () => {
+    const parsed = parseCheckCSV(csvText);
+    const checks = parsed.map((r) => rowToCheck(r, accountId)).filter(Boolean) as CheckInsert[];
+    importChecks(checks, () => setCsvText(""));
+  };
+
+  const handleMultiRowSubmit = () => {
+    const checks = rows.map((r) => rowToCheck(r, accountId)).filter(Boolean) as CheckInsert[];
+    importChecks(checks, () => setRows([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()]));
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonRows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: "" });
+
+        const mapped = jsonRows.map((row) => {
+          const result: Record<string, string> = {};
+          Object.entries(row).forEach(([header, value]) => {
+            const match = matchCheckHeader(header);
+            if (match) result[match] = String(value);
+          });
+          return result;
+        });
+
+        setFileRows(mapped);
+        toast.success(`Parsed ${mapped.length} row(s) from ${file.name}`);
+      } catch {
+        toast.error("Failed to parse file. Make sure it's a valid CSV or Excel file.");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = "";
+  };
+
+  const handleFileImport = () => {
+    const checks = fileRows.map((r) => rowToCheck(r, accountId)).filter(Boolean) as CheckInsert[];
+    importChecks(checks, () => { setFileRows([]); setFileName(null); });
+  };
+
+  const updateRow = (idx: number, key: string, value: string) => {
+    setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, [key]: value } : r)));
+  };
+  const addRow = () => setRows((prev) => [...prev, EMPTY_ROW()]);
+  const removeRow = (idx: number) => setRows((prev) => prev.filter((_, i) => i !== idx));
+
+  const MULTI_ROW_KEYS: CheckColumnKey[] = ["payee", "amount", "check_number", "check_date", "status", "memo"];
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          <Upload className="h-4 w-4 mr-2" />
+          Import
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Import Checks</DialogTitle>
+        </DialogHeader>
+        <Tabs defaultValue="file">
+          <TabsList>
+            <TabsTrigger value="file">Upload File</TabsTrigger>
+            <TabsTrigger value="csv">Paste CSV</TabsTrigger>
+            <TabsTrigger value="rows">Multi-Row Form</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="file" className="space-y-4 pt-2">
+            <div className="flex flex-col items-center gap-4 py-6 border-2 border-dashed border-border rounded-lg">
+              <FileUp className="h-10 w-10 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Upload a CSV or Excel (.xlsx, .xls) file</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                Choose File
+              </Button>
+              {fileName && (
+                <p className="text-sm font-medium">{fileName} — {fileRows.length} row(s) parsed</p>
+              )}
+            </div>
+            {fileRows.length > 0 && (
+              <div className="overflow-x-auto max-h-48 rounded border border-border">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-muted/50">
+                      {CHECK_COLUMN_KEYS.filter((k) => fileRows.some((r) => r[k])).map((k) => (
+                        <th key={k} className="text-left px-2 py-1 font-semibold text-muted-foreground whitespace-nowrap">
+                          {CHECK_COLUMN_LABELS[k]}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fileRows.slice(0, 20).map((row, i) => (
+                      <tr key={i} className="border-t border-border">
+                        {CHECK_COLUMN_KEYS.filter((k) => fileRows.some((r) => r[k])).map((k) => (
+                          <td key={k} className="px-2 py-1 whitespace-nowrap">{row[k] || ""}</td>
+                        ))}
+                      </tr>
+                    ))}
+                    {fileRows.length > 20 && (
+                      <tr><td colSpan={99} className="px-2 py-1 text-muted-foreground">…and {fileRows.length - 20} more</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button onClick={handleFileImport} disabled={importing || fileRows.length === 0}>
+                {importing ? "Importing..." : `Import ${fileRows.length} Check(s)`}
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="csv" className="space-y-3 pt-2">
+            <div>
+              <Label className="text-xs text-muted-foreground">
+                Paste tab-separated or comma-separated data. Headers: {CHECK_COLUMN_KEYS.join(", ")}
+              </Label>
+              <Textarea
+                value={csvText}
+                onChange={(e) => setCsvText(e.target.value)}
+                placeholder={"payee\tamount\tcheck_number\tcheck_date\tstatus\tmemo\nJohn Doe\t100\t1001\t2025-01-15\tOpen\tDonation"}
+                rows={10}
+                className="font-mono text-xs mt-1"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button onClick={handleCSVImport} disabled={importing || !csvText.trim()}>
+                {importing ? "Importing..." : "Import"}
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="rows" className="space-y-3 pt-2">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr>
+                    {MULTI_ROW_KEYS.map((k) => (
+                      <th key={k} className="text-left px-1 py-1 font-semibold text-muted-foreground">
+                        {CHECK_COLUMN_LABELS[k]}
+                      </th>
+                    ))}
+                    <th className="w-8"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, idx) => (
+                    <tr key={idx}>
+                      {MULTI_ROW_KEYS.map((k) => (
+                        <td key={k} className="px-1 py-0.5">
+                          <Input
+                            className="h-8 text-xs"
+                            value={row[k] || ""}
+                            onChange={(e) => updateRow(idx, k, e.target.value)}
+                            placeholder={CHECK_COLUMN_LABELS[k]}
+                            type={k === "amount" ? "number" : k === "check_date" ? "date" : "text"}
+                          />
+                        </td>
+                      ))}
+                      <td className="px-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => removeRow(idx)}
+                          disabled={rows.length <= 1}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Button size="sm" variant="outline" onClick={addRow}>
+              <Plus className="h-3 w-3 mr-1" /> Add Row
+            </Button>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button onClick={handleMultiRowSubmit} disabled={importing}>
+                {importing ? "Adding..." : "Add Checks"}
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
