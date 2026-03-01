@@ -86,15 +86,13 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onVoid }: Check
                   <Button variant="ghost" size="icon" onClick={() => onPrint(check)} title="Print">
                     <Printer className="h-4 w-4" />
                   </Button>
+                  <Button variant="ghost" size="icon" onClick={() => onEdit(check)} title="Edit">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   {!check.voided && (
-                    <>
-                      <Button variant="ghost" size="icon" onClick={() => onEdit(check)} title="Edit">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onVoid(check)} title="Void" className="text-orange-500 hover:text-orange-600">
-                        <Ban className="h-4 w-4" />
-                      </Button>
-                    </>
+                    <Button variant="ghost" size="icon" onClick={() => onVoid(check)} title="Void" className="text-orange-500 hover:text-orange-600">
+                      <Ban className="h-4 w-4" />
+                    </Button>
                   )}
                   <Button variant="ghost" size="icon" onClick={() => onDelete(check.id)} title="Delete" className="text-destructive hover:text-destructive">
                     <Trash2 className="h-4 w-4" />
