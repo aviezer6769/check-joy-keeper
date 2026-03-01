@@ -10,6 +10,7 @@ import { FieldSuggestInput } from "@/components/FieldSuggestInput";
 
 const EMPTY_PAYEE: PayeeInsert = {
   payee_name: "",
+  is_active: true,
   record_id: null,
   sort_order: 0,
   urgent_level: 0,

@@ -44,6 +44,7 @@ const PAYEE_COLUMNS: ColumnDef[] = [
   { key: "city", label: "City", defaultVisible: false },
   { key: "state", label: "State", defaultVisible: false },
   { key: "zip", label: "Zip", defaultVisible: false },
+  { key: "is_active", label: "Active" },
 ];
 
 function formatCurrency(amount: number) {
@@ -127,6 +128,7 @@ const Payees = () => {
       case "city": return p.city || "—";
       case "state": return p.state || "—";
       case "zip": return p.zip || "—";
+      case "is_active": return p.is_active ? <Badge variant="default" className="bg-success text-success-foreground">Active</Badge> : <Badge variant="secondary">Inactive</Badge>;
       default: return "—";
     }
   };
@@ -191,6 +193,7 @@ const Payees = () => {
       case "city": return p.city || "";
       case "state": return p.state || "";
       case "zip": return p.zip || "";
+      case "is_active": return p.is_active ? "Active" : "Inactive";
       default: return "";
     }
   };

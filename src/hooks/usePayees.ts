@@ -24,6 +24,7 @@ export interface Payee {
   state: string | null;
   zip: string | null;
   payee_name: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }

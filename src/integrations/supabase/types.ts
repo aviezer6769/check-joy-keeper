@@ -160,6 +160,7 @@ export type Database = {
           first_name: string | null
           first_name_yiddish: string | null
           id: string
+          is_active: boolean
           last_name: string | null
           last_name_yiddish: string | null
           middle_name: string | null
@@ -185,6 +186,7 @@ export type Database = {
           first_name?: string | null
           first_name_yiddish?: string | null
           id?: string
+          is_active?: boolean
           last_name?: string | null
           last_name_yiddish?: string | null
           middle_name?: string | null
@@ -210,6 +212,7 @@ export type Database = {
           first_name?: string | null
           first_name_yiddish?: string | null
           id?: string
+          is_active?: boolean
           last_name?: string | null
           last_name_yiddish?: string | null
           middle_name?: string | null

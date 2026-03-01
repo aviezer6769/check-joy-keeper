@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -117,6 +118,14 @@ export function PayeeEditForm({ payee, open, onOpenChange }: PayeeEditFormProps)
               )}
             </div>
           ))}
+          <div className="col-span-2 flex items-center gap-3 pt-1">
+            <Switch
+              checked={form.is_active ?? true}
+              onCheckedChange={(v) => setForm((prev) => ({ ...prev, is_active: v }))}
+              id="is-active"
+            />
+            <Label htmlFor="is-active" className="text-sm">Active</Label>
+          </div>
           <div className="col-span-2 flex justify-between pt-2">
             <Button type="button" variant="destructive" size="sm" onClick={handleDelete} disabled={deletePayee.isPending}>
               <Trash2 className="h-4 w-4 mr-1" /> Delete
