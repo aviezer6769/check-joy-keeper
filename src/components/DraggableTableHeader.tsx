@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { TableHead, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
@@ -12,11 +12,11 @@ interface DraggableTableHeaderProps {
   sort: SortState | null;
   onToggleSort: (key: string) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
+  onSetWidth?: (key: string, width: number) => void;
   columnClassName?: (key: string) => string;
   isRtl?: (key: string) => boolean;
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
-  /** Per-column filter support */
   filters?: Record<string, string>;
   onFilterChange?: (key: string, value: string) => void;
   showFilters?: boolean;
@@ -28,6 +28,7 @@ export function DraggableTableHeader({
   sort,
   onToggleSort,
   onReorder,
+  onSetWidth,
   columnClassName,
   isRtl,
   prefix,
@@ -38,13 +39,17 @@ export function DraggableTableHeader({
 }: DraggableTableHeaderProps) {
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [overIdx, setOverIdx] = useState<number | null>(null);
+  const [resizingCol, setResizingCol] = useState<string | null>(null);
+  const resizeRef = useRef<{ startX: number; startW: number; key: string } | null>(null);
 
+  // --- Column drag-to-reorder ---
   const handleDragStart = useCallback((e: React.DragEvent, idx: number) => {
+    if (resizingCol) { e.preventDefault(); return; }
     setDragIdx(idx);
     e.dataTransfer.effectAllowed = "move";
     const el = e.currentTarget as HTMLElement;
     e.dataTransfer.setDragImage(el, 20, 20);
-  }, []);
+  }, [resizingCol]);
 
   const handleDragOver = useCallback((e: React.DragEvent, idx: number) => {
     e.preventDefault();
@@ -69,6 +74,40 @@ export function DraggableTableHeader({
     setOverIdx(null);
   }, []);
 
+  // --- Column resize ---
+  const handleResizeStart = useCallback(
+    (e: React.MouseEvent, colKey: string, currentWidth: number) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const startX = e.clientX;
+      const startW = currentWidth || 120;
+      resizeRef.current = { startX, startW, key: colKey };
+      setResizingCol(colKey);
+
+      const onMouseMove = (ev: MouseEvent) => {
+        if (!resizeRef.current) return;
+        const diff = ev.clientX - resizeRef.current.startX;
+        const newW = Math.max(40, Math.min(600, resizeRef.current.startW + diff));
+        onSetWidth?.(resizeRef.current.key, newW);
+      };
+
+      const onMouseUp = () => {
+        resizeRef.current = null;
+        setResizingCol(null);
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      };
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    },
+    [onSetWidth]
+  );
+
   // Count prefix children for empty filter cells
   const prefixCount = prefix
     ? React.Children.count(
@@ -92,15 +131,15 @@ export function DraggableTableHeader({
           return (
             <TableHead
               key={col.key}
-              draggable
+              draggable={!resizingCol}
               onDragStart={(e) => handleDragStart(e, idx)}
               onDragOver={(e) => handleDragOver(e, idx)}
               onDrop={(e) => handleDrop(e, idx)}
               onDragEnd={handleDragEnd}
               dir={rtl ? "rtl" : undefined}
               className={cn(
-                "font-semibold select-none transition-all",
-                "cursor-grab active:cursor-grabbing",
+                "font-semibold select-none transition-all relative group",
+                !resizingCol && "cursor-grab active:cursor-grabbing",
                 isDragging && "opacity-40",
                 isOver && "border-l-2 border-primary",
                 extraCls
@@ -108,7 +147,7 @@ export function DraggableTableHeader({
               style={w ? { width: w, minWidth: w, maxWidth: w } : undefined}
             >
               <div
-                className="inline-flex items-center cursor-pointer hover:text-foreground"
+                className="inline-flex items-center cursor-pointer hover:text-foreground pr-2"
                 onClick={(e) => {
                   e.stopPropagation();
                   onToggleSort(col.key);
@@ -125,6 +164,18 @@ export function DraggableTableHeader({
                   <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />
                 )}
               </div>
+              {/* Resize handle */}
+              {onSetWidth && (
+                <div
+                  className={cn(
+                    "absolute top-0 right-0 w-1.5 h-full cursor-col-resize z-10",
+                    "hover:bg-primary/40 active:bg-primary/60",
+                    "opacity-0 group-hover:opacity-100 transition-opacity",
+                    resizingCol === col.key && "opacity-100 bg-primary/60"
+                  )}
+                  onMouseDown={(e) => handleResizeStart(e, col.key, w || (e.currentTarget.parentElement?.offsetWidth ?? 120))}
+                />
+              )}
             </TableHead>
           );
         })}
