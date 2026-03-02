@@ -143,7 +143,21 @@ const Payees = () => {
         activeFilters.every(([key, val]) => {
           const text = getPayeeTextValue(p, key);
           if (val === "__blank__") return !text || text.trim() === "";
-          return text.toLowerCase() === val.toLowerCase();
+          const mode = colLayout.filterModes[key] || "contains";
+          const tl = text.toLowerCase();
+          const vl = val.toLowerCase();
+          const numT = parseFloat(text);
+          const numV = parseFloat(val);
+          switch (mode) {
+            case "equals": return tl === vl;
+            case "not": return tl !== vl;
+            case "gt": return !isNaN(numT) && !isNaN(numV) && numT > numV;
+            case "lt": return !isNaN(numT) && !isNaN(numV) && numT < numV;
+            case "gte": return !isNaN(numT) && !isNaN(numV) && numT >= numV;
+            case "lte": return !isNaN(numT) && !isNaN(numV) && numT <= numV;
+            case "contains":
+            default: return tl.includes(vl);
+          }
         })
       );
     }
@@ -156,7 +170,7 @@ const Payees = () => {
       if (va > vb) return dir === "asc" ? 1 : -1;
       return 0;
     });
-  }, [filteredBase, colLayout.sort, colLayout.filters]);
+  }, [filteredBase, colLayout.sort, colLayout.filters, colLayout.filterModes]);
 
   // Compute unique values per column for dropdown filters
   const filterOptions = useMemo(() => {
@@ -387,7 +401,9 @@ const Payees = () => {
                   onSetWidth={colLayout.setColumnWidth}
                   isRtl={(key) => key === "yiddish_name" || key.endsWith("_yiddish")}
                   filters={colLayout.filters}
+                  filterModes={colLayout.filterModes}
                   onFilterChange={colLayout.setFilter}
+                  onFilterModeChange={colLayout.setFilterMode}
                   showFilters={showFilters}
                   filterOptions={filterOptions}
                   prefix={
