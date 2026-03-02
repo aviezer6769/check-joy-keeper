@@ -98,14 +98,13 @@ const Payees = () => {
   const filteredBase = search
     ? payees.filter((p) => {
         const q = search.toLowerCase();
-        return (
-          p.payee_name.toLowerCase().includes(q) ||
-          p.record_id?.toLowerCase().includes(q) ||
-          p.first_name?.toLowerCase().includes(q) ||
-          p.last_name?.toLowerCase().includes(q) ||
-          p.first_name_yiddish?.toLowerCase().includes(q) ||
-          p.last_name_yiddish?.toLowerCase().includes(q)
-        );
+        const fields = [
+          p.payee_name, p.record_id,
+          p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish,
+          p.title, p.title_to_use, p.first_name, p.middle_name, p.last_name,
+          p.street_no, p.street_name, p.apt, p.city, p.state, p.zip, p.memo,
+        ];
+        return fields.some((f) => f?.toLowerCase().includes(q));
       })
     : payees;
 
