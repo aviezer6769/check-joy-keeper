@@ -99,6 +99,7 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
     return checks.filter((check) =>
       activeFilters.every(([key, val]) => {
         const text = getCheckTextValue(check, key, chalikahMap);
+        if (val === "__blank__") return !text || text.trim() === "";
         return text.toLowerCase().includes(val.toLowerCase());
       })
     );

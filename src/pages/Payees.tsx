@@ -141,9 +141,11 @@ const Payees = () => {
     let result = filteredBase;
     if (activeFilters.length > 0) {
       result = result.filter((p) =>
-        activeFilters.every(([key, val]) =>
-          getPayeeTextValue(p, key).toLowerCase().includes(val.toLowerCase())
-        )
+        activeFilters.every(([key, val]) => {
+          const text = getPayeeTextValue(p, key);
+          if (val === "__blank__") return !text || text.trim() === "";
+          return text.toLowerCase().includes(val.toLowerCase());
+        })
       );
     }
     if (!colLayout.sort) return result;
