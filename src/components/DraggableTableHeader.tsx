@@ -28,14 +28,24 @@ function FilterCell({ col, w, value, options, onChange }: {
       <div className="flex items-center gap-0.5">
         <Input
           placeholder="Search..."
-          value={value}
+          value={value === "__blank__" ? "" : value}
           onChange={(e) => onChange(e.target.value)}
+          disabled={value === "__blank__"}
           className="h-6 text-xs border-muted bg-background flex-1"
         />
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn("h-6 w-6 shrink-0 text-[9px] font-medium", value === "__blank__" && "text-primary bg-primary/10")}
+          title="Filter blank values"
+          onClick={() => onChange(value === "__blank__" ? "" : "__blank__")}
+        >
+          ∅
+        </Button>
         {hasOptions && (
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className={cn("h-6 w-6 shrink-0", value && "text-primary")}>
+              <Button variant="ghost" size="icon" className={cn("h-6 w-6 shrink-0", value && value !== "__blank__" && "text-primary")}>
                 <ListFilter className="h-3 w-3" />
               </Button>
             </PopoverTrigger>
