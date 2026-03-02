@@ -202,7 +202,7 @@ const Payees = () => {
       case "city": return p.city || "—";
       case "state": return p.state || "—";
       case "zip": return p.zip || "—";
-      case "memo": return <span className="text-sm max-w-[200px] truncate block">{p.memo || "—"}</span>;
+      case "memo": return <span className="text-sm max-w-[300px] whitespace-pre-line block">{p.memo || "—"}</span>;
       case "is_active": return p.is_active ? <Badge variant="default" className="bg-success text-success-foreground">Active</Badge> : <Badge variant="secondary">Inactive</Badge>;
       default: return "—";
     }
