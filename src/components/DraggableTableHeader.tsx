@@ -46,6 +46,12 @@ function FilterCell({ col, w, value, options, onChange }: {
               >
                 All
               </button>
+              <button
+                className={cn("w-full text-left text-xs px-2 py-1 rounded hover:bg-muted italic text-muted-foreground", value === "__blank__" && "font-semibold text-primary")}
+                onClick={() => onChange("__blank__")}
+              >
+                (blank)
+              </button>
               {options.map((opt) => (
                 <button
                   key={opt}
