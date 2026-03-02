@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type Payee, usePayees } from "@/hooks/usePayees";
 import { buildPayeeName } from "@/lib/payee-utils";
@@ -41,6 +42,7 @@ const APPLY_ALL_FIELDS: FieldDef[] = [
   { key: "state", label: "State" },
   { key: "zip", label: "Zip" },
   { key: "memo", label: "Memo" },
+  { key: "is_active", label: "Active Status" },
 ];
 
 const GRID_FIELDS: FieldDef[] = [
@@ -120,7 +122,11 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
     enabledFields.forEach((key) => {
       const field = APPLY_ALL_FIELDS.find((f) => f.key === key);
       const val = values[key] || "";
-      updates[key] = field?.type === "number" ? Number(val) || 0 : val || null;
+      if (key === "is_active") {
+        updates[key] = values[key] === "true";
+      } else {
+        updates[key] = field?.type === "number" ? Number(val) || 0 : val || null;
+      }
     });
 
     setSaving(true);
@@ -209,7 +215,13 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                   <Label htmlFor={`bulk-${f.key}`} className="text-sm w-24 shrink-0" dir={f.dir}>
                     {f.label}
                   </Label>
-                  {f.type === "number" ? (
+                  {f.key === "is_active" ? (
+                    <Switch
+                      checked={values[f.key] === "true"}
+                      onCheckedChange={(checked) => setValues((prev) => ({ ...prev, [f.key]: String(checked) }))}
+                      disabled={!enabledFields.has(f.key)}
+                    />
+                  ) : f.type === "number" ? (
                     <Input
                       type="number"
                       value={values[f.key] ?? ""}
