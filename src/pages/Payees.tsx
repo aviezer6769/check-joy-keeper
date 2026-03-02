@@ -143,12 +143,7 @@ const Payees = () => {
         activeFilters.every(([key, val]) => {
           const text = getPayeeTextValue(p, key);
           if (val === "__blank__") return !text || text.trim() === "";
-          // If the value matches an exact dropdown option, use exact match; otherwise use contains for typed search
-          const options = filterOptions[key];
-          if (options && options.some((opt) => opt === val)) {
-            return text === val;
-          }
-          return text.toLowerCase().includes(val.toLowerCase());
+          return text.toLowerCase() === val.toLowerCase();
         })
       );
     }
