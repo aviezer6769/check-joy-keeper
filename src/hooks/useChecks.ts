@@ -40,7 +40,7 @@ export function useChecks(search?: string, accountId?: string | null) {
 
       if (search) {
         query = query.or(
-          `payee.ilike.%${search}%,check_number.ilike.%${search}%,memo.ilike.%${search}%`
+          `payee.ilike.%${search}%,check_number.ilike.%${search}%,memo.ilike.%${search}%,payee_record_number.ilike.%${search}%,given_to_payee.ilike.%${search}%,given_to_record_number.ilike.%${search}%`
         );
       }
 
