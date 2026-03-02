@@ -284,6 +284,7 @@ const Payees = () => {
       case "state": return p.state || "";
       case "zip": return p.zip || "";
       case "is_active": return p.is_active ? "Active" : "Inactive";
+      case "memo": return p.memo || "";
       default: return "";
     }
   };
@@ -296,6 +297,18 @@ const Payees = () => {
       return row;
     });
     const ws = XLSX.utils.json_to_sheet(rows);
+    // Enable text wrapping for cells with line breaks (e.g. memo)
+    const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+    for (let R = range.s.r; R <= range.e.r; R++) {
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[addr];
+        if (cell && typeof cell.v === "string" && cell.v.includes("\n")) {
+          if (!cell.s) cell.s = {};
+          (cell.s as any).alignment = { wrapText: true };
+        }
+      }
+    }
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Payees");
     XLSX.writeFile(wb, "payees.xlsx");
