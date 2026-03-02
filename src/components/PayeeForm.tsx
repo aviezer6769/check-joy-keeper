@@ -7,6 +7,7 @@ import { useAddPayee, usePayees, type PayeeInsert } from "@/hooks/usePayees";
 import { Plus } from "lucide-react";
 import { buildPayeeName } from "@/lib/payee-utils";
 import { FieldSuggestInput } from "@/components/FieldSuggestInput";
+import { Textarea } from "@/components/ui/textarea";
 
 const EMPTY_PAYEE: PayeeInsert = {
   payee_name: "",
@@ -119,11 +120,18 @@ export function PayeeForm() {
             <Input value={computedName} readOnly disabled className="bg-muted" />
           </div>
           {FIELDS.map((f) => (
-            <div key={f.key}>
+            <div key={f.key} className={f.key === "memo" ? "col-span-2" : ""}>
               <Label className="text-xs mb-1 block" dir={f.dir}>
                 {f.label}
               </Label>
-              {f.type === "number" ? (
+              {f.key === "memo" ? (
+                <Textarea
+                  value={(form[f.key] as string) ?? ""}
+                  onChange={(e) => handleChange(f.key, e.target.value)}
+                  placeholder={f.label}
+                  className="min-h-[60px]"
+                />
+              ) : f.type === "number" ? (
                 <Input
                   type="number"
                   value={(form[f.key] as number) ?? 0}
