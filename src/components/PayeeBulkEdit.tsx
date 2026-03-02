@@ -21,13 +21,26 @@ interface FieldDef {
 }
 
 const APPLY_ALL_FIELDS: FieldDef[] = [
+  { key: "record_id", label: "Record ID" },
   { key: "sort_order", label: "Sort Order", type: "number" },
   { key: "urgent_level", label: "Urgent Level", type: "number" },
+  { key: "title_1_yiddish", label: "טיטל 1", dir: "rtl" },
+  { key: "first_name_yiddish", label: "ערשטע נאמען", dir: "rtl" },
+  { key: "middle_name_yiddish", label: "מיטעלסטע", dir: "rtl" },
+  { key: "last_name_yiddish", label: "לעצטע", dir: "rtl" },
+  { key: "title_2_yiddish", label: "טיטל 2", dir: "rtl" },
   { key: "title", label: "Title" },
   { key: "title_to_use", label: "TitleToUse" },
+  { key: "first_name", label: "First Name" },
+  { key: "middle_name", label: "Middle Name" },
+  { key: "last_name", label: "Last Name" },
+  { key: "street_no", label: "St #" },
+  { key: "street_name", label: "Street" },
+  { key: "apt", label: "Apt" },
   { key: "city", label: "City" },
   { key: "state", label: "State" },
   { key: "zip", label: "Zip" },
+  { key: "memo", label: "Memo" },
 ];
 
 const GRID_FIELDS: FieldDef[] = [
@@ -50,6 +63,7 @@ const GRID_FIELDS: FieldDef[] = [
   { key: "city", label: "City" },
   { key: "state", label: "State" },
   { key: "zip", label: "Zip" },
+  { key: "memo", label: "Memo" },
 ];
 
 interface PayeeBulkEditProps {
