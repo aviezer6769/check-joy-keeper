@@ -125,7 +125,7 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
       if (key === "is_active") {
         updates[key] = values[key] === "true";
       } else {
-        updates[key] = field?.type === "number" ? Number(val) || 0 : val || null;
+        updates[key] = field?.type === "number" ? (val === "?" ? null : Number(val) || 0) : val || null;
       }
     });
 
@@ -222,14 +222,26 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                       disabled={!enabledFields.has(f.key)}
                     />
                   ) : f.type === "number" ? (
-                    <Input
-                      type="number"
-                      value={values[f.key] ?? ""}
-                      onChange={(e) => setValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                      placeholder={f.label}
-                      disabled={!enabledFields.has(f.key)}
-                      className="h-8 text-sm"
-                    />
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="number"
+                        value={values[f.key] === "?" ? "" : (values[f.key] ?? "")}
+                        onChange={(e) => setValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                        placeholder={values[f.key] === "?" ? "?" : f.label}
+                        disabled={!enabledFields.has(f.key) || values[f.key] === "?"}
+                        className="h-8 text-sm"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={values[f.key] === "?" ? "default" : "outline"}
+                        className="h-8 px-2 text-xs shrink-0"
+                        disabled={!enabledFields.has(f.key)}
+                        onClick={() => setValues((prev) => ({ ...prev, [f.key]: prev[f.key] === "?" ? "" : "?" }))}
+                      >
+                        ?
+                      </Button>
+                    </div>
                   ) : (
                     <FieldSuggestInput
                       dir={f.dir}
