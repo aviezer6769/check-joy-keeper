@@ -14,11 +14,15 @@ export interface SortState {
   dir: SortDir;
 }
 
+export type FilterMode = "contains" | "equals" | "gt" | "lt" | "gte" | "lte" | "not";
+
 export interface ColumnLayout {
   visibleKeys: string[];
   widths?: Record<string, number>;
   sort?: SortState | null;
 }
+
+// ... keep existing code (STORAGE_PREFIX, loadLayout, saveLayout)
 
 const STORAGE_PREFIX = "col-layout-";
 
@@ -61,6 +65,7 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
 
   // Column filters (not persisted — session only)
   const [filters, setFilters] = useState<Record<string, string>>({});
+  const [filterModes, setFilterModes] = useState<Record<string, FilterMode>>({});
 
   const setLayout = useCallback(
     (next: ColumnLayout) => {
@@ -79,6 +84,8 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
     const visible = new Set(layout.visibleKeys);
     return allColumns.filter((c) => !visible.has(c.key));
   }, [layout.visibleKeys, allColumns]);
+
+  // ... keep existing code (toggleColumn, moveColumn, reorderColumn, setColumnWidth, toggleSort)
 
   const toggleColumn = useCallback(
     (key: string) => {
@@ -131,7 +138,7 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
       let next: SortState | null;
       if (current?.key === key) {
         if (current.dir === "asc") next = { key, dir: "desc" };
-        else next = null; // remove sort
+        else next = null;
       } else {
         next = { key, dir: "asc" };
       }
@@ -147,13 +154,22 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
     []
   );
 
+  const setFilterMode = useCallback(
+    (key: string, mode: FilterMode) => {
+      setFilterModes((prev) => ({ ...prev, [key]: mode }));
+    },
+    []
+  );
+
   const clearFilters = useCallback(() => {
     setFilters({});
+    setFilterModes({});
   }, []);
 
   const resetLayout = useCallback(() => {
     setLayout(defaultLayout);
     setFilters({});
+    setFilterModes({});
   }, [defaultLayout, setLayout]);
 
   return {
@@ -170,7 +186,9 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
     sort: layout.sort || null,
     widths: layout.widths || {},
     filters,
+    filterModes,
     setFilter,
+    setFilterMode,
     clearFilters,
   };
 }

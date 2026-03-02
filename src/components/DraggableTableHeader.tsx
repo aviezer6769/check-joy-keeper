@@ -4,18 +4,42 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, ArrowUp, ArrowDown, ListFilter } from "lucide-react";
-import { type ColumnDef, type SortState } from "@/hooks/useColumnLayout";
+import { type ColumnDef, type SortState, type FilterMode } from "@/hooks/useColumnLayout";
 import { cn } from "@/lib/utils";
 import React from "react";
 
 const MAX_DROPDOWN_OPTIONS = 50;
 
-function FilterCell({ col, w, value, options, onChange }: {
+const FILTER_MODE_LABELS: Record<FilterMode, string> = {
+  contains: "⊇",
+  equals: "=",
+  not: "≠",
+  gt: ">",
+  lt: "<",
+  gte: "≥",
+  lte: "≤",
+};
+
+const FILTER_MODE_NAMES: Record<FilterMode, string> = {
+  contains: "Contains",
+  equals: "Equals",
+  not: "Not equal",
+  gt: "Greater than",
+  lt: "Less than",
+  gte: "Greater or equal",
+  lte: "Less or equal",
+};
+
+const ALL_MODES: FilterMode[] = ["contains", "equals", "not", "gt", "lt", "gte", "lte"];
+
+function FilterCell({ col, w, value, options, onChange, mode, onModeChange }: {
   col: ColumnDef;
   w: number | undefined;
   value: string;
   options?: string[];
   onChange: (val: string) => void;
+  mode: FilterMode;
+  onModeChange: (mode: FilterMode) => void;
 }) {
   const hasOptions = options && options.length > 0 && options.length <= MAX_DROPDOWN_OPTIONS;
 
@@ -26,6 +50,30 @@ function FilterCell({ col, w, value, options, onChange }: {
       style={w ? { width: w, minWidth: w, maxWidth: w } : undefined}
     >
       <div className="flex items-center gap-0.5">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0 text-[10px] font-bold"
+              title={`Filter mode: ${FILTER_MODE_NAMES[mode]}`}
+            >
+              {FILTER_MODE_LABELS[mode]}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-36 p-1" align="start">
+            {ALL_MODES.map((m) => (
+              <button
+                key={m}
+                className={cn("w-full text-left text-xs px-2 py-1 rounded hover:bg-muted flex items-center gap-2", mode === m && "font-semibold text-primary")}
+                onClick={() => onModeChange(m)}
+              >
+                <span className="w-4 text-center font-bold">{FILTER_MODE_LABELS[m]}</span>
+                {FILTER_MODE_NAMES[m]}
+              </button>
+            ))}
+          </PopoverContent>
+        </Popover>
         <Input
           placeholder="Search..."
           value={value === "__blank__" ? "" : value}
@@ -91,7 +139,9 @@ interface DraggableTableHeaderProps {
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
   filters?: Record<string, string>;
+  filterModes?: Record<string, FilterMode>;
   onFilterChange?: (key: string, value: string) => void;
+  onFilterModeChange?: (key: string, mode: FilterMode) => void;
   showFilters?: boolean;
   filterOptions?: Record<string, string[]>;
 }
@@ -108,7 +158,9 @@ export function DraggableTableHeader({
   prefix,
   suffix,
   filters,
+  filterModes,
   onFilterChange,
+  onFilterModeChange,
   showFilters,
   filterOptions,
 }: DraggableTableHeaderProps) {
@@ -293,6 +345,8 @@ export function DraggableTableHeader({
               value={filters[col.key] || ""}
               options={filterOptions?.[col.key]}
               onChange={(val) => onFilterChange(col.key, val)}
+              mode={filterModes?.[col.key] || "contains"}
+              onModeChange={(m) => onFilterModeChange?.(col.key, m)}
             />
           ))}
           {suffix && <TableHead className="py-1 px-2" />}
