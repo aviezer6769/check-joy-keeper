@@ -132,12 +132,26 @@ export function PayeeForm() {
                   className="min-h-[60px]"
                 />
               ) : f.type === "number" ? (
-                <Input
-                  type="number"
-                  value={(form[f.key] as number) ?? 0}
-                  onChange={(e) => handleChange(f.key, e.target.value)}
-                  placeholder={f.label}
-                />
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    value={form[f.key] === null ? "" : ((form[f.key] as number) ?? 0)}
+                    onChange={(e) => handleChange(f.key, e.target.value)}
+                    placeholder={form[f.key] === null && f.key === "urgent_level" ? "?" : f.label}
+                    disabled={form[f.key] === null && f.key === "urgent_level"}
+                  />
+                  {f.key === "urgent_level" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={form[f.key] === null ? "default" : "outline"}
+                      className="h-9 px-2 text-xs shrink-0"
+                      onClick={() => setForm((prev) => ({ ...prev, [f.key]: prev[f.key] === null ? 0 : null }))}
+                    >
+                      ?
+                    </Button>
+                  )}
+                </div>
               ) : (
                 <FieldSuggestInput
                   dir={f.dir}
