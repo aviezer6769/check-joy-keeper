@@ -234,8 +234,7 @@ export function CheckBulkImport({ accountId }: CheckBulkImportProps) {
   };
 
   const handleFileImport = () => {
-    const checks = fileRows.map((r) => rowToCheck(r, accountId)).filter(Boolean) as CheckInsert[];
-    importChecks(checks, () => { setFileRows([]); setFileName(null); });
+    resolveAndImport(fileRows, () => { setFileRows([]); setFileName(null); });
   };
 
   const updateRow = (idx: number, key: string, value: string) => {
