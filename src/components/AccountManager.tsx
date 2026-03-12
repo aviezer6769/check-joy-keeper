@@ -83,6 +83,10 @@ function AccountDetail({ account, onSave, saving }: AccountDetailProps) {
           <Input value={form.payer_name} onChange={(e) => set("payer_name", e.target.value)} className="h-8 text-sm" placeholder="Name on checks" />
         </div>
         <div className="col-span-2">
+          <Label className="text-xs">Payer Name (Yiddish)</Label>
+          <Input value={form.payer_name_yiddish} onChange={(e) => set("payer_name_yiddish", e.target.value)} className="h-8 text-sm" placeholder="אידישער נאמען" dir="rtl" />
+        </div>
+        <div className="col-span-2">
           <Label className="text-xs">Address</Label>
           <Input value={form.payer_address} onChange={(e) => set("payer_address", e.target.value)} className="h-8 text-sm" placeholder="Street address" />
         </div>
