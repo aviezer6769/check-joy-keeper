@@ -76,6 +76,7 @@ function getSortValue(check: Check, key: string, chalikahMap: Record<string, str
     case "memo": return (check.memo || "").toLowerCase();
     case "record_number": return check.payee_record_number || "";
     case "given_to_record": return check.given_to_record_number || "";
+    case "run_no": return (check.run_no || "").toLowerCase();
     default: return "";
   }
 }

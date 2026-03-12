@@ -319,6 +319,10 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
               <Label htmlFor="payeeRecord">Payee Record #</Label>
               <Input id="payeeRecord" value={payeeRecordNumber} onChange={(e) => setPayeeRecordNumber(e.target.value)} placeholder="Record number" />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="runNo">Run No.</Label>
+              <Input id="runNo" value={runNo} onChange={(e) => setRunNo(e.target.value)} placeholder="Run number" />
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="memo">Memo</Label>
