@@ -14,7 +14,7 @@ import { type CheckInsert } from "@/hooks/useChecks";
 
 const CHECK_COLUMN_KEYS = [
   "payee", "amount", "check_number", "check_date", "status", "memo",
-  "payee_record_number", "given_to_payee", "given_to_record_number",
+  "payee_record_number", "given_to_payee", "given_to_record_number", "run_no",
 ] as const;
 
 type CheckColumnKey = typeof CHECK_COLUMN_KEYS[number];
@@ -26,21 +26,27 @@ const CHECK_COLUMN_LABELS: Record<CheckColumnKey, string> = {
   check_date: "Date",
   status: "Status",
   memo: "Memo",
-  payee_record_number: "Payee Record #",
+  payee_record_number: "Record #",
   given_to_payee: "Given To",
   given_to_record_number: "Given To Record #",
+  run_no: "Run No.",
 };
 
 const CHECK_HEADER_ALIASES: Record<string, CheckColumnKey> = {
   payee: "payee", "payee name": "payee", payee_name: "payee",
   amount: "amount",
   "check #": "check_number", "check number": "check_number", check_number: "check_number", "check#": "check_number",
-  date: "check_date", check_date: "check_date", "check date": "check_date",
+  checkno: "check_number", "checkno.": "check_number",
+  date: "check_date", check_date: "check_date", "check date": "check_date", checkdate: "check_date",
   status: "status",
   memo: "memo", notes: "memo",
-  "payee record #": "payee_record_number", payee_record_number: "payee_record_number", "record #": "payee_record_number", "record number": "payee_record_number",
+  "payee record #": "payee_record_number", payee_record_number: "payee_record_number",
+  "record #": "payee_record_number", "record number": "payee_record_number",
+  "record id": "payee_record_number", record_id: "payee_record_number", recordid: "payee_record_number",
   "given to": "given_to_payee", given_to_payee: "given_to_payee", "given to payee": "given_to_payee",
   "given to record #": "given_to_record_number", given_to_record_number: "given_to_record_number",
+  "run no": "run_no", "run no.": "run_no", run_no: "run_no", runno: "run_no",
+  checkrun: "run_no", "check run": "run_no", check_run: "run_no",
 };
 
 function matchCheckHeader(header: string): CheckColumnKey | undefined {
@@ -57,6 +63,26 @@ function matchCheckHeader(header: string): CheckColumnKey | undefined {
 
 const EMPTY_ROW = (): Record<string, string> =>
   Object.fromEntries(CHECK_COLUMN_KEYS.map((k) => [k, ""]));
+
+function parseAmount(val: string): number {
+  if (!val) return 0;
+  return parseFloat(String(val).replace(/[$,]/g, "")) || 0;
+}
+
+function parseDate(val: string): string {
+  if (!val) return new Date().toISOString().split("T")[0];
+  const s = String(val).trim();
+  // Already ISO format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // M/D/YY or M/D/YYYY
+  const parts = s.split("/");
+  if (parts.length === 3) {
+    let [m, d, y] = parts.map(Number);
+    if (y < 100) y += 2000;
+    return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  }
+  return new Date().toISOString().split("T")[0];
+}
 
 function parseCheckCSV(text: string): Record<string, string>[] {
   const lines = text.trim().split("\n").filter(Boolean);
@@ -87,17 +113,35 @@ function parseCheckCSV(text: string): Record<string, string>[] {
   });
 }
 
-function rowToCheck(row: Record<string, string>, accountId: string | null): CheckInsert | null {
-  const payee = (row.payee || "").trim();
+async function lookupPayeesByRecordId(recordIds: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (recordIds.length === 0) return map;
+  const unique = [...new Set(recordIds)];
+  // Query in batches of 100
+  for (let i = 0; i < unique.length; i += 100) {
+    const batch = unique.slice(i, i + 100);
+    const { data } = await supabase.from("payees").select("record_id, payee_name").in("record_id", batch);
+    if (data) data.forEach((p) => { if (p.record_id) map.set(p.record_id, p.payee_name); });
+  }
+  return map;
+}
+
+function rowToCheck(row: Record<string, string>, accountId: string | null, payeeMap?: Map<string, string>): CheckInsert | null {
+  let payee = (row.payee || "").trim();
+  const recordId = (row.payee_record_number || "").trim();
+  // If no payee but we have a record ID, look up the payee name
+  if (!payee && recordId && payeeMap) {
+    payee = payeeMap.get(recordId) || "";
+  }
   if (!payee) return null;
   return {
     payee,
-    amount: parseFloat(row.amount) || 0,
+    amount: parseAmount(row.amount),
     check_number: row.check_number || null,
-    check_date: row.check_date || new Date().toISOString().split("T")[0],
+    check_date: parseDate(row.check_date),
     status: (["Open", "Printed", "Given", "Cleared", "Void"].includes(row.status) ? row.status : "Open") as any,
     memo: row.memo || null,
-    payee_record_number: row.payee_record_number || null,
+    payee_record_number: recordId || null,
     given_to_payee: row.given_to_payee || null,
     given_to_record_number: row.given_to_record_number || null,
     chalikah_id: null,
@@ -138,15 +182,23 @@ export function CheckBulkImport({ accountId }: CheckBulkImportProps) {
     }
   };
 
+  const resolveAndImport = async (rawRows: Record<string, string>[], onDone: () => void) => {
+    // Collect record IDs that need payee lookup
+    const recordIds = rawRows
+      .filter((r) => !r.payee?.trim() && r.payee_record_number?.trim())
+      .map((r) => r.payee_record_number.trim());
+    const payeeMap = await lookupPayeesByRecordId(recordIds);
+    const checks = rawRows.map((r) => rowToCheck(r, accountId, payeeMap)).filter(Boolean) as CheckInsert[];
+    importChecks(checks, onDone);
+  };
+
   const handleCSVImport = () => {
     const parsed = parseCheckCSV(csvText);
-    const checks = parsed.map((r) => rowToCheck(r, accountId)).filter(Boolean) as CheckInsert[];
-    importChecks(checks, () => setCsvText(""));
+    resolveAndImport(parsed, () => setCsvText(""));
   };
 
   const handleMultiRowSubmit = () => {
-    const checks = rows.map((r) => rowToCheck(r, accountId)).filter(Boolean) as CheckInsert[];
-    importChecks(checks, () => setRows([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()]));
+    resolveAndImport(rows, () => setRows([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()]));
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -182,8 +234,7 @@ export function CheckBulkImport({ accountId }: CheckBulkImportProps) {
   };
 
   const handleFileImport = () => {
-    const checks = fileRows.map((r) => rowToCheck(r, accountId)).filter(Boolean) as CheckInsert[];
-    importChecks(checks, () => { setFileRows([]); setFileName(null); });
+    resolveAndImport(fileRows, () => { setFileRows([]); setFileName(null); });
   };
 
   const updateRow = (idx: number, key: string, value: string) => {
