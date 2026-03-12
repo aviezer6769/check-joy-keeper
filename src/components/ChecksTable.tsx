@@ -33,6 +33,7 @@ const CHECK_COLUMNS: ColumnDef[] = [
   { key: "memo", label: "Memo" },
   { key: "record_number", label: "Record #" },
   { key: "given_to_record", label: "Given To #", defaultVisible: false },
+  { key: "run_no", label: "Run No.", defaultVisible: false },
 ];
 
 interface ChecksTableProps {
