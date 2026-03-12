@@ -45,6 +45,7 @@ function AccountDetail({ account, onSave, saving }: AccountDetailProps) {
       payer_state: form.payer_state || null,
       payer_zip: form.payer_zip || null,
       payer_phone: form.payer_phone || null,
+      payer_name_yiddish: form.payer_name_yiddish || null,
     });
   };
 
