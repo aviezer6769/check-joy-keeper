@@ -1,11 +1,11 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, Plus, Trash2, FileUp } from "lucide-react";
+import { Upload, Plus, Trash2, FileUp, ArrowDown, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -152,9 +152,10 @@ function rowToCheck(row: Record<string, string>, accountId: string | null, payee
 
 interface CheckBulkImportProps {
   accountId: string | null;
+  existingChecks?: { check_number: string | null }[];
 }
 
-export function CheckBulkImport({ accountId }: CheckBulkImportProps) {
+export function CheckBulkImport({ accountId, existingChecks = [] }: CheckBulkImportProps) {
   const [open, setOpen] = useState(false);
   const [csvText, setCsvText] = useState("");
   const [rows, setRows] = useState<Record<string, string>[]>([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()]);
@@ -163,6 +164,13 @@ export function CheckBulkImport({ accountId }: CheckBulkImportProps) {
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileRows, setFileRows] = useState<Record<string, string>[]>([]);
   const qc = useQueryClient();
+
+  const nextCheckNumber = useMemo(() => {
+    const nums = existingChecks
+      .map((c) => parseInt(c.check_number || "", 10))
+      .filter((n) => !isNaN(n));
+    return nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  }, [existingChecks]);
 
   const importChecks = async (checks: CheckInsert[], onDone: () => void) => {
     if (checks.length === 0) {
@@ -243,7 +251,25 @@ export function CheckBulkImport({ accountId }: CheckBulkImportProps) {
   const addRow = () => setRows((prev) => [...prev, EMPTY_ROW()]);
   const removeRow = (idx: number) => setRows((prev) => prev.filter((_, i) => i !== idx));
 
-  const MULTI_ROW_KEYS: CheckColumnKey[] = ["payee", "amount", "check_number", "check_date", "status", "memo"];
+  const copyDown = (key: string) => {
+    setRows((prev) => {
+      const firstVal = prev[0]?.[key] || "";
+      return prev.map((r) => ({ ...r, [key]: r[key] || firstVal }));
+    });
+  };
+
+  const autoNumberChecks = () => {
+    setRows((prev) => prev.map((r, i) => ({
+      ...r,
+      check_number: r.check_number || String(nextCheckNumber + i),
+    })));
+  };
+
+  const addMultipleRows = (count: number) => {
+    setRows((prev) => [...prev, ...Array.from({ length: count }, () => EMPTY_ROW())]);
+  };
+
+  const MULTI_ROW_KEYS: CheckColumnKey[] = ["payee_record_number", "payee", "amount", "check_number", "check_date", "run_no", "status", "memo"];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -339,13 +365,30 @@ export function CheckBulkImport({ accountId }: CheckBulkImportProps) {
           </TabsContent>
 
           <TabsContent value="rows" className="space-y-3 pt-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button size="sm" variant="outline" onClick={autoNumberChecks} title="Auto-fill check numbers starting from next available">
+                Auto Check #s (from {nextCheckNumber})
+              </Button>
+              <span className="text-xs text-muted-foreground">Click a column's ↓ to copy the first row's value down.</span>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
                   <tr>
                     {MULTI_ROW_KEYS.map((k) => (
                       <th key={k} className="text-left px-1 py-1 font-semibold text-muted-foreground">
-                        {CHECK_COLUMN_LABELS[k]}
+                        <div className="flex items-center gap-1">
+                          {CHECK_COLUMN_LABELS[k]}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-5 w-5 opacity-50 hover:opacity-100"
+                            onClick={() => copyDown(k)}
+                            title={`Copy first row's ${CHECK_COLUMN_LABELS[k]} to all rows`}
+                          >
+                            <ArrowDown className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </th>
                     ))}
                     <th className="w-8"></th>
@@ -381,9 +424,17 @@ export function CheckBulkImport({ accountId }: CheckBulkImportProps) {
                 </tbody>
               </table>
             </div>
-            <Button size="sm" variant="outline" onClick={addRow}>
-              <Plus className="h-3 w-3 mr-1" /> Add Row
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={() => addRow()}>
+                <Plus className="h-3 w-3 mr-1" /> Add Row
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => addMultipleRows(5)}>
+                +5 Rows
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => addMultipleRows(10)}>
+                +10 Rows
+              </Button>
+            </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
               <Button onClick={handleMultiRowSubmit} disabled={importing}>
