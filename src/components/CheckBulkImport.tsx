@@ -182,15 +182,23 @@ export function CheckBulkImport({ accountId }: CheckBulkImportProps) {
     }
   };
 
+  const resolveAndImport = async (rawRows: Record<string, string>[], onDone: () => void) => {
+    // Collect record IDs that need payee lookup
+    const recordIds = rawRows
+      .filter((r) => !r.payee?.trim() && r.payee_record_number?.trim())
+      .map((r) => r.payee_record_number.trim());
+    const payeeMap = await lookupPayeesByRecordId(recordIds);
+    const checks = rawRows.map((r) => rowToCheck(r, accountId, payeeMap)).filter(Boolean) as CheckInsert[];
+    importChecks(checks, onDone);
+  };
+
   const handleCSVImport = () => {
     const parsed = parseCheckCSV(csvText);
-    const checks = parsed.map((r) => rowToCheck(r, accountId)).filter(Boolean) as CheckInsert[];
-    importChecks(checks, () => setCsvText(""));
+    resolveAndImport(parsed, () => setCsvText(""));
   };
 
   const handleMultiRowSubmit = () => {
-    const checks = rows.map((r) => rowToCheck(r, accountId)).filter(Boolean) as CheckInsert[];
-    importChecks(checks, () => setRows([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()]));
+    resolveAndImport(rows, () => setRows([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()]));
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
