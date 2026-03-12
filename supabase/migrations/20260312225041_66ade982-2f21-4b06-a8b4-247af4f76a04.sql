@@ -1,0 +1,1 @@
+ALTER TABLE public.accounts ADD COLUMN payer_name_yiddish text DEFAULT NULL;

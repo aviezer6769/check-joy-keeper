@@ -28,6 +28,7 @@ function AccountDetail({ account, onSave, saving }: AccountDetailProps) {
     payer_state: account.payer_state || "",
     payer_zip: account.payer_zip || "",
     payer_phone: account.payer_phone || "",
+    payer_name_yiddish: account.payer_name_yiddish || "",
   });
 
   const set = (key: string, value: string) => setForm((p) => ({ ...p, [key]: value }));
@@ -44,6 +45,7 @@ function AccountDetail({ account, onSave, saving }: AccountDetailProps) {
       payer_state: form.payer_state || null,
       payer_zip: form.payer_zip || null,
       payer_phone: form.payer_phone || null,
+      payer_name_yiddish: form.payer_name_yiddish || null,
     });
   };
 
@@ -79,6 +81,10 @@ function AccountDetail({ account, onSave, saving }: AccountDetailProps) {
         <div className="col-span-2">
           <Label className="text-xs">Payer Name</Label>
           <Input value={form.payer_name} onChange={(e) => set("payer_name", e.target.value)} className="h-8 text-sm" placeholder="Name on checks" />
+        </div>
+        <div className="col-span-2">
+          <Label className="text-xs">Payer Name (Yiddish)</Label>
+          <Input value={form.payer_name_yiddish} onChange={(e) => set("payer_name_yiddish", e.target.value)} className="h-8 text-sm" placeholder="אידישער נאמען" dir="rtl" />
         </div>
         <div className="col-span-2">
           <Label className="text-xs">Address</Label>
