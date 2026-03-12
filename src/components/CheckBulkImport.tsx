@@ -251,7 +251,25 @@ export function CheckBulkImport({ accountId, existingChecks = [] }: CheckBulkImp
   const addRow = () => setRows((prev) => [...prev, EMPTY_ROW()]);
   const removeRow = (idx: number) => setRows((prev) => prev.filter((_, i) => i !== idx));
 
-  const MULTI_ROW_KEYS: CheckColumnKey[] = ["payee", "amount", "check_number", "check_date", "status", "memo"];
+  const copyDown = (key: string) => {
+    setRows((prev) => {
+      const firstVal = prev[0]?.[key] || "";
+      return prev.map((r) => ({ ...r, [key]: r[key] || firstVal }));
+    });
+  };
+
+  const autoNumberChecks = () => {
+    setRows((prev) => prev.map((r, i) => ({
+      ...r,
+      check_number: r.check_number || String(nextCheckNumber + i),
+    })));
+  };
+
+  const addMultipleRows = (count: number) => {
+    setRows((prev) => [...prev, ...Array.from({ length: count }, () => EMPTY_ROW())]);
+  };
+
+  const MULTI_ROW_KEYS: CheckColumnKey[] = ["payee_record_number", "payee", "amount", "check_number", "check_date", "run_no", "status", "memo"];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
