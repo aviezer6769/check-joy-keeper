@@ -48,6 +48,8 @@ function AccountDetail({ account, onSave, saving }: AccountDetailProps) {
       payer_zip: form.payer_zip || null,
       payer_phone: form.payer_phone || null,
       payer_name_yiddish: form.payer_name_yiddish || null,
+      check_payer_name: form.check_payer_name || null,
+      stub_payer_name: form.stub_payer_name || null,
     });
   };
 
