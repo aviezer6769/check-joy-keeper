@@ -24,6 +24,7 @@ export type Database = {
           payer_address: string | null
           payer_city: string | null
           payer_name: string | null
+          payer_name_yiddish: string | null
           payer_phone: string | null
           payer_state: string | null
           payer_zip: string | null
@@ -39,6 +40,7 @@ export type Database = {
           payer_address?: string | null
           payer_city?: string | null
           payer_name?: string | null
+          payer_name_yiddish?: string | null
           payer_phone?: string | null
           payer_state?: string | null
           payer_zip?: string | null
@@ -54,6 +56,7 @@ export type Database = {
           payer_address?: string | null
           payer_city?: string | null
           payer_name?: string | null
+          payer_name_yiddish?: string | null
           payer_phone?: string | null
           payer_state?: string | null
           payer_zip?: string | null
