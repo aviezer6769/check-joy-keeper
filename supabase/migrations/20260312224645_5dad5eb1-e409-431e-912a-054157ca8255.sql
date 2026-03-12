@@ -1,0 +1,1 @@
+ALTER TABLE public.checks ADD COLUMN run_no text DEFAULT NULL;

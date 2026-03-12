@@ -98,6 +98,7 @@ export type Database = {
           original_amount: number | null
           payee: string
           payee_record_number: string | null
+          run_no: string | null
           status: string
           updated_at: string
         }
@@ -115,6 +116,7 @@ export type Database = {
           original_amount?: number | null
           payee: string
           payee_record_number?: string | null
+          run_no?: string | null
           status?: string
           updated_at?: string
         }
@@ -132,6 +134,7 @@ export type Database = {
           original_amount?: number | null
           payee?: string
           payee_record_number?: string | null
+          run_no?: string | null
           status?: string
           updated_at?: string
         }
