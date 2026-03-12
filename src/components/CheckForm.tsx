@@ -153,6 +153,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       payee_record_number: payeeRecordNumber || null,
       given_to_payee: givenToPayee || null,
       given_to_record_number: givenToRecordNumber || null,
+      run_no: runNo || null,
       account_id: initialData?.account_id ?? null,
     });
     if (!initialData) {
