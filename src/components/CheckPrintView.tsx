@@ -78,7 +78,7 @@ export function CheckPrintView({ check }: CheckPrintViewProps) {
         <div className="space-y-3">
           <div className="flex items-baseline gap-2">
             <span className="text-sm font-bold">PAY TO THE ORDER OF:</span>
-            <span className="flex-1 border-b border-foreground pb-1 font-bold text-lg">{check.payee}</span>
+            <span className="flex-1 border-b border-foreground pb-1 font-bold text-lg">{check.payee.startsWith("Payee #") ? "" : check.payee}</span>
             <span className="border border-foreground px-3 py-1 font-bold text-lg">{formatCurrency(check.amount)}</span>
           </div>
 
