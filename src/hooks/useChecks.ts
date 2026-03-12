@@ -19,6 +19,7 @@ export interface Check {
   given_to_record_number: string | null;
   account_id: string | null;
   original_amount: number | null;
+  run_no: string | null;
   created_at: string;
   updated_at: string;
 }

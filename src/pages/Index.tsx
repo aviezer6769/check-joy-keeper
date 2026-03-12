@@ -64,6 +64,7 @@ const Index = () => {
       case "memo": return c.memo || "";
       case "record_number": return c.payee_record_number || "";
       case "given_to_record": return c.given_to_record_number || "";
+      case "run_no": return c.run_no || "";
       default: return "";
     }
   };

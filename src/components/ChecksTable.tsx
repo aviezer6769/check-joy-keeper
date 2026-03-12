@@ -186,6 +186,8 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
         return <span className="font-mono text-sm">{check.payee_record_number || "—"}</span>;
       case "given_to_record":
         return <span className="font-mono text-sm">{check.given_to_record_number || "—"}</span>;
+      case "run_no":
+        return <span className="font-mono text-sm">{check.run_no || "—"}</span>;
       default:
         return "—";
     }

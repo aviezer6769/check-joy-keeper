@@ -171,6 +171,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       setSelectedPayee(null);
       setGivenToSearchQuery("");
       setSelectedGivenTo(null);
+      setRunNo("");
     }
   };
 
