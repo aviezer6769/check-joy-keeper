@@ -152,9 +152,10 @@ function rowToCheck(row: Record<string, string>, accountId: string | null, payee
 
 interface CheckBulkImportProps {
   accountId: string | null;
+  existingChecks?: { check_number: string | null }[];
 }
 
-export function CheckBulkImport({ accountId }: CheckBulkImportProps) {
+export function CheckBulkImport({ accountId, existingChecks = [] }: CheckBulkImportProps) {
   const [open, setOpen] = useState(false);
   const [csvText, setCsvText] = useState("");
   const [rows, setRows] = useState<Record<string, string>[]>([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()]);
@@ -163,6 +164,13 @@ export function CheckBulkImport({ accountId }: CheckBulkImportProps) {
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileRows, setFileRows] = useState<Record<string, string>[]>([]);
   const qc = useQueryClient();
+
+  const nextCheckNumber = useMemo(() => {
+    const nums = existingChecks
+      .map((c) => parseInt(c.check_number || "", 10))
+      .filter((n) => !isNaN(n));
+    return nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  }, [existingChecks]);
 
   const importChecks = async (checks: CheckInsert[], onDone: () => void) => {
     if (checks.length === 0) {
