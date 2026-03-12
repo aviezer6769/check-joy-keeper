@@ -66,9 +66,15 @@ const FIELDS: FieldDef[] = [
 
 export function PayeeForm() {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<PayeeInsert>({ ...EMPTY_PAYEE });
   const addPayee = useAddPayee();
   const { data: allPayees = [] } = usePayees();
+
+  const nextRecordId = useMemo(() => {
+    const nums = allPayees.map((p) => parseInt(p.record_id || "", 10)).filter((n) => !isNaN(n));
+    return nums.length > 0 ? String(Math.max(...nums) + 1) : "1";
+  }, [allPayees]);
+
+  const [form, setForm] = useState<PayeeInsert>({ ...EMPTY_PAYEE, record_id: nextRecordId });
 
   const suggestionsByField = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -96,7 +102,7 @@ export function PayeeForm() {
       { ...form, payee_name: computedName },
       {
         onSuccess: () => {
-          setForm({ ...EMPTY_PAYEE });
+          setForm({ ...EMPTY_PAYEE, record_id: String(parseInt(nextRecordId) + 1) });
           setOpen(false);
         },
       }
@@ -104,7 +110,10 @@ export function PayeeForm() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => {
+      if (v) setForm((prev) => ({ ...prev, record_id: prev.record_id || nextRecordId }));
+      setOpen(v);
+    }}>
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="h-4 w-4 mr-1" /> Add Payee
