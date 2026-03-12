@@ -61,6 +61,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
   const [payeeRecordNumber, setPayeeRecordNumber] = useState(initialData?.payee_record_number ?? "");
   const [givenToPayee, setGivenToPayee] = useState(initialData?.given_to_payee ?? "");
   const [givenToRecordNumber, setGivenToRecordNumber] = useState(initialData?.given_to_record_number ?? "");
+  const [runNo, setRunNo] = useState(initialData?.run_no ?? "");
 
   // Search state for payee
   const [searchQuery, setSearchQuery] = useState(initialData?.payee ?? "");
