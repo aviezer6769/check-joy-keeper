@@ -123,14 +123,21 @@ const Payees = () => {
 
   const getPayeeSortValue = (p: Payee, key: string): string | number => {
     switch (key) {
-      case "record_id": return (p.record_id || "").toLowerCase();
+      case "record_id": {
+        const n = parseFloat(p.record_id || "");
+        return isNaN(n) ? (p.record_id || "").toLowerCase() : n;
+      }
       case "sort_order": return p.sort_order ?? 0;
       case "urgent_level": return p.urgent_level ?? 0;
       case "yiddish_name": return [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ").toLowerCase();
       case "payee_name": return [p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ").toLowerCase() || p.payee_name.toLowerCase();
       case "address": return [p.city, p.state].filter(Boolean).join(", ").toLowerCase();
       case "is_active": return p.is_active ? 1 : 0;
-      default: return ((p as any)[key] || "").toString().toLowerCase();
+      default: {
+        const raw = ((p as any)[key] || "").toString();
+        const n = parseFloat(raw);
+        return isNaN(n) ? raw.toLowerCase() : n;
+      }
     }
   };
 

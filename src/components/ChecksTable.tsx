@@ -66,7 +66,10 @@ function getCheckTextValue(check: Check, key: string, chalikahMap: Record<string
 
 function getSortValue(check: Check, key: string, chalikahMap: Record<string, string>): string | number {
   switch (key) {
-    case "check_number": return check.check_number || "";
+    case "check_number": {
+      const n = parseFloat(check.check_number || "");
+      return isNaN(n) ? (check.check_number || "") : n;
+    }
     case "check_date": return check.check_date;
     case "payee": return check.payee.toLowerCase();
     case "chalikah": return (check.chalikah_id ? chalikahMap[check.chalikah_id] || "" : "").toLowerCase();
@@ -74,9 +77,18 @@ function getSortValue(check: Check, key: string, chalikahMap: Record<string, str
     case "status": return check.status;
     case "given_to": return (check.given_to_payee || "").toLowerCase();
     case "memo": return (check.memo || "").toLowerCase();
-    case "record_number": return check.payee_record_number || "";
-    case "given_to_record": return check.given_to_record_number || "";
-    case "run_no": return (check.run_no || "").toLowerCase();
+    case "record_number": {
+      const n = parseFloat(check.payee_record_number || "");
+      return isNaN(n) ? (check.payee_record_number || "") : n;
+    }
+    case "given_to_record": {
+      const n = parseFloat(check.given_to_record_number || "");
+      return isNaN(n) ? (check.given_to_record_number || "") : n;
+    }
+    case "run_no": {
+      const n = parseFloat(check.run_no || "");
+      return isNaN(n) ? (check.run_no || "").toLowerCase() : n;
+    }
     default: return "";
   }
 }
