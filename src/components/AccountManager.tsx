@@ -97,6 +97,7 @@ function AccountDetail({ account, onSave, saving }: AccountDetailProps) {
         <div>
           <Label className="text-xs">Stub Payer Name</Label>
           <Input value={form.stub_payer_name} onChange={(e) => set("stub_payer_name", e.target.value)} className="h-8 text-sm" placeholder="Name printed on stub" />
+        </div>
         <div className="col-span-2">
           <Label className="text-xs">Address</Label>
           <Input value={form.payer_address} onChange={(e) => set("payer_address", e.target.value)} className="h-8 text-sm" placeholder="Street address" />
