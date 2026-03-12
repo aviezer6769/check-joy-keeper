@@ -61,6 +61,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
   const [payeeRecordNumber, setPayeeRecordNumber] = useState(initialData?.payee_record_number ?? "");
   const [givenToPayee, setGivenToPayee] = useState(initialData?.given_to_payee ?? "");
   const [givenToRecordNumber, setGivenToRecordNumber] = useState(initialData?.given_to_record_number ?? "");
+  const [runNo, setRunNo] = useState(initialData?.run_no ?? "");
 
   // Search state for payee
   const [searchQuery, setSearchQuery] = useState(initialData?.payee ?? "");
@@ -152,6 +153,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       payee_record_number: payeeRecordNumber || null,
       given_to_payee: givenToPayee || null,
       given_to_record_number: givenToRecordNumber || null,
+      run_no: runNo || null,
       account_id: initialData?.account_id ?? null,
     });
     if (!initialData) {
@@ -169,6 +171,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       setSelectedPayee(null);
       setGivenToSearchQuery("");
       setSelectedGivenTo(null);
+      setRunNo("");
     }
   };
 
@@ -315,6 +318,10 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
             <div className="space-y-2">
               <Label htmlFor="payeeRecord">Payee Record #</Label>
               <Input id="payeeRecord" value={payeeRecordNumber} onChange={(e) => setPayeeRecordNumber(e.target.value)} placeholder="Record number" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="runNo">Run No.</Label>
+              <Input id="runNo" value={runNo} onChange={(e) => setRunNo(e.target.value)} placeholder="Run number" />
             </div>
           </div>
           <div className="space-y-2">

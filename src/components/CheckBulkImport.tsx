@@ -101,6 +101,7 @@ function rowToCheck(row: Record<string, string>, accountId: string | null): Chec
     given_to_payee: row.given_to_payee || null,
     given_to_record_number: row.given_to_record_number || null,
     chalikah_id: null,
+    run_no: row.run_no || null,
     account_id: accountId,
   };
 }

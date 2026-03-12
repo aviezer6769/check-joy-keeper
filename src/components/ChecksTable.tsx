@@ -33,6 +33,7 @@ const CHECK_COLUMNS: ColumnDef[] = [
   { key: "memo", label: "Memo" },
   { key: "record_number", label: "Record #" },
   { key: "given_to_record", label: "Given To #", defaultVisible: false },
+  { key: "run_no", label: "Run No.", defaultVisible: false },
 ];
 
 interface ChecksTableProps {
@@ -58,6 +59,7 @@ function getCheckTextValue(check: Check, key: string, chalikahMap: Record<string
     case "memo": return check.memo || "";
     case "record_number": return check.payee_record_number || "";
     case "given_to_record": return check.given_to_record_number || "";
+    case "run_no": return check.run_no || "";
     default: return "";
   }
 }
@@ -74,6 +76,7 @@ function getSortValue(check: Check, key: string, chalikahMap: Record<string, str
     case "memo": return (check.memo || "").toLowerCase();
     case "record_number": return check.payee_record_number || "";
     case "given_to_record": return check.given_to_record_number || "";
+    case "run_no": return (check.run_no || "").toLowerCase();
     default: return "";
   }
 }
@@ -184,6 +187,8 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
         return <span className="font-mono text-sm">{check.payee_record_number || "—"}</span>;
       case "given_to_record":
         return <span className="font-mono text-sm">{check.given_to_record_number || "—"}</span>;
+      case "run_no":
+        return <span className="font-mono text-sm">{check.run_no || "—"}</span>;
       default:
         return "—";
     }
