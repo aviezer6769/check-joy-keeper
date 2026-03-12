@@ -97,9 +97,9 @@ export function PayeeForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!computedName) return;
+    const name = computedName || (form.record_id ? `Payee #${form.record_id}` : "Unnamed Payee");
     addPayee.mutate(
-      { ...form, payee_name: computedName },
+      { ...form, payee_name: name },
       {
         onSuccess: () => {
           setForm({ ...EMPTY_PAYEE, record_id: String(parseInt(nextRecordId) + 1) });
