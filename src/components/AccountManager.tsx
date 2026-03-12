@@ -28,6 +28,7 @@ function AccountDetail({ account, onSave, saving }: AccountDetailProps) {
     payer_state: account.payer_state || "",
     payer_zip: account.payer_zip || "",
     payer_phone: account.payer_phone || "",
+    payer_name_yiddish: account.payer_name_yiddish || "",
   });
 
   const set = (key: string, value: string) => setForm((p) => ({ ...p, [key]: value }));
