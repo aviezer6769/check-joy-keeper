@@ -66,9 +66,15 @@ const FIELDS: FieldDef[] = [
 
 export function PayeeForm() {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<PayeeInsert>({ ...EMPTY_PAYEE });
   const addPayee = useAddPayee();
   const { data: allPayees = [] } = usePayees();
+
+  const nextRecordId = useMemo(() => {
+    const nums = allPayees.map((p) => parseInt(p.record_id || "", 10)).filter((n) => !isNaN(n));
+    return nums.length > 0 ? String(Math.max(...nums) + 1) : "1";
+  }, [allPayees]);
+
+  const [form, setForm] = useState<PayeeInsert>({ ...EMPTY_PAYEE, record_id: nextRecordId });
 
   const suggestionsByField = useMemo(() => {
     const map: Record<string, string[]> = {};
