@@ -28,9 +28,15 @@ export function useAccounts() {
       const { data, error } = await supabase
         .from("accounts")
         .select("*")
-        .order("created_at", { ascending: true });
+        .order("account_name", { ascending: true });
       if (error) throw error;
-      return data as Account[];
+      // Put NECB account first
+      const sorted = (data as Account[]).sort((a, b) => {
+        const aIsNecb = a.account_name.toLowerCase().includes("necb") ? 0 : 1;
+        const bIsNecb = b.account_name.toLowerCase().includes("necb") ? 0 : 1;
+        return aIsNecb - bIsNecb;
+      });
+      return sorted;
     },
   });
 }
