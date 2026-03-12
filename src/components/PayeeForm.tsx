@@ -102,7 +102,7 @@ export function PayeeForm() {
       { ...form, payee_name: computedName },
       {
         onSuccess: () => {
-          setForm({ ...EMPTY_PAYEE });
+          setForm({ ...EMPTY_PAYEE, record_id: String(parseInt(nextRecordId) + 1) });
           setOpen(false);
         },
       }
