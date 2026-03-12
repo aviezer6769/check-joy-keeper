@@ -110,7 +110,10 @@ export function PayeeForm() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => {
+      if (v) setForm((prev) => ({ ...prev, record_id: prev.record_id || nextRecordId }));
+      setOpen(v);
+    }}>
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="h-4 w-4 mr-1" /> Add Payee
