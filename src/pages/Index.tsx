@@ -176,7 +176,7 @@ const Index = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
-              <CheckBulkImport accountId={selectedAccountId} />
+              <CheckBulkImport accountId={selectedAccountId} existingChecks={checks} />
               <Button onClick={() => { setEditingCheck(null); setFormOpen(true); }}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Check
