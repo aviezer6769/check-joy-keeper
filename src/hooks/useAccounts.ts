@@ -15,6 +15,8 @@ export interface Account {
   payer_zip: string | null;
   payer_phone: string | null;
   payer_name_yiddish: string | null;
+  check_payer_name: string | null;
+  stub_payer_name: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -19,6 +19,7 @@ export type Database = {
           account_name: string
           account_number: string | null
           bank_name: string | null
+          check_payer_name: string | null
           created_at: string
           id: string
           payer_address: string | null
@@ -29,12 +30,14 @@ export type Database = {
           payer_state: string | null
           payer_zip: string | null
           routing_number: string | null
+          stub_payer_name: string | null
           updated_at: string
         }
         Insert: {
           account_name: string
           account_number?: string | null
           bank_name?: string | null
+          check_payer_name?: string | null
           created_at?: string
           id?: string
           payer_address?: string | null
@@ -45,12 +48,14 @@ export type Database = {
           payer_state?: string | null
           payer_zip?: string | null
           routing_number?: string | null
+          stub_payer_name?: string | null
           updated_at?: string
         }
         Update: {
           account_name?: string
           account_number?: string | null
           bank_name?: string | null
+          check_payer_name?: string | null
           created_at?: string
           id?: string
           payer_address?: string | null
@@ -61,6 +66,7 @@ export type Database = {
           payer_state?: string | null
           payer_zip?: string | null
           routing_number?: string | null
+          stub_payer_name?: string | null
           updated_at?: string
         }
         Relationships: []
