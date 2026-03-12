@@ -28,7 +28,7 @@ export function useAccounts() {
       const { data, error } = await supabase
         .from("accounts")
         .select("*")
-        .order("created_at", { ascending: true });
+        .order("account_name", { ascending: true });
       if (error) throw error;
       return data as Account[];
     },
