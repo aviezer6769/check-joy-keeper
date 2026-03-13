@@ -15,6 +15,21 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+// Run promises in sequential batches to avoid rate limiting
+async function batchedUpdates<T>(
+  items: T[],
+  fn: (item: T) => Promise<{ error: any }>,
+  batchSize = 20
+): Promise<{ errors: number; total: number }> {
+  let errors = 0;
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const results = await Promise.all(batch.map(fn));
+    errors += results.filter((r) => r.error).length;
+  }
+  return { errors, total: items.length };
+}
+
 interface FieldDef {
   key: string;
   label: string;
@@ -104,19 +119,17 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
     // Handle status=Void specially — each check needs its own original_amount
     if (enabledFields.has("status") && values["status"] === "Void") {
       setSaving(true);
-      const promises = checks.map((c) => {
+      const { errors: voidErrors } = await batchedUpdates(checks, async (c) => {
         const perCheckUpdates = { ...updates };
         if (c.status !== "Void") {
           perCheckUpdates.original_amount = c.amount;
           perCheckUpdates.amount = 0;
         }
-        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id);
+        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id).select().single();
       });
-      const results = await Promise.all(promises);
       setSaving(false);
-      const errors = results.filter((r) => r.error);
-      if (errors.length > 0) {
-        toast.error(`${errors.length} row(s) failed to update`);
+      if (voidErrors > 0) {
+        toast.error(`${voidErrors} row(s) failed to update`);
       } else {
         toast.success(`Updated ${checks.length} check(s)`);
         qc.invalidateQueries({ queryKey: ["checks"] });
@@ -129,19 +142,17 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
     // Handle unvoiding
     if (enabledFields.has("status") && values["status"] !== "Void") {
       setSaving(true);
-      const promises = checks.map((c) => {
+      const { errors: unvoidErrors } = await batchedUpdates(checks, async (c) => {
         const perCheckUpdates = { ...updates };
         if (c.status === "Void") {
           perCheckUpdates.amount = c.original_amount ?? 0;
           perCheckUpdates.original_amount = null;
         }
-        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id);
+        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id).select().single();
       });
-      const results = await Promise.all(promises);
       setSaving(false);
-      const errors = results.filter((r) => r.error);
-      if (errors.length > 0) {
-        toast.error(`${errors.length} row(s) failed to update`);
+      if (unvoidErrors > 0) {
+        toast.error(`${unvoidErrors} row(s) failed to update`);
       } else {
         toast.success(`Updated ${checks.length} check(s)`);
         qc.invalidateQueries({ queryKey: ["checks"] });
@@ -152,12 +163,13 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
     }
 
     setSaving(true);
-    const ids = checks.map((c) => c.id);
-    const { error } = await supabase.from("checks").update(updates).in("id", ids);
+    const { errors: bulkErrors } = await batchedUpdates(checks, async (c) => {
+      return supabase.from("checks").update(updates).eq("id", c.id).select().single();
+    });
     setSaving(false);
 
-    if (error) {
-      toast.error("Bulk update failed: " + error.message);
+    if (bulkErrors > 0) {
+      toast.error(`${bulkErrors} row(s) failed to update`);
     } else {
       toast.success(`Updated ${checks.length} check(s)`);
       qc.invalidateQueries({ queryKey: ["checks"] });
@@ -200,7 +212,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
 
   const handleGridSave = async () => {
     setSaving(true);
-    const promises = gridRows.map((row) => {
+    const { errors: gridErrors } = await batchedUpdates(gridRows, async (row) => {
       const { id, created_at, updated_at, ...rest } = row;
       GRID_FIELDS.forEach((f) => {
         if (f.type === "number") {
@@ -213,15 +225,12 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
           rest[f.key] = rest[f.key] || null;
         }
       });
-      return supabase.from("checks").update(rest).eq("id", id);
+      return supabase.from("checks").update(rest).eq("id", id).select().single();
     });
-
-    const results = await Promise.all(promises);
     setSaving(false);
 
-    const errors = results.filter((r) => r.error);
-    if (errors.length > 0) {
-      toast.error(`${errors.length} row(s) failed to update`);
+    if (gridErrors > 0) {
+      toast.error(`${gridErrors} row(s) failed to update`);
     } else {
       toast.success(`Updated ${gridRows.length} check(s)`);
       qc.invalidateQueries({ queryKey: ["checks"] });
