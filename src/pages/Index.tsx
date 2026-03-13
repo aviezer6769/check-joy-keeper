@@ -35,7 +35,7 @@ const Index = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingCheck, setEditingCheck] = useState<Check | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [printCheck, setPrintCheck] = useState<Check | null>(null);
+  const [printChecks, setPrintChecks] = useState<Check[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
