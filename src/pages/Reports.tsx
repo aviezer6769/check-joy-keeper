@@ -31,6 +31,7 @@ const STATIC_REPORT_COLS: ColumnDef[] = [
   { key: "record_id", label: "Record ID" },
   { key: "yiddish_name", label: "Yiddish Name" },
   { key: "payee_name", label: "Payee" },
+  { key: "memo", label: "Memo", defaultVisible: false },
 ];
 
 const Reports = () => {
