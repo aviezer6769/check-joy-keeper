@@ -265,7 +265,7 @@ const Reports = () => {
     if (colKey === "payee_name") return pr.name.toLowerCase();
     if (colKey === "address") return (pr.address || "").toLowerCase();
     if (colKey === "memo") return (pr.memo || "").toLowerCase();
-    if (colKey === "total") return Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0);
+    if (colKey === "total") return Object.values(matrixData[pr.key] || {}).reduce((s, v) => s + v, 0);
     if (colKey.startsWith("ch_")) {
       const chId = colKey.slice(3);
       return matrixData[pr.name]?.[chId] || 0;
