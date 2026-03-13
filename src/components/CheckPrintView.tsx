@@ -108,7 +108,7 @@ function PayeeBlock({ payee }: { payee?: Payee | null }) {
   const cityLine = [cityState, payee.zip].filter(Boolean).join(" ");
 
   return (
-    <div className="text-xs leading-tight mt-6">
+    <div className="text-xs leading-tight mt-6 ml-8">
       {yiddishName && <p>{yiddishName}</p>}
       <p>{payee.payee_name}</p>
       {streetLine && <p>{streetLine}</p>}
