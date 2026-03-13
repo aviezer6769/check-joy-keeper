@@ -632,7 +632,7 @@ const Payees = () => {
                                       <TableBody>
                                         {renderCheckRows(sorted)}
                                         <TableRow className="bg-muted/50 font-semibold">
-                                          <TableCell colSpan={3} className="text-xs">Total ({sorted.length} checks)</TableCell>
+                                          <TableCell colSpan={4} className="text-xs">Total ({sorted.length} checks)</TableCell>
                                           <TableCell className="text-right font-mono text-xs">{formatCurrency(total)}</TableCell>
                                           <TableCell colSpan={2} />
                                         </TableRow>
