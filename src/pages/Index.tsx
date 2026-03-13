@@ -302,7 +302,11 @@ const Index = () => {
       {/* Hidden print view */}
       <div className="hidden">
         <div ref={printRef}>
-          {printCheck && <CheckPrintView check={printCheck} />}
+          {printChecks.map((c, i) => (
+            <div key={c.id} style={i > 0 ? { pageBreakBefore: "always" } : undefined}>
+              <CheckPrintView check={c} />
+            </div>
+          ))}
         </div>
       </div>
 
