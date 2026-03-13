@@ -9,6 +9,10 @@ interface CheckPrintViewProps {
   payee?: Payee | null;
 }
 
+const PAGE_WIDTH_IN = "8.5in";
+const FACE_HEIGHT_IN = "3.55in";
+const STUB_HEIGHT_IN = "2.05in";
+
 function amountToFullWords(num: number): string {
   const ones = [
     "",
