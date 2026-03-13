@@ -216,7 +216,7 @@ const Reports = () => {
       } else if (col.key.startsWith("ch_")) {
         const chId = col.key.slice(3);
         totalsRow[col.label] = exportPayees.reduce(
-          (s: number, pr: any) => s + (src.matrix[pr.name]?.[chId] || 0), 0
+          (s: number, pr: any) => s + (src.matrix[pr.key]?.[chId] || 0), 0
         );
       }
     });
