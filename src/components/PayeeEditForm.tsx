@@ -63,10 +63,23 @@ export function PayeeEditForm({ payee, open, onOpenChange }: PayeeEditFormProps)
   }, [allPayees]);
 
   const handleChange = (key: string, value: string) => {
-    setForm((prev) => ({
-      ...prev,
-      [key]: key === "sort_order" || key === "urgent_level" ? Number(value) || 0 : value || null,
-    }));
+    setForm((prev) => {
+      const updated = {
+        ...prev,
+        [key]: key === "sort_order" || key === "urgent_level" ? Number(value) || 0 : value || null,
+      };
+      if (key === "street_name" && value) {
+        const match = allPayees.find(
+          (p) => p.street_name?.toLowerCase() === value.toLowerCase()
+        );
+        if (match) {
+          if (!prev.city) updated.city = match.city;
+          if (!prev.state) updated.state = match.state;
+          if (!prev.zip) updated.zip = match.zip;
+        }
+      }
+      return updated;
+    });
   };
 
   const computedName = buildPayeeName(form);
