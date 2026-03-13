@@ -1,4 +1,5 @@
 import { type Check } from "@/hooks/useChecks";
+import signatureImg from "@/assets/signature.png";
 
 interface CheckPrintViewProps {
   check: Check;
