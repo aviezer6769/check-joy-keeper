@@ -173,13 +173,18 @@ const Reports = () => {
 
   const handleExport = (data?: any) => {
     const src = data || buildReportData();
-    const rows = (src.payeeRows as typeof payeeRows).map((pr) => {
+    // If there's a selection, export only selected; otherwise export all displayed
+    const exportPayees = selectedNames.size > 0
+      ? (src.payeeRows as typeof payeeRows).filter((pr) => selectedNames.has(pr.name))
+      : (src.payeeRows as typeof payeeRows);
+    const rows = exportPayees.map((pr) => {
       const row: Record<string, any> = {};
       colLayout.visibleColumns.forEach((col) => {
         if (col.key === "record_id") row["Record ID"] = pr.record_id;
         else if (col.key === "is_active") row["Active"] = pr.is_active ? "Active" : "Inactive";
         else if (col.key === "yiddish_name") row["Yiddish Name"] = pr.yiddish;
         else if (col.key === "payee_name") row["Payee"] = pr.name;
+        else if (col.key === "address") row["Address"] = pr.address || "";
         else if (col.key === "memo") row["Memo"] = pr.memo || "";
         else if (col.key === "total") row["Total"] = Object.values(src.matrix[pr.name] || {}).reduce((s: number, v: any) => s + Number(v), 0);
         else if (col.key.startsWith("ch_")) {
@@ -197,10 +202,13 @@ const Reports = () => {
       else if (col.key === "record_id") totalsRow["Record ID"] = "";
       else if (col.key === "is_active") totalsRow["Active"] = "";
       else if (col.key === "yiddish_name") totalsRow["Yiddish Name"] = "";
-      else if (col.key === "total") totalsRow["Total"] = src.grandTotal || 0;
-      else if (col.key.startsWith("ch_")) {
+      else if (col.key === "address") totalsRow["Address"] = "";
+      else if (col.key === "total") {
+        totalsRow["Total"] = exportPayees.reduce((s, pr) =>
+          s + Object.values(src.matrix[pr.name] || {}).reduce((ss: number, v: any) => ss + Number(v), 0), 0);
+      } else if (col.key.startsWith("ch_")) {
         const chId = col.key.slice(3);
-        totalsRow[col.label] = (src.payeeRows as typeof payeeRows).reduce(
+        totalsRow[col.label] = exportPayees.reduce(
           (s: number, pr: any) => s + (src.matrix[pr.name]?.[chId] || 0), 0
         );
       }
