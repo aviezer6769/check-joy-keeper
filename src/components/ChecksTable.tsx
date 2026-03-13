@@ -156,7 +156,7 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
     return result;
   }, [checks, chalikahMap]);
 
-
+  const allSelected = filteredChecks.length > 0 && filteredChecks.every((c) => selectedIds.has(c.id));
   const renderCell = (check: Check, key: string) => {
     switch (key) {
       case "check_number":
