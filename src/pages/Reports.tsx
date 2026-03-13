@@ -421,6 +421,8 @@ const Reports = () => {
             {/* Totals row */}
             <TableRow className="bg-muted/50 font-bold">
               {visCols.map((col) => {
+                if (col.key === "sort_order")
+                  return <TableCell key={col.key} className="bg-muted/50" />;
                 if (col.key === "record_id")
                   return <TableCell key={col.key} className="sticky left-0 bg-muted/50 z-10" />;
                 if (col.key === "yiddish_name")
