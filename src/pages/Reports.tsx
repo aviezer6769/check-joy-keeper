@@ -111,19 +111,23 @@ const Reports = () => {
   // Build payee × chalikah matrix
   const { matrix, payeeRows, chalikahCols, grandTotal } = useMemo(() => {
     const map: Record<string, Record<string, number>> = {};
-    const payeeMap: Record<string, { name: string; record_id: string; yiddish: string; memo: string; address: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
+    const payeeMap: Record<string, { key: string; name: string; record_id: string; yiddish: string; memo: string; address: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
     const chalikahIds = new Set<string>();
 
+    // Deduplicate by record_id when available, otherwise by payee name
     filteredChecks.forEach((c) => {
-      const payee = c.payee || "(No Payee)";
+      const info = getPayeeInfo(c.payee || "(No Payee)", c.payee_record_number);
+      // Use record_id as the unique key when available, otherwise fall back to payee name
+      const dedupeKey = (c.payee_record_number && info.record_id)
+        ? `__rid__${info.record_id}`
+        : (c.payee || "(No Payee)");
       const chId = c.chalikah_id || "__none__";
       chalikahIds.add(chId);
-      if (!map[payee]) {
-        map[payee] = {};
-        const info = getPayeeInfo(payee, c.payee_record_number);
-        payeeMap[payee] = { name: payee, ...info };
+      if (!map[dedupeKey]) {
+        map[dedupeKey] = {};
+        payeeMap[dedupeKey] = { key: dedupeKey, name: c.payee || "(No Payee)", ...info };
       }
-      map[payee][chId] = (map[payee][chId] || 0) + c.amount;
+      map[dedupeKey][chId] = (map[dedupeKey][chId] || 0) + c.amount;
     });
 
     const chalikahNameMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
@@ -178,7 +182,7 @@ const Reports = () => {
     const baseRows = data ? (src.payeeRows as typeof payeeRows) : displayedRows;
     // If there's a selection, export only selected; otherwise export all displayed
     const exportPayees = selectedNames.size > 0
-      ? baseRows.filter((pr) => selectedNames.has(pr.name))
+      ? baseRows.filter((pr) => selectedNames.has(pr.key))
       : baseRows;
     const rows = exportPayees.map((pr) => {
       const row: Record<string, any> = {};
@@ -189,10 +193,10 @@ const Reports = () => {
         else if (col.key === "payee_name") row["Payee"] = pr.name;
         else if (col.key === "address") row["Address"] = pr.address || "";
         else if (col.key === "memo") row["Memo"] = pr.memo || "";
-        else if (col.key === "total") row["Total"] = Object.values(src.matrix[pr.name] || {}).reduce((s: number, v: any) => s + Number(v), 0);
+        else if (col.key === "total") row["Total"] = Object.values(src.matrix[pr.key] || {}).reduce((s: number, v: any) => s + Number(v), 0);
         else if (col.key.startsWith("ch_")) {
           const chId = col.key.slice(3);
-          row[col.label] = src.matrix[pr.name]?.[chId] || 0;
+          row[col.label] = src.matrix[pr.key]?.[chId] || 0;
         }
       });
       return row;
@@ -208,11 +212,11 @@ const Reports = () => {
       else if (col.key === "address") totalsRow["Address"] = "";
       else if (col.key === "total") {
         totalsRow["Total"] = exportPayees.reduce((s: number, pr: any) =>
-          s + (Object.values(src.matrix[pr.name] || {}) as number[]).reduce((ss, v) => ss + Number(v), 0), 0);
+          s + (Object.values(src.matrix[pr.key] || {}) as number[]).reduce((ss, v) => ss + Number(v), 0), 0);
       } else if (col.key.startsWith("ch_")) {
         const chId = col.key.slice(3);
         totalsRow[col.label] = exportPayees.reduce(
-          (s: number, pr: any) => s + (src.matrix[pr.name]?.[chId] || 0), 0
+          (s: number, pr: any) => s + (src.matrix[pr.key]?.[chId] || 0), 0
         );
       }
     });
@@ -238,11 +242,11 @@ const Reports = () => {
     if (colKey === "address") return pr.address || "";
     if (colKey === "memo") return pr.memo || "";
     if (colKey === "total") {
-      return String(Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0));
+      return String(Object.values(matrixData[pr.key] || {}).reduce((s, v) => s + v, 0));
     }
     if (colKey.startsWith("ch_")) {
       const chId = colKey.slice(3);
-      return String(matrixData[pr.name]?.[chId] || 0);
+      return String(matrixData[pr.key]?.[chId] || 0);
     }
     return "";
   };
@@ -261,10 +265,10 @@ const Reports = () => {
     if (colKey === "payee_name") return pr.name.toLowerCase();
     if (colKey === "address") return (pr.address || "").toLowerCase();
     if (colKey === "memo") return (pr.memo || "").toLowerCase();
-    if (colKey === "total") return Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0);
+    if (colKey === "total") return Object.values(matrixData[pr.key] || {}).reduce((s, v) => s + v, 0);
     if (colKey.startsWith("ch_")) {
       const chId = colKey.slice(3);
-      return matrixData[pr.name]?.[chId] || 0;
+      return matrixData[pr.key]?.[chId] || 0;
     }
     return "";
   };
@@ -352,7 +356,7 @@ const Reports = () => {
   // Compute filtered grand total
   const filteredGrandTotal = useMemo(() =>
     displayedRows.reduce((s, pr) =>
-      s + Object.values(matrix[pr.name] || {}).reduce((ss, v) => ss + v, 0), 0
+      s + Object.values(matrix[pr.key] || {}).reduce((ss, v) => ss + v, 0), 0
     ), [displayedRows, matrix]);
 
   const renderMatrix = (
@@ -416,10 +420,10 @@ const Reports = () => {
                 prefix={
                   <TableHead className="w-10">
                     <Checkbox
-                      checked={rows.length > 0 && rows.every((pr) => selectedNames.has(pr.name))}
+                      checked={rows.length > 0 && rows.every((pr) => selectedNames.has(pr.key))}
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          setSelectedNames(new Set(rows.map((pr) => pr.name)));
+                          setSelectedNames(new Set(rows.map((pr) => pr.key)));
                         } else {
                           setSelectedNames(new Set());
                         }
@@ -432,18 +436,18 @@ const Reports = () => {
           </TableHeader>
           <TableBody>
             {rows.map((pr) => {
-              const rowTotal = Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0);
+              const rowTotal = Object.values(matrixData[pr.key] || {}).reduce((s, v) => s + v, 0);
               return (
-                <TableRow key={pr.name} className={!isStatic && selectedNames.has(pr.name) ? "bg-muted/30" : undefined}>
+                <TableRow key={pr.key} className={!isStatic && selectedNames.has(pr.key) ? "bg-muted/30" : undefined}>
                   {!isStatic && (
                     <TableCell className="w-10">
                       <Checkbox
-                        checked={selectedNames.has(pr.name)}
+                        checked={selectedNames.has(pr.key)}
                         onCheckedChange={(checked) => {
                           setSelectedNames((prev) => {
                             const next = new Set(prev);
-                            if (checked) next.add(pr.name);
-                            else next.delete(pr.name);
+                            if (checked) next.add(pr.key);
+                            else next.delete(pr.key);
                             return next;
                           });
                         }}
@@ -473,7 +477,7 @@ const Reports = () => {
                       const chId = col.key.slice(3);
                       return (
                         <TableCell key={col.key} className="text-right tabular-nums">
-                          {matrixData[pr.name]?.[chId] ? fmt(matrixData[pr.name][chId]) : "—"}
+                          {matrixData[pr.key]?.[chId] ? fmt(matrixData[pr.key][chId]) : "—"}
                         </TableCell>
                       );
                     }
@@ -500,7 +504,7 @@ const Reports = () => {
                   return <TableCell key={col.key} className="text-right tabular-nums">{fmt(total)}</TableCell>;
                 if (col.key.startsWith("ch_")) {
                   const chId = col.key.slice(3);
-                  const colTotal = rows.reduce((s, pr) => s + (matrixData[pr.name]?.[chId] || 0), 0);
+                  const colTotal = rows.reduce((s, pr) => s + (matrixData[pr.key]?.[chId] || 0), 0);
                   return <TableCell key={col.key} className="text-right tabular-nums">{fmt(colTotal)}</TableCell>;
                 }
                 return <TableCell key={col.key} />;
