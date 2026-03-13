@@ -176,7 +176,7 @@ const Payees = () => {
     if (!colLayout.sort) return result;
     const { key, dir } = colLayout.sort;
     if (key === "sort_order") {
-      // Composite sort: active desc, urgent desc (null last), last_name_yiddish asc, first_name_yiddish asc, middle_name_yiddish asc
+      // Composite sort: active first, urgent priority 1 > 2 > 3 > 0 > ?, then Hebrew name
       return [...result].sort((a, b) => {
         const mul = dir === "asc" ? 1 : -1;
         // 1. Active first
