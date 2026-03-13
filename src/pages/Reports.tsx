@@ -55,7 +55,7 @@ const Reports = () => {
   const [reportName, setReportName] = useState("");
   const [viewingReport, setViewingReport] = useState<SavedReport | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-
+  const [selectedNames, setSelectedNames] = useState<Set<string>>(new Set());
   // Build payee lookup by record_id and payee_name
   const payeeLookup = useMemo(() => {
     const byRecord: Record<string, { record_id: string; yiddish: string; memo: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
