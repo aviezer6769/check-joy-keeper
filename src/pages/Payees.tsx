@@ -71,6 +71,7 @@ const Payees = () => {
   const [editingPayee, setEditingPayee] = useState<Payee | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [batchCheckOpen, setBatchCheckOpen] = useState(false);
   const [groupByChalikah, setGroupByChalikah] = useState(false);
   const [showFilters, setShowFilters] = useState(() => localStorage.getItem("payees-show-filters") === "true");
   const toggleFilters = () => {
