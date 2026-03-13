@@ -405,6 +405,8 @@ const Reports = () => {
                     }
                     if (col.key === "record_id")
                       return <TableCell key={col.key} className="sticky left-0 bg-background z-10">{pr.record_id || "—"}</TableCell>;
+                    if (col.key === "is_active")
+                      return <TableCell key={col.key} className="bg-background">{pr.is_active ? <Badge variant="default" className="bg-success text-success-foreground">Active</Badge> : <Badge variant="secondary">Inactive</Badge>}</TableCell>;
                     if (col.key === "yiddish_name")
                       return <TableCell key={col.key} className="bg-background" dir="rtl">{pr.yiddish || "—"}</TableCell>;
                     if (col.key === "payee_name")
