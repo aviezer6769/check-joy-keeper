@@ -205,7 +205,7 @@ const Reports = () => {
       else if (col.key === "address") totalsRow["Address"] = "";
       else if (col.key === "total") {
         totalsRow["Total"] = exportPayees.reduce((s: number, pr: any) =>
-          s + Object.values(src.matrix[pr.name] || {}).reduce((ss: number, v: any) => ss + Number(v), 0), 0);
+          s + (Object.values(src.matrix[pr.name] || {}) as number[]).reduce((ss, v) => ss + Number(v), 0), 0);
       } else if (col.key.startsWith("ch_")) {
         const chId = col.key.slice(3);
         totalsRow[col.label] = exportPayees.reduce(
