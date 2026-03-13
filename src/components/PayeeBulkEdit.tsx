@@ -151,6 +151,14 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
     );
   };
 
+  const copyDownGrid = (key: string) => {
+    setGridRows((prev) => {
+      const firstVal = prev[0]?.[key];
+      if (firstVal === undefined || firstVal === null || firstVal === "") return prev;
+      return prev.map((r) => ({ ...r, [key]: r[key] || firstVal }));
+    });
+  };
+
   const handleGridSave = async () => {
     setSaving(true);
     // Build individual updates for changed rows
