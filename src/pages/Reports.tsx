@@ -55,13 +55,19 @@ const Reports = () => {
 
   // Build payee lookup by record_id and payee_name
   const payeeLookup = useMemo(() => {
-    const byRecord: Record<string, { record_id: string; yiddish: string; memo: string }> = {};
-    const byName: Record<string, { record_id: string; yiddish: string; memo: string }> = {};
+    const byRecord: Record<string, { record_id: string; yiddish: string; memo: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
+    const byName: Record<string, typeof byRecord[string]> = {};
     payeesList.forEach((p) => {
       const yiddish = [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish]
         .filter(Boolean)
         .join(" ");
-      const entry = { record_id: p.record_id || "", yiddish, memo: p.memo || "" };
+      const entry = {
+        record_id: p.record_id || "", yiddish, memo: p.memo || "",
+        is_active: p.is_active, urgent_level: p.urgent_level,
+        last_name_yiddish: p.last_name_yiddish || "",
+        first_name_yiddish: p.first_name_yiddish || "",
+        middle_name_yiddish: p.middle_name_yiddish || "",
+      };
       if (p.record_id) byRecord[p.record_id] = entry;
       byName[p.payee_name.toLowerCase()] = entry;
     });
