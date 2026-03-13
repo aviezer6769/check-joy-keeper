@@ -526,6 +526,7 @@ const Payees = () => {
                                     items.map((c) => (
                                       <TableRow key={c.id}>
                                         <TableCell className="font-mono text-xs">{c.check_number || "—"}</TableCell>
+                                        <TableCell className="text-xs">{c.account_id ? accountMap[c.account_id] || "—" : "—"}</TableCell>
                                         <TableCell className="text-xs">{formatDate(c.check_date)}</TableCell>
                                         <TableCell className="text-xs">{c.chalikah_id ? chalikahMap[c.chalikah_id] || "—" : "—"}</TableCell>
                                         <TableCell className="text-right font-mono text-xs">
