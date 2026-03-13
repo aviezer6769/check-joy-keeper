@@ -465,7 +465,18 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
                     <th className="text-left px-2 py-1.5 font-semibold text-muted-foreground whitespace-nowrap">#</th>
                     {GRID_FIELDS.map((f) => (
                       <th key={f.key} className="text-left px-1 py-1.5 font-semibold text-muted-foreground whitespace-nowrap">
-                        {f.label}
+                        <div className="flex items-center gap-1">
+                          {f.label}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-5 w-5 opacity-50 hover:opacity-100"
+                            onClick={() => copyDownGrid(f.key)}
+                            title={`Copy first row's ${f.label} to all rows`}
+                          >
+                            <ArrowDown className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </th>
                     ))}
                   </tr>
