@@ -41,6 +41,7 @@ const Index = () => {
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const [displayedChecks, setDisplayedChecks] = useState<Check[]>([]);
+  const { data: payees = [] } = usePayees();
   const handleFilteredChecksChange = useCallback((filtered: Check[]) => {
     setDisplayedChecks(filtered);
   }, []);
