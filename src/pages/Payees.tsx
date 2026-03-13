@@ -7,13 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers, X } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers, X, FileCheck } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { PayeeForm } from "@/components/PayeeForm";
 import { PayeeBulkImport } from "@/components/PayeeBulkImport";
 import { PayeeEditForm } from "@/components/PayeeEditForm";
 import { PayeeBulkEdit } from "@/components/PayeeBulkEdit";
+import { BatchCheckDialog } from "@/components/BatchCheckDialog";
 import { useDeletePayee } from "@/hooks/usePayees";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -70,6 +71,7 @@ const Payees = () => {
   const [editingPayee, setEditingPayee] = useState<Payee | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [batchCheckOpen, setBatchCheckOpen] = useState(false);
   const [groupByChalikah, setGroupByChalikah] = useState(false);
   const [showFilters, setShowFilters] = useState(() => localStorage.getItem("payees-show-filters") === "true");
   const toggleFilters = () => {
@@ -347,6 +349,9 @@ const Payees = () => {
                   </Button>
                   <Button size="sm" variant="secondary" onClick={() => setBulkEditOpen(true)}>
                     <Pencil className="h-4 w-4 mr-1" /> Edit {selectedIds.size}
+                  </Button>
+                  <Button size="sm" variant="default" onClick={() => setBatchCheckOpen(true)}>
+                    <FileCheck className="h-4 w-4 mr-1" /> Create Checks ({selectedIds.size})
                   </Button>
                 </>
               )}
@@ -663,6 +668,12 @@ const Payees = () => {
         payees={selectedPayees}
         open={bulkEditOpen}
         onOpenChange={setBulkEditOpen}
+        onDone={() => setSelectedIds(new Set())}
+      />
+      <BatchCheckDialog
+        open={batchCheckOpen}
+        onOpenChange={setBatchCheckOpen}
+        payees={selectedPayees}
         onDone={() => setSelectedIds(new Set())}
       />
     </div>
