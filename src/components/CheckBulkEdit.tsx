@@ -125,17 +125,17 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
           perCheckUpdates.original_amount = c.amount;
           perCheckUpdates.amount = 0;
         }
-        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id).select().single();
+        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id);
       });
       setSaving(false);
       if (voidErrors > 0) {
         toast.error(`${voidErrors} row(s) failed to update`);
       } else {
         toast.success(`Updated ${checks.length} check(s)`);
-        qc.invalidateQueries({ queryKey: ["checks"] });
-        onDone();
-        onOpenChange(false);
       }
+      qc.invalidateQueries({ queryKey: ["checks"] });
+      onDone();
+      onOpenChange(false);
       return;
     }
 
@@ -148,34 +148,39 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
           perCheckUpdates.amount = c.original_amount ?? 0;
           perCheckUpdates.original_amount = null;
         }
-        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id).select().single();
+        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id);
       });
       setSaving(false);
       if (unvoidErrors > 0) {
         toast.error(`${unvoidErrors} row(s) failed to update`);
       } else {
         toast.success(`Updated ${checks.length} check(s)`);
-        qc.invalidateQueries({ queryKey: ["checks"] });
-        onDone();
-        onOpenChange(false);
       }
-      return;
-    }
-
-    setSaving(true);
-    const { errors: bulkErrors } = await batchedUpdates(checks, async (c) => {
-      return supabase.from("checks").update(updates).eq("id", c.id).select().single();
-    });
-    setSaving(false);
-
-    if (bulkErrors > 0) {
-      toast.error(`${bulkErrors} row(s) failed to update`);
-    } else {
-      toast.success(`Updated ${checks.length} check(s)`);
       qc.invalidateQueries({ queryKey: ["checks"] });
       onDone();
       onOpenChange(false);
+      return;
     }
+
+    // Simple bulk update — use .in() with batched ID chunks
+    setSaving(true);
+    const ids = checks.map((c) => c.id);
+    let bulkErrors = 0;
+    for (let i = 0; i < ids.length; i += 50) {
+      const batch = ids.slice(i, i + 50);
+      const { error } = await supabase.from("checks").update(updates).in("id", batch);
+      if (error) bulkErrors++;
+    }
+    setSaving(false);
+
+    if (bulkErrors > 0) {
+      toast.error(`Some rows failed to update`);
+    } else {
+      toast.success(`Updated ${checks.length} check(s)`);
+    }
+    qc.invalidateQueries({ queryKey: ["checks"] });
+    onDone();
+    onOpenChange(false);
   };
 
   const updateGridCell = (idx: number, key: string, value: any) => {
