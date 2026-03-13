@@ -97,7 +97,7 @@ function getSortValue(check: Check, key: string, chalikahMap: Record<string, str
 export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange, selectedIds, onToggleSelect, onToggleAll, onFilteredChecksChange }: ChecksTableProps) {
   const { data: chalikahList = [] } = useChalikah();
   const chalikahMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
-  const allSelected = checks.length > 0 && checks.every((c) => selectedIds.has(c.id));
+  const [allSelectedDeferred, setAllSelectedDeferred] = useState(false);
   const [showFilters, setShowFilters] = useState(() => localStorage.getItem("checks-show-filters") === "true");
   const toggleFilters = () => {
     setShowFilters((prev) => {
