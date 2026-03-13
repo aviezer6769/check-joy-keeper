@@ -9,6 +9,8 @@ interface FieldSuggestInputProps {
   className?: string;
   type?: string;
   dir?: "rtl" | "ltr";
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  [key: string]: any;
 }
 
 export function FieldSuggestInput({
