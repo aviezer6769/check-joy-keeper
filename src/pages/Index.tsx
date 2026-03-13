@@ -88,7 +88,7 @@ const Index = () => {
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
-    documentTitle: `Check-${printCheck?.check_number || "print"}`,
+    documentTitle: `Check-${printChecks.length === 1 ? printChecks[0]?.check_number || "print" : "bulk-print"}`,
   });
 
   const handleSubmit = (data: CheckInsert) => {
