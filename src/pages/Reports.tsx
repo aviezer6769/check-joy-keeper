@@ -174,10 +174,12 @@ const Reports = () => {
 
   const handleExport = (data?: any) => {
     const src = data || buildReportData();
+    // Use displayedRows (sorted/filtered) for live view, or saved data's payeeRows
+    const baseRows = data ? (src.payeeRows as typeof payeeRows) : displayedRows;
     // If there's a selection, export only selected; otherwise export all displayed
     const exportPayees = selectedNames.size > 0
-      ? (src.payeeRows as typeof payeeRows).filter((pr) => selectedNames.has(pr.name))
-      : (src.payeeRows as typeof payeeRows);
+      ? baseRows.filter((pr) => selectedNames.has(pr.name))
+      : baseRows;
     const rows = exportPayees.map((pr) => {
       const row: Record<string, any> = {};
       colLayout.visibleColumns.forEach((col) => {
