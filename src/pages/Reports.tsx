@@ -391,6 +391,10 @@ const Reports = () => {
               return (
                 <TableRow key={pr.name}>
                   {visCols.map((col) => {
+                    if (col.key === "sort_order") {
+                      const parts = [pr.is_active ? "✓" : "✗", pr.urgent_level === null || pr.urgent_level === undefined ? "?" : String(pr.urgent_level)].join("/");
+                      return <TableCell key={col.key} className="bg-background"><span className="text-muted-foreground text-xs">{parts}</span></TableCell>;
+                    }
                     if (col.key === "record_id")
                       return <TableCell key={col.key} className="sticky left-0 bg-background z-10">{pr.record_id || "—"}</TableCell>;
                     if (col.key === "yiddish_name")
