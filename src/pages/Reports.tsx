@@ -99,7 +99,7 @@ const Reports = () => {
   // Build payee × chalikah matrix
   const { matrix, payeeRows, chalikahCols, grandTotal } = useMemo(() => {
     const map: Record<string, Record<string, number>> = {};
-    const payeeMap: Record<string, { name: string; record_id: string; yiddish: string }> = {};
+    const payeeMap: Record<string, { name: string; record_id: string; yiddish: string; memo: string }> = {};
     const chalikahIds = new Set<string>();
 
     filteredChecks.forEach((c) => {
@@ -109,7 +109,7 @@ const Reports = () => {
       if (!map[payee]) {
         map[payee] = {};
         const info = getPayeeInfo(payee, c.payee_record_number);
-        payeeMap[payee] = { name: payee, record_id: info.record_id, yiddish: info.yiddish };
+        payeeMap[payee] = { name: payee, record_id: info.record_id, yiddish: info.yiddish, memo: info.memo };
       }
       map[payee][chId] = (map[payee][chId] || 0) + c.amount;
     });
