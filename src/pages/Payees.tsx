@@ -89,6 +89,7 @@ const Payees = () => {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const colLayout = useColumnLayout("payees", PAYEE_COLUMNS);
   const chalikahMap = useMemo(() => Object.fromEntries(chalikahList.map((c) => [c.id, c.name])), [chalikahList]);
+  const accountMap = useMemo(() => Object.fromEntries(accounts.map((a) => [a.id, a.account_name])), [accounts]);
 
   // Match checks to payee by record number (given_to_record_number first, then payee_record_number)
   const checksByRecordId = useMemo(() => {
