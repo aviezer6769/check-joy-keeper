@@ -117,7 +117,7 @@ const Payees = () => {
     switch (key) {
       case "record_id": return p.record_id || "";
       case "sort_order": return String(p.sort_order ?? 0);
-      case "urgent_level": return String(p.urgent_level ?? 0);
+      case "urgent_level": return p.urgent_level === null || p.urgent_level === undefined ? "?" : String(p.urgent_level);
       case "yiddish_name": return [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ");
       case "payee_name": return [p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ") || p.payee_name;
       case "address": return [p.street_no, p.street_name, p.apt, p.city, p.state, p.zip].filter(Boolean).join(" ");
