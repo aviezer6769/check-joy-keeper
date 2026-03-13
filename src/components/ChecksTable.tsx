@@ -121,6 +121,11 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
     );
   }, [checks, colLayout.filters, chalikahMap]);
 
+  // Report filtered checks back to parent
+  useEffect(() => {
+    onFilteredChecksChange?.(filteredChecks);
+  }, [filteredChecks, onFilteredChecksChange]);
+
   // Apply sort
   const sortedChecks = useMemo(() => {
     if (!colLayout.sort) return filteredChecks;
