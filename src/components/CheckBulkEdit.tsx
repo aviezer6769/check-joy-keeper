@@ -190,6 +190,14 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
     );
   };
 
+  const copyDownGrid = (key: string) => {
+    setGridRows((prev) => {
+      const firstVal = prev[0]?.[key];
+      if (firstVal === undefined || firstVal === null || firstVal === "") return prev;
+      return prev.map((r) => ({ ...r, [key]: r[key] || firstVal }));
+    });
+  };
+
   const handleGridSave = async () => {
     setSaving(true);
     const promises = gridRows.map((row) => {
