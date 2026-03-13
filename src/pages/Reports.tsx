@@ -420,10 +420,10 @@ const Reports = () => {
                 prefix={
                   <TableHead className="w-10">
                     <Checkbox
-                      checked={rows.length > 0 && rows.every((pr) => selectedNames.has(pr.name))}
+                      checked={rows.length > 0 && rows.every((pr) => selectedNames.has(pr.key))}
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          setSelectedNames(new Set(rows.map((pr) => pr.name)));
+                          setSelectedNames(new Set(rows.map((pr) => pr.key)));
                         } else {
                           setSelectedNames(new Set());
                         }
