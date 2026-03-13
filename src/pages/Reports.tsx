@@ -82,7 +82,7 @@ const Reports = () => {
     if (recordNumber && payeeLookup.byRecord[recordNumber]) {
       return payeeLookup.byRecord[recordNumber];
     }
-    return payeeLookup.byName[payeeName.toLowerCase()] || { record_id: "", yiddish: "", memo: "", is_active: true, urgent_level: null, last_name_yiddish: "", first_name_yiddish: "", middle_name_yiddish: "" };
+    return payeeLookup.byName[payeeName.toLowerCase()] || { record_id: "", yiddish: "", memo: "", address: "", is_active: true, urgent_level: null, last_name_yiddish: "", first_name_yiddish: "", middle_name_yiddish: "" };
   };
 
   // Filter checks
