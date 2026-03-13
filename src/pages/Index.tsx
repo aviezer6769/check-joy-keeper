@@ -308,11 +308,14 @@ const Index = () => {
       {/* Hidden print view */}
       <div className="hidden">
         <div ref={printRef}>
-          {printChecks.map((c, i) => (
-            <div key={c.id} style={i > 0 ? { pageBreakBefore: "always" } : undefined}>
-              <CheckPrintView check={c} account={selectedAccount} />
-            </div>
-          ))}
+          {printChecks.map((c, i) => {
+            const matchedPayee = payees.find((p) => p.payee_name === c.payee || p.record_id === c.payee_record_number) || null;
+            return (
+              <div key={c.id} style={i > 0 ? { pageBreakBefore: "always" } : undefined}>
+                <CheckPrintView check={c} account={selectedAccount} payee={matchedPayee} />
+              </div>
+            );
+          })}
         </div>
       </div>
 
