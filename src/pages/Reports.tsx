@@ -28,6 +28,7 @@ const fmt = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
 const STATIC_REPORT_COLS: ColumnDef[] = [
+  { key: "sort_order", label: "Sort" },
   { key: "record_id", label: "Record ID" },
   { key: "yiddish_name", label: "Yiddish Name" },
   { key: "payee_name", label: "Payee" },
