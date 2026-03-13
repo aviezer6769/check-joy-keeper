@@ -135,10 +135,11 @@ const Index = () => {
   };
 
   const toggleAll = () => {
-    if (checks.length > 0 && checks.every((c) => selectedIds.has(c.id))) {
+    const target = displayedChecks.length > 0 ? displayedChecks : checks;
+    if (target.length > 0 && target.every((c) => selectedIds.has(c.id))) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(checks.map((c) => c.id)));
+      setSelectedIds(new Set(target.map((c) => c.id)));
     }
   };
 
