@@ -74,12 +74,25 @@ function parseDate(val: string): string {
   const s = String(val).trim();
   // Already ISO format
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // Excel serial number (e.g. 45363)
+  const num = Number(s);
+  if (!isNaN(num) && num > 10000 && num < 100000) {
+    // Excel epoch is Jan 0, 1900 (with the Lotus 1-2-3 leap year bug)
+    const excelEpoch = new Date(1899, 11, 30);
+    const date = new Date(excelEpoch.getTime() + num * 86400000);
+    return date.toISOString().split("T")[0];
+  }
   // M/D/YY or M/D/YYYY
   const parts = s.split("/");
   if (parts.length === 3) {
     let [m, d, y] = parts.map(Number);
     if (y < 100) y += 2000;
     return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  }
+  // Try native Date parse as fallback (handles "Mar 12, 2026" etc.)
+  const parsed = new Date(s);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString().split("T")[0];
   }
   return new Date().toISOString().split("T")[0];
 }
@@ -218,9 +231,9 @@ export function CheckBulkImport({ accountId, existingChecks = [] }: CheckBulkImp
     reader.onload = (evt) => {
       try {
         const data = new Uint8Array(evt.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: "array" });
+        const workbook = XLSX.read(data, { type: "array", cellDates: true });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonRows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: "" });
+        const jsonRows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: "", raw: false });
 
         const mapped = jsonRows.map((row) => {
           const result: Record<string, string> = {};
