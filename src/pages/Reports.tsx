@@ -111,7 +111,7 @@ const Reports = () => {
   // Build payee × chalikah matrix
   const { matrix, payeeRows, chalikahCols, grandTotal } = useMemo(() => {
     const map: Record<string, Record<string, number>> = {};
-    const payeeMap: Record<string, { name: string; record_id: string; yiddish: string; memo: string; address: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
+    const payeeMap: Record<string, { key: string; name: string; record_id: string; yiddish: string; memo: string; address: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
     const chalikahIds = new Set<string>();
 
     // Deduplicate by record_id when available, otherwise by payee name
