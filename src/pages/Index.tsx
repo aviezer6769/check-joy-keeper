@@ -10,7 +10,6 @@ import { CheckForm } from "@/components/CheckForm";
 import { ChecksTable, CHECK_COLUMNS } from "@/components/ChecksTable";
 import { CheckPrintView } from "@/components/CheckPrintView";
 import { StatsCards } from "@/components/StatsCards";
-import { ChalikahDashboard } from "@/components/ChalikahDashboard";
 import { AccountManager } from "@/components/AccountManager";
 import { CheckBulkEdit } from "@/components/CheckBulkEdit";
 import { CheckBulkImport } from "@/components/CheckBulkImport";
