@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { ArrowDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -187,6 +188,14 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
         return updated;
       })
     );
+  };
+
+  const copyDownGrid = (key: string) => {
+    setGridRows((prev) => {
+      const firstVal = prev[0]?.[key];
+      if (firstVal === undefined || firstVal === null || firstVal === "") return prev;
+      return prev.map((r) => ({ ...r, [key]: r[key] || firstVal }));
+    });
   };
 
   const handleGridSave = async () => {
@@ -456,7 +465,18 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
                     <th className="text-left px-2 py-1.5 font-semibold text-muted-foreground whitespace-nowrap">#</th>
                     {GRID_FIELDS.map((f) => (
                       <th key={f.key} className="text-left px-1 py-1.5 font-semibold text-muted-foreground whitespace-nowrap">
-                        {f.label}
+                        <div className="flex items-center gap-1">
+                          {f.label}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-5 w-5 opacity-50 hover:opacity-100"
+                            onClick={() => copyDownGrid(f.key)}
+                            title={`Copy first row's ${f.label} to all rows`}
+                          >
+                            <ArrowDown className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </th>
                     ))}
                   </tr>
