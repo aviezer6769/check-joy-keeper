@@ -183,6 +183,12 @@ const Index = () => {
                   Dashboard
                 </Button>
               </Link>
+              <Link to="/reports">
+                <Button variant="outline">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Reports
+                </Button>
+              </Link>
               <Button variant="outline" onClick={handleExportChecks}>
                 <Download className="h-4 w-4 mr-2" />
                 Export
