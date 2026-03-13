@@ -280,15 +280,17 @@ const Reports = () => {
     if (colLayout.sort) {
       const { key, dir } = colLayout.sort;
       if (key === "sort_order") {
-        // Composite sort: active desc, urgent desc (null last), last yiddish, first yiddish, middle yiddish
+        // Composite sort: active first, urgent priority 1 > 2 > 3 > 0 > ?, then Hebrew name
         result.sort((a, b) => {
           const mul = dir === "asc" ? 1 : -1;
           const activeA = a.is_active ? 0 : 1;
           const activeB = b.is_active ? 0 : 1;
           if (activeA !== activeB) return (activeA - activeB) * mul;
-          const urgA = a.urgent_level == null ? -Infinity : a.urgent_level === 0 ? -Infinity : a.urgent_level;
-          const urgB = b.urgent_level == null ? -Infinity : b.urgent_level === 0 ? -Infinity : b.urgent_level;
-          if (urgA !== urgB) return (urgB - urgA) * mul;
+          const getUrgencyPriority = (value: number | null | undefined) =>
+            value === 1 ? 0 : value === 2 ? 1 : value === 3 ? 2 : value === 0 ? 3 : 4;
+          const urgA = getUrgencyPriority(a.urgent_level);
+          const urgB = getUrgencyPriority(b.urgent_level);
+          if (urgA !== urgB) return (urgA - urgB) * mul;
           const lastCmp = a.last_name_yiddish.localeCompare(b.last_name_yiddish, "he");
           if (lastCmp !== 0) return lastCmp * mul;
           const firstCmp = a.first_name_yiddish.localeCompare(b.first_name_yiddish, "he");
