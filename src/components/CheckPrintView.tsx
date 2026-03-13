@@ -9,6 +9,10 @@ interface CheckPrintViewProps {
   payee?: Payee | null;
 }
 
+const PAGE_WIDTH_IN = "8.5in";
+const FACE_HEIGHT_IN = "3.55in";
+const STUB_HEIGHT_IN = "2.05in";
+
 function amountToFullWords(num: number): string {
   const ones = [
     "",
@@ -108,7 +112,7 @@ function PayeeBlock({ payee }: { payee?: Payee | null }) {
   const cityLine = [cityState, payee.zip].filter(Boolean).join(" ");
 
   return (
-    <div className="text-xs leading-tight mt-6 ml-8">
+    <div className="text-xs leading-tight mt-8 ml-10">
       {yiddishName && <p>{yiddishName}</p>}
       <p>{payee.payee_name}</p>
       {streetLine && <p>{streetLine}</p>}
@@ -127,7 +131,7 @@ function StubRightMeta({
   includeRun?: boolean;
 }) {
   return (
-    <div className="w-[90px] text-right text-xs leading-tight space-y-1">
+    <div className="w-[104px] text-right text-xs leading-tight space-y-1">
       <p>{check.check_number || ""}</p>
       <p>{formatDateShort(check.check_date)}</p>
       <p>{formatCurrency(check.amount)}</p>
@@ -141,10 +145,14 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
   const payeeName = check.payee.startsWith("Payee #") ? "" : check.payee;
 
   return (
-    <div className="font-sans text-black bg-white" id="check-print" style={{ width: "8.5in", margin: "0 auto" }}>
+    <div
+      className="font-sans text-black bg-white"
+      id="check-print"
+      style={{ width: PAGE_WIDTH_IN, margin: "0 auto", minHeight: "11in" }}
+    >
       {/* ===== CHECK SECTION (top) ===== */}
-      <div className="px-6 pt-4 pb-2" style={{ minHeight: "280px" }}>
-        <div className="flex justify-between items-start mb-6">
+      <div className="px-8 pt-6 pb-3" style={{ height: FACE_HEIGHT_IN }}>
+        <div className="flex justify-between items-start mb-10">
           <div className="text-xs leading-tight">
             <p className="font-bold text-sm">{account?.check_payer_name || account?.payer_name || account?.account_name || "CLYKT"}</p>
             <p>{[account?.payer_city, account?.payer_state].filter(Boolean).join(" ")} {account?.payer_zip || ""}</p>
@@ -153,7 +161,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
           <div className="text-right text-sm">{check.check_number || ""}</div>
         </div>
 
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-end mb-6">
           <span className="text-sm">
             Date&nbsp;&nbsp;
             <span className="border-b border-black inline-block min-w-[100px] pb-0.5 text-center">{formatDateShort(check.check_date)}</span>
@@ -161,28 +169,28 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
         </div>
 
         <div className="mb-1 text-sm">Pay to the</div>
-        <div className="flex items-baseline gap-2 mb-3">
+        <div className="flex items-baseline gap-2 mb-4">
           <span className="text-sm whitespace-nowrap">order of</span>
           <span className="flex-1 border-b border-black pb-0.5 pl-2 text-base font-normal">{payeeName}</span>
           <span className="border border-black px-3 py-1 text-base font-semibold whitespace-nowrap">{formatCurrency(check.amount)}</span>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-8">
           <span className="border-b border-black pb-0.5 text-sm inline-block w-full">{amountToFullWords(check.amount)}</span>
         </div>
 
-        <div className="flex justify-between items-end mt-2">
+        <div className="flex justify-between items-end mt-6">
           <div className="text-sm flex items-baseline">
             <span>Memo</span>
             <span className="border-b border-black inline-block min-w-[220px] ml-1 pb-0.5 pl-2">{check.memo || ""}</span>
           </div>
-          <div className="min-w-[220px] text-center">
+          <div className="min-w-[230px] text-center">
             <img src={signatureImg} alt="Signature" className="h-10 mx-auto object-contain" />
             <div className="border-t border-black" />
           </div>
         </div>
 
-        <div className="mt-4 text-xs tracking-[0.25em] font-mono text-black/70">
+        <div className="mt-6 text-xs tracking-[0.22em] font-mono text-black/70">
           {check.check_number && <span>⑈{check.check_number}⑈</span>}
           {"  "}
           {account?.routing_number && <span>⑈{account.routing_number}⑈</span>}
@@ -191,10 +199,10 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
         </div>
       </div>
 
-      <div className="border-t border-dashed border-black/40" />
+      <div className="border-t border-dashed" style={{ borderColor: "#b9b9b9" }} />
 
       {/* ===== STUB 1 (middle) ===== */}
-      <div className="px-6 py-4" style={{ minHeight: "180px" }}>
+      <div className="px-8 pt-5 pb-4" style={{ height: STUB_HEIGHT_IN }}>
         <div className="flex justify-between items-start">
           <PayerBlock account={account} showYiddish boldEnglish />
           <StubRightMeta check={check} />
@@ -202,10 +210,10 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
         <PayeeBlock payee={payee} />
       </div>
 
-      <div className="border-t border-dashed border-black/40" />
+      <div className="border-t border-dashed" style={{ borderColor: "#b9b9b9" }} />
 
       {/* ===== STUB 2 (bottom) ===== */}
-      <div className="px-6 py-4" style={{ minHeight: "180px" }}>
+      <div className="px-8 pt-5 pb-4" style={{ height: STUB_HEIGHT_IN }}>
         <div className="flex justify-between items-start">
           <PayerBlock account={account} showYiddish={false} boldEnglish={false} />
           <StubRightMeta check={check} includeRecord includeRun />
