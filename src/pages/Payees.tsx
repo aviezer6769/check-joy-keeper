@@ -586,6 +586,7 @@ const Payees = () => {
                                                   <TableHeader>
                                                     <TableRow>
                                                       <TableHead className="text-xs">Check #</TableHead>
+                                                      <TableHead className="text-xs">Account</TableHead>
                                                       <TableHead className="text-xs">Date</TableHead>
                                                       <TableHead className="text-xs">Chalikah</TableHead>
                                                       <TableHead className="text-xs text-right">Amount</TableHead>
