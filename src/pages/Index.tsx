@@ -158,6 +158,7 @@ const Index = () => {
   };
 
   const selectedChecks = checks.filter((c) => selectedIds.has(c.id));
+  const selectedAccount = accounts.find((a) => a.id === selectedAccountId) || null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -307,7 +308,7 @@ const Index = () => {
         <div ref={printRef}>
           {printChecks.map((c, i) => (
             <div key={c.id} style={i > 0 ? { pageBreakBefore: "always" } : undefined}>
-              <CheckPrintView check={c} />
+              <CheckPrintView check={c} account={selectedAccount} />
             </div>
           ))}
         </div>

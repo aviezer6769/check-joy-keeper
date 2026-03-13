@@ -1,8 +1,10 @@
 import { type Check } from "@/hooks/useChecks";
+import { type Account } from "@/hooks/useAccounts";
 import signatureImg from "@/assets/signature.png";
 
 interface CheckPrintViewProps {
   check: Check;
+  account?: Account | null;
 }
 
 function numberToWords(num: number): string {
@@ -54,50 +56,151 @@ function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 }
 
-function formatDate(date: string) {
+function formatDateShort(date: string) {
   return new Date(date + "T00:00:00").toLocaleDateString("en-US", {
-    month: "long",
+    month: "numeric",
     day: "numeric",
     year: "numeric",
   });
 }
 
-export function CheckPrintView({ check }: CheckPrintViewProps) {
+function PayerBlock({ account, useStubName }: { account?: Account | null; useStubName?: boolean }) {
+  if (!account) return null;
+  const name = useStubName
+    ? (account.stub_payer_name || account.payer_name || account.account_name)
+    : (account.check_payer_name || account.payer_name || account.account_name);
   return (
-    <div className="p-8 max-w-2xl mx-auto font-mono text-foreground" id="check-print">
-      <div className="border-2 border-foreground rounded-lg p-6 space-y-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <p className="text-lg font-bold">Check</p>
+    <div className="text-xs leading-tight">
+      {account.payer_name_yiddish && <p className="font-bold">{account.payer_name_yiddish}</p>}
+      <p className="font-bold">{name}</p>
+      {account.payer_address && <p>{account.payer_address}</p>}
+      {(account.payer_city || account.payer_state || account.payer_zip) && (
+        <p>{[account.payer_city, account.payer_state].filter(Boolean).join(", ")} {account.payer_zip || ""}</p>
+      )}
+    </div>
+  );
+}
+
+function StubSection({ check, account, index }: { check: Check; account?: Account | null; index: number }) {
+  return (
+    <div className="flex justify-between items-start px-6 py-4" style={{ minHeight: "140px" }}>
+      <div className="space-y-1">
+        <PayerBlock account={account} useStubName />
+      </div>
+      <div className="text-right text-xs space-y-0.5">
+        <p>{check.check_number || ""}</p>
+        <p>{formatDateShort(check.check_date)}</p>
+        <p>{formatCurrency(check.amount)}</p>
+        {index === 1 && <p>{check.payee_record_number || "0"}</p>}
+      </div>
+    </div>
+  );
+}
+
+export function CheckPrintView({ check, account }: CheckPrintViewProps) {
+  const payeeName = check.payee.startsWith("Payee #") ? "" : check.payee;
+
+  return (
+    <div className="font-sans text-black bg-white" id="check-print" style={{ width: "8.5in", margin: "0 auto" }}>
+      {/* ===== CHECK SECTION (top) ===== */}
+      <div className="px-6 pt-4 pb-2" style={{ minHeight: "280px" }}>
+        {/* Header: Payer | Bank | Check# */}
+        <div className="flex justify-between items-start mb-4">
+          <div className="text-xs font-bold leading-tight">
+            <p>{account?.check_payer_name || account?.payer_name || account?.account_name || "CLYKT"}</p>
+            {(account?.payer_city || account?.payer_state || account?.payer_zip) && (
+              <p>{[account?.payer_city, account?.payer_state].filter(Boolean).join(" ")} {account?.payer_zip || ""}</p>
+            )}
           </div>
-          <div className="text-right">
-            <p className="text-sm">Check # {check.check_number || "N/A"}</p>
-            <p className="text-sm">Date: {formatDate(check.check_date)}</p>
+          <div className="text-center text-sm">
+            <p>{account?.bank_name || ""}</p>
+          </div>
+          <div className="text-right text-sm">
+            <p>{check.check_number || ""}</p>
           </div>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-baseline gap-2">
-            <span className="text-sm font-bold">PAY TO THE ORDER OF:</span>
-            <span className="flex-1 border-b border-foreground pb-1 font-bold text-lg">{check.payee.startsWith("Payee #") ? "" : check.payee}</span>
-            <span className="border border-foreground px-3 py-1 font-bold text-lg">{formatCurrency(check.amount)}</span>
-          </div>
-
-          <div className="flex items-baseline gap-2">
-            <span className="flex-1 border-b border-foreground pb-1 text-sm italic">
-              {numberToWords(check.amount)} Dollars
-            </span>
-          </div>
-        </div>
-
-        <div className="flex justify-between items-end pt-4">
+        {/* Date */}
+        <div className="flex justify-end mb-3">
           <div className="text-sm">
-            <p>Memo: {check.memo || "—"}</p>
-            {check.payee_record_number && <p>Record #: {check.payee_record_number}</p>}
+            Date <span className="border-b border-black pb-0.5 pl-2 pr-4 ml-1">{formatDateShort(check.check_date)}</span>
+          </div>
+        </div>
+
+        {/* Pay to the order of */}
+        <div className="flex items-baseline gap-2 mb-1 text-sm">
+          <span className="whitespace-nowrap">Pay to the</span>
+        </div>
+        <div className="flex items-baseline gap-2 mb-3">
+          <span className="text-sm whitespace-nowrap">order of</span>
+          <span className="flex-1 border-b border-black pb-0.5 text-base font-medium pl-2">{payeeName}</span>
+          <span className="border border-black px-3 py-0.5 text-base font-bold ml-2 whitespace-nowrap">{formatCurrency(check.amount)}</span>
+        </div>
+
+        {/* Amount in words */}
+        <div className="flex items-baseline gap-2 mb-4">
+          <span className="flex-1 border-b border-black pb-0.5 text-sm italic pl-1">
+            {numberToWords(check.amount)} Dollars and Zero Cents
+          </span>
+        </div>
+
+        {/* Memo + Signature */}
+        <div className="flex justify-between items-end mt-4">
+          <div className="text-sm">
+            <span>Memo </span>
+            <span className="border-b border-black pb-0.5 pl-2 pr-16 inline-block min-w-[200px]">{check.memo || ""}</span>
           </div>
           <div className="min-w-[200px] text-center">
             <img src={signatureImg} alt="Signature" className="h-10 mx-auto object-contain" />
-            <div className="border-t border-foreground pt-1 text-sm">Authorized Signature</div>
+            <div className="border-t border-black" />
+          </div>
+        </div>
+
+        {/* MICR line */}
+        <div className="mt-4 text-xs tracking-widest font-mono text-muted-foreground">
+          {account?.routing_number && <span>⑈{account.routing_number}⑈</span>}
+          {" "}
+          {account?.account_number && <span>{account.account_number}⑈</span>}
+        </div>
+      </div>
+
+      {/* ===== Perforated line ===== */}
+      <div className="border-t border-dashed border-gray-400 my-0" />
+
+      {/* ===== STUB 1 (middle) ===== */}
+      <div className="flex justify-between items-start px-6 py-4" style={{ minHeight: "140px" }}>
+        <div className="space-y-1">
+          <PayerBlock account={account} useStubName />
+        </div>
+        <div className="flex gap-12">
+          <div className="text-sm">
+            <p className="font-medium">{payeeName}</p>
+          </div>
+          <div className="text-right text-xs space-y-0.5">
+            <p>{check.check_number || ""}</p>
+            <p>{formatDateShort(check.check_date)}</p>
+            <p>{formatCurrency(check.amount)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== Perforated line ===== */}
+      <div className="border-t border-dashed border-gray-400 my-0" />
+
+      {/* ===== STUB 2 (bottom) ===== */}
+      <div className="flex justify-between items-start px-6 py-4" style={{ minHeight: "140px" }}>
+        <div className="space-y-1">
+          <PayerBlock account={account} useStubName />
+        </div>
+        <div className="flex gap-12">
+          <div className="text-sm">
+            <p className="font-medium">{payeeName}</p>
+          </div>
+          <div className="text-right text-xs space-y-0.5">
+            <p>{check.check_number || ""}</p>
+            <p>{formatDateShort(check.check_date)}</p>
+            <p>{formatCurrency(check.amount)}</p>
+            <p>{check.payee_record_number || "0"}</p>
           </div>
         </div>
       </div>
