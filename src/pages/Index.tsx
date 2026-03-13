@@ -214,7 +214,7 @@ const Index = () => {
         )}
 
         {/* Stats */}
-        <StatsCards checks={checks} />
+        <StatsCards checks={displayedChecks.length > 0 || checks.length === 0 ? displayedChecks : checks} />
 
         {/* Search + bulk actions */}
         <div className="flex items-center gap-3">
