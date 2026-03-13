@@ -224,6 +224,7 @@ const Reports = () => {
     if (colKey === "is_active") return pr.is_active ? "Active" : "Inactive";
     if (colKey === "yiddish_name") return pr.yiddish || "";
     if (colKey === "payee_name") return pr.name;
+    if (colKey === "address") return pr.address || "";
     if (colKey === "memo") return pr.memo || "";
     if (colKey === "total") {
       return String(Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0));
