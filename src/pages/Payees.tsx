@@ -183,22 +183,22 @@ const Payees = () => {
         const activeA = a.is_active ? 0 : 1;
         const activeB = b.is_active ? 0 : 1;
         if (activeA !== activeB) return (activeA - activeB) * mul;
-        // 2. Urgent level desc (higher first), null/0 last
-        const urgA = a.urgent_level ?? -1;
-        const urgB = b.urgent_level ?? -1;
+        // 2. Urgent level desc (higher first), null/?/0 go last
+        const urgA = a.urgent_level == null ? -Infinity : a.urgent_level === 0 ? -Infinity : a.urgent_level;
+        const urgB = b.urgent_level == null ? -Infinity : b.urgent_level === 0 ? -Infinity : b.urgent_level;
         if (urgA !== urgB) return (urgB - urgA) * mul;
-        // 3. Last yiddish name asc
-        const lastA = (a.last_name_yiddish || "").toLowerCase();
-        const lastB = (b.last_name_yiddish || "").toLowerCase();
-        if (lastA !== lastB) return lastA.localeCompare(lastB) * mul;
-        // 4. First yiddish name asc
-        const firstA = (a.first_name_yiddish || "").toLowerCase();
-        const firstB = (b.first_name_yiddish || "").toLowerCase();
-        if (firstA !== firstB) return firstA.localeCompare(firstB) * mul;
-        // 5. Middle yiddish name asc
-        const midA = (a.middle_name_yiddish || "").toLowerCase();
-        const midB = (b.middle_name_yiddish || "").toLowerCase();
-        return midA.localeCompare(midB) * mul;
+        // 3-5. Yiddish names: Hebrew alphabetical (אבג) using locale compare
+        const lastA = a.last_name_yiddish || "";
+        const lastB = b.last_name_yiddish || "";
+        const lastCmp = lastA.localeCompare(lastB, "he");
+        if (lastCmp !== 0) return lastCmp * mul;
+        const firstA = a.first_name_yiddish || "";
+        const firstB = b.first_name_yiddish || "";
+        const firstCmp = firstA.localeCompare(firstB, "he");
+        if (firstCmp !== 0) return firstCmp * mul;
+        const midA = a.middle_name_yiddish || "";
+        const midB = b.middle_name_yiddish || "";
+        return midA.localeCompare(midB, "he") * mul;
       });
     }
     return [...result].sort((a, b) => {
