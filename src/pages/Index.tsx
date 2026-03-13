@@ -2,7 +2,7 @@ import { useState, useRef, useMemo, useCallback } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, Pencil, Trash2, List, Download, BarChart3, FileText } from "lucide-react";
+import { Plus, Search, Users, Pencil, Trash2, List, Download, BarChart3, FileText, Printer } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert, type CheckStatus } from "@/hooks/useChecks";
 import { useAccounts } from "@/hooks/useAccounts";
@@ -35,7 +35,7 @@ const Index = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingCheck, setEditingCheck] = useState<Check | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [printCheck, setPrintCheck] = useState<Check | null>(null);
+  const [printChecks, setPrintChecks] = useState<Check[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
@@ -88,7 +88,7 @@ const Index = () => {
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
-    documentTitle: `Check-${printCheck?.check_number || "print"}`,
+    documentTitle: `Check-${printChecks.length === 1 ? printChecks[0]?.check_number || "print" : "bulk-print"}`,
   });
 
   const handleSubmit = (data: CheckInsert) => {
@@ -109,7 +109,12 @@ const Index = () => {
   };
 
   const handlePrintCheck = (check: Check) => {
-    setPrintCheck(check);
+    setPrintChecks([check]);
+    setTimeout(() => handlePrint(), 100);
+  };
+
+  const handleBulkPrint = () => {
+    setPrintChecks(selectedChecks);
     setTimeout(() => handlePrint(), 100);
   };
 
@@ -242,6 +247,9 @@ const Index = () => {
               <Button size="sm" variant="secondary" onClick={() => setBulkEditOpen(true)}>
                 <Pencil className="h-4 w-4 mr-1" /> Edit {selectedIds.size}
               </Button>
+              <Button size="sm" variant="outline" onClick={handleBulkPrint}>
+                <Printer className="h-4 w-4 mr-1" /> Print {selectedIds.size}
+              </Button>
             </div>
           )}
         </div>
@@ -297,7 +305,11 @@ const Index = () => {
       {/* Hidden print view */}
       <div className="hidden">
         <div ref={printRef}>
-          {printCheck && <CheckPrintView check={printCheck} />}
+          {printChecks.map((c, i) => (
+            <div key={c.id} style={i > 0 ? { pageBreakBefore: "always" } : undefined}>
+              <CheckPrintView check={c} />
+            </div>
+          ))}
         </div>
       </div>
 
