@@ -14,6 +14,7 @@ import { PayeeForm } from "@/components/PayeeForm";
 import { PayeeBulkImport } from "@/components/PayeeBulkImport";
 import { PayeeEditForm } from "@/components/PayeeEditForm";
 import { PayeeBulkEdit } from "@/components/PayeeBulkEdit";
+import { BatchCheckDialog } from "@/components/BatchCheckDialog";
 import { useDeletePayee } from "@/hooks/usePayees";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
