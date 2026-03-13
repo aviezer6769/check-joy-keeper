@@ -392,40 +392,40 @@ const Reports = () => {
                 ))}
               </TableRow>
             ) : (
-              <TableRow>
-                <TableHead className="w-10">
-                  <Checkbox
-                    checked={rows.length > 0 && rows.every((pr) => selectedNames.has(pr.name))}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedNames(new Set(rows.map((pr) => pr.name)));
-                      } else {
-                        setSelectedNames(new Set());
-                      }
-                    }}
-                  />
-                </TableHead>
-                <DraggableTableHeader
-                  columns={visCols}
-                  widths={colLayout.widths}
-                  sort={colLayout.sort}
-                  onToggleSort={colLayout.toggleSort}
-                  onReorder={colLayout.reorderColumn}
-                  onSetWidth={colLayout.setColumnWidth}
-                  columnClassName={(key) =>
-                    key === "record_id" || key === "yiddish_name" || key === "payee_name" || key === "memo" || key === "address"
-                      ? "min-w-[120px]"
-                      : "text-right min-w-[120px]"
-                  }
-                  isRtl={(key) => key === "yiddish_name"}
-                  showFilters={showFilters}
-                  filters={colLayout.filters}
-                  filterModes={colLayout.filterModes}
-                  onFilterChange={colLayout.setFilter}
-                  onFilterModeChange={colLayout.setFilterMode}
-                  filterOptions={reportFilterOptions}
-                />
-              </TableRow>
+              <DraggableTableHeader
+                columns={visCols}
+                widths={colLayout.widths}
+                sort={colLayout.sort}
+                onToggleSort={colLayout.toggleSort}
+                onReorder={colLayout.reorderColumn}
+                onSetWidth={colLayout.setColumnWidth}
+                columnClassName={(key) =>
+                  key === "record_id" || key === "yiddish_name" || key === "payee_name" || key === "memo" || key === "address"
+                    ? "min-w-[120px]"
+                    : "text-right min-w-[120px]"
+                }
+                isRtl={(key) => key === "yiddish_name"}
+                showFilters={showFilters}
+                filters={colLayout.filters}
+                filterModes={colLayout.filterModes}
+                onFilterChange={colLayout.setFilter}
+                onFilterModeChange={colLayout.setFilterMode}
+                filterOptions={reportFilterOptions}
+                prefix={
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={rows.length > 0 && rows.every((pr) => selectedNames.has(pr.name))}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedNames(new Set(rows.map((pr) => pr.name)));
+                        } else {
+                          setSelectedNames(new Set());
+                        }
+                      }}
+                    />
+                  </TableHead>
+                }
+              />
             )}
           </TableHeader>
           <TableBody>
