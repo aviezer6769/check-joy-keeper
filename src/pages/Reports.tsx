@@ -71,7 +71,7 @@ const Reports = () => {
     if (recordNumber && payeeLookup.byRecord[recordNumber]) {
       return payeeLookup.byRecord[recordNumber];
     }
-    return payeeLookup.byName[payeeName.toLowerCase()] || { record_id: "", yiddish: "" };
+    return payeeLookup.byName[payeeName.toLowerCase()] || { record_id: "", yiddish: "", memo: "" };
   };
 
   // Filter checks
