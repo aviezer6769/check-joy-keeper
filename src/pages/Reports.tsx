@@ -594,7 +594,7 @@ const Reports = () => {
                 />
                 <Button variant="outline" onClick={() => handleExport()}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {selectedNames.size > 0 ? `Export ${selectedNames.size} Selected` : "Export"}
                 </Button>
                 <Button onClick={() => setSaveDialogOpen(true)}>
                   <Save className="h-4 w-4 mr-2" />
