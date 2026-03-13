@@ -173,6 +173,12 @@ const Index = () => {
                   Chalikah
                 </Button>
               </Link>
+              <Link to="/dashboard">
+                <Button variant="outline">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+              </Link>
               <Button variant="outline" onClick={handleExportChecks}>
                 <Download className="h-4 w-4 mr-2" />
                 Export
