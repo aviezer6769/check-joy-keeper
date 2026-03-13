@@ -19,8 +19,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
+import { useColumnLayout, type ColumnDef, type FilterMode } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
+import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 import * as XLSX from "xlsx";
 
 const fmt = (n: number) =>
