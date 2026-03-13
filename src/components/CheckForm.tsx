@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { type Check, type CheckInsert, CHECK_STATUSES } from "@/hooks/useChecks";
 import { usePayees, type Payee } from "@/hooks/usePayees";
 import { useChalikah, useAddChalikah } from "@/hooks/useChalikah";
@@ -178,13 +177,12 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
             {initialData ? "Edit Check" : "New Check"}
           </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="flex-1 -mx-6 px-6">
         <form onSubmit={handleSubmit} className="grid gap-4 pt-2">
           {/* Payee search */}
           <div className="space-y-2 relative" ref={dropdownRef}>
@@ -409,7 +407,6 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
             </Button>
           </div>
         </form>
-        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
