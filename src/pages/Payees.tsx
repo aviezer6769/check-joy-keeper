@@ -597,7 +597,7 @@ const Payees = () => {
                                                   <TableBody>
                                                     {renderCheckRows(items)}
                                                     <TableRow className="bg-muted/50 font-semibold">
-                                                      <TableCell colSpan={3} className="text-xs">Subtotal ({items.length} checks)</TableCell>
+                                                      <TableCell colSpan={4} className="text-xs">Subtotal ({items.length} checks)</TableCell>
                                                       <TableCell className="text-right font-mono text-xs">{formatCurrency(groupTotal)}</TableCell>
                                                       <TableCell colSpan={2} />
                                                     </TableRow>
