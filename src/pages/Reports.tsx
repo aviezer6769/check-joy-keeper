@@ -168,6 +168,7 @@ const Reports = () => {
         if (col.key === "record_id") row["Record ID"] = pr.record_id;
         else if (col.key === "yiddish_name") row["Yiddish Name"] = pr.yiddish;
         else if (col.key === "payee_name") row["Payee"] = pr.name;
+        else if (col.key === "memo") row["Memo"] = pr.memo || "";
         else if (col.key === "total") row["Total"] = Object.values(src.matrix[pr.name] || {}).reduce((s: number, v: any) => s + Number(v), 0);
         else if (col.key.startsWith("ch_")) {
           const chId = col.key.slice(3);
