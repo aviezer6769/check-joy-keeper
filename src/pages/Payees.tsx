@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers, X } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers, X, FileCheck } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { PayeeForm } from "@/components/PayeeForm";
