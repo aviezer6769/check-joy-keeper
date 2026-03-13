@@ -209,10 +209,11 @@ const Reports = () => {
 
   // Helper to get cell text value for filtering/sorting
   const getRowTextValue = (
-    pr: { name: string; record_id: string; yiddish: string; memo: string },
+    pr: typeof payeeRows[number],
     colKey: string,
     matrixData: Record<string, Record<string, number>>
   ): string => {
+    if (colKey === "sort_order") return "";
     if (colKey === "record_id") return pr.record_id || "";
     if (colKey === "yiddish_name") return pr.yiddish || "";
     if (colKey === "payee_name") return pr.name;
@@ -228,7 +229,7 @@ const Reports = () => {
   };
 
   const getRowSortValue = (
-    pr: { name: string; record_id: string; yiddish: string; memo: string },
+    pr: typeof payeeRows[number],
     colKey: string,
     matrixData: Record<string, Record<string, number>>
   ): string | number => {
