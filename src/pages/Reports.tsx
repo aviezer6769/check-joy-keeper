@@ -192,6 +192,7 @@ const Reports = () => {
       const row: Record<string, any> = {};
       colLayout.visibleColumns.forEach((col) => {
         if (col.key === "record_id") row["Record ID"] = pr.record_id;
+        else if (col.key === "urgent_level") row["Urgent"] = pr.urgent_level == null ? "?" : pr.urgent_level;
         else if (col.key === "is_active") row["Active"] = pr.is_active ? "Active" : "Inactive";
         else if (col.key === "yiddish_name") row["Yiddish Name"] = pr.yiddish;
         else if (col.key === "payee_name") row["Payee"] = pr.name;
