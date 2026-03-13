@@ -163,12 +163,13 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
     }
 
     setSaving(true);
-    const ids = checks.map((c) => c.id);
-    const { error } = await supabase.from("checks").update(updates).in("id", ids);
+    const { errors: bulkErrors } = await batchedUpdates(checks, async (c) => {
+      return supabase.from("checks").update(updates).eq("id", c.id).select().single();
+    });
     setSaving(false);
 
-    if (error) {
-      toast.error("Bulk update failed: " + error.message);
+    if (bulkErrors > 0) {
+      toast.error(`${bulkErrors} row(s) failed to update`);
     } else {
       toast.success(`Updated ${checks.length} check(s)`);
       qc.invalidateQueries({ queryKey: ["checks"] });
