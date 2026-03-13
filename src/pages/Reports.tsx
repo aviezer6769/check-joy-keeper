@@ -477,7 +477,7 @@ const Reports = () => {
                       const chId = col.key.slice(3);
                       return (
                         <TableCell key={col.key} className="text-right tabular-nums">
-                          {matrixData[pr.name]?.[chId] ? fmt(matrixData[pr.name][chId]) : "—"}
+                          {matrixData[pr.key]?.[chId] ? fmt(matrixData[pr.key][chId]) : "—"}
                         </TableCell>
                       );
                     }
