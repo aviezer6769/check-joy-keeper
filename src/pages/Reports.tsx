@@ -114,16 +114,20 @@ const Reports = () => {
     const payeeMap: Record<string, { name: string; record_id: string; yiddish: string; memo: string; address: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
     const chalikahIds = new Set<string>();
 
+    // Deduplicate by record_id when available, otherwise by payee name
     filteredChecks.forEach((c) => {
-      const payee = c.payee || "(No Payee)";
+      const info = getPayeeInfo(c.payee || "(No Payee)", c.payee_record_number);
+      // Use record_id as the unique key when available, otherwise fall back to payee name
+      const dedupeKey = (c.payee_record_number && info.record_id)
+        ? `__rid__${info.record_id}`
+        : (c.payee || "(No Payee)");
       const chId = c.chalikah_id || "__none__";
       chalikahIds.add(chId);
-      if (!map[payee]) {
-        map[payee] = {};
-        const info = getPayeeInfo(payee, c.payee_record_number);
-        payeeMap[payee] = { name: payee, ...info };
+      if (!map[dedupeKey]) {
+        map[dedupeKey] = {};
+        payeeMap[dedupeKey] = { name: c.payee || "(No Payee)", ...info };
       }
-      map[payee][chId] = (map[payee][chId] || 0) + c.amount;
+      map[dedupeKey][chId] = (map[dedupeKey][chId] || 0) + c.amount;
     });
 
     const chalikahNameMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
