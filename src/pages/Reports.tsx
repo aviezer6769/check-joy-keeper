@@ -114,18 +114,21 @@ const Reports = () => {
     const payeeMap: Record<string, { key: string; name: string; record_id: string; yiddish: string; memo: string; address: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
     const chalikahIds = new Set<string>();
 
-    // Deduplicate by record_id when available, otherwise by payee name
+    // Attribute check to given_to if different from check payee, same as payee list
     filteredChecks.forEach((c) => {
-      const info = getPayeeInfo(c.payee || "(No Payee)", c.payee_record_number);
-      // Use record_id as the unique key when available, otherwise fall back to payee name
-      const dedupeKey = (c.payee_record_number && info.record_id)
+      // Use given_to_record_number first (the actual recipient), fall back to payee_record_number
+      const effectiveRecordNumber = c.given_to_record_number || c.payee_record_number;
+      const effectivePayee = c.given_to_payee || c.payee || "(No Payee)";
+      const info = getPayeeInfo(effectivePayee, effectiveRecordNumber);
+      // Deduplicate by record_id when available, otherwise by payee name
+      const dedupeKey = (effectiveRecordNumber && info.record_id)
         ? `__rid__${info.record_id}`
-        : (c.payee || "(No Payee)");
+        : effectivePayee;
       const chId = c.chalikah_id || "__none__";
       chalikahIds.add(chId);
       if (!map[dedupeKey]) {
         map[dedupeKey] = {};
-        payeeMap[dedupeKey] = { key: dedupeKey, name: c.payee || "(No Payee)", ...info };
+        payeeMap[dedupeKey] = { key: dedupeKey, name: effectivePayee, ...info };
       }
       map[dedupeKey][chId] = (map[dedupeKey][chId] || 0) + c.amount;
     });
