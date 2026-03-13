@@ -196,7 +196,7 @@ const Reports = () => {
         else if (col.key === "total") row["Total"] = Object.values(src.matrix[pr.key] || {}).reduce((s: number, v: any) => s + Number(v), 0);
         else if (col.key.startsWith("ch_")) {
           const chId = col.key.slice(3);
-          row[col.label] = src.matrix[pr.name]?.[chId] || 0;
+          row[col.label] = src.matrix[pr.key]?.[chId] || 0;
         }
       });
       return row;
