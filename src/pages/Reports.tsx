@@ -356,7 +356,7 @@ const Reports = () => {
   // Compute filtered grand total
   const filteredGrandTotal = useMemo(() =>
     displayedRows.reduce((s, pr) =>
-      s + Object.values(matrix[pr.name] || {}).reduce((ss, v) => ss + v, 0), 0
+      s + Object.values(matrix[pr.key] || {}).reduce((ss, v) => ss + v, 0), 0
     ), [displayedRows, matrix]);
 
   const renderMatrix = (
