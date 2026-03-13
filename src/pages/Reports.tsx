@@ -397,6 +397,8 @@ const Reports = () => {
                   return <TableCell key={col.key} className="bg-muted/50" />;
                 if (col.key === "payee_name")
                   return <TableCell key={col.key} className="bg-muted/50">TOTAL</TableCell>;
+                if (col.key === "memo")
+                  return <TableCell key={col.key} className="bg-muted/50" />;
                 if (col.key === "total")
                   return <TableCell key={col.key} className="text-right tabular-nums">{fmt(total)}</TableCell>;
                 if (col.key.startsWith("ch_")) {
