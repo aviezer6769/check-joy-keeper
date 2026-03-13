@@ -309,7 +309,15 @@ const Index = () => {
       <div className="hidden">
         <div ref={printRef}>
           {printChecks.map((c, i) => {
-            const matchedPayee = payees.find((p) => p.payee_name === c.payee || p.record_id === c.payee_record_number) || null;
+            const normalizedPayeeName = (c.payee || "").trim().toLowerCase();
+            const normalizedRecord = (c.payee_record_number || "").trim().toLowerCase();
+            const matchedPayee =
+              payees.find((p) => {
+                const payeeName = (p.payee_name || "").trim().toLowerCase();
+                const recordId = (p.record_id || "").trim().toLowerCase();
+                return payeeName === normalizedPayeeName || (normalizedRecord && recordId === normalizedRecord);
+              }) || null;
+
             return (
               <div key={c.id} style={i > 0 ? { pageBreakBefore: "always" } : undefined}>
                 <CheckPrintView check={c} account={selectedAccount} payee={matchedPayee} />
