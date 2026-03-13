@@ -230,7 +230,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
           rest[f.key] = rest[f.key] || null;
         }
       });
-      return supabase.from("checks").update(rest).eq("id", id).select().single();
+      return supabase.from("checks").update(rest).eq("id", id);
     });
     setSaving(false);
 
