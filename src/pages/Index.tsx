@@ -10,6 +10,7 @@ import { CheckForm } from "@/components/CheckForm";
 import { ChecksTable, CHECK_COLUMNS } from "@/components/ChecksTable";
 import { CheckPrintView } from "@/components/CheckPrintView";
 import { StatsCards } from "@/components/StatsCards";
+import { ChalikahDashboard } from "@/components/ChalikahDashboard";
 import { AccountManager } from "@/components/AccountManager";
 import { CheckBulkEdit } from "@/components/CheckBulkEdit";
 import { CheckBulkImport } from "@/components/CheckBulkImport";
@@ -205,6 +206,7 @@ const Index = () => {
 
         {/* Stats */}
         <StatsCards checks={checks} />
+        <ChalikahDashboard checks={checks} />
 
         {/* Search + bulk actions */}
         <div className="flex items-center gap-3">
