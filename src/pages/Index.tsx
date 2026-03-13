@@ -39,6 +39,10 @@ const Index = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+  const [displayedChecks, setDisplayedChecks] = useState<Check[]>([]);
+  const handleFilteredChecksChange = useCallback((filtered: Check[]) => {
+    setDisplayedChecks(filtered);
+  }, []);
 
   // Use first account as default once loaded
   const selectedAccountId = activeAccountId || accounts[0]?.id || null;
