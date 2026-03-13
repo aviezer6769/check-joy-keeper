@@ -178,12 +178,13 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
             {initialData ? "Edit Check" : "New Check"}
           </DialogTitle>
         </DialogHeader>
+        <ScrollArea className="flex-1 -mx-6 px-6">
         <form onSubmit={handleSubmit} className="grid gap-4 pt-2">
           {/* Payee search */}
           <div className="space-y-2 relative" ref={dropdownRef}>
