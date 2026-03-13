@@ -350,6 +350,9 @@ const Payees = () => {
                   <Button size="sm" variant="secondary" onClick={() => setBulkEditOpen(true)}>
                     <Pencil className="h-4 w-4 mr-1" /> Edit {selectedIds.size}
                   </Button>
+                  <Button size="sm" variant="default" onClick={() => setBatchCheckOpen(true)}>
+                    <FileCheck className="h-4 w-4 mr-1" /> Create Checks ({selectedIds.size})
+                  </Button>
                 </>
               )}
               <Button size="sm" variant={groupByChalikah ? "default" : "outline"} onClick={() => setGroupByChalikah(!groupByChalikah)}>
