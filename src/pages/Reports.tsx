@@ -242,7 +242,7 @@ const Reports = () => {
     if (colKey === "address") return pr.address || "";
     if (colKey === "memo") return pr.memo || "";
     if (colKey === "total") {
-      return String(Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0));
+      return String(Object.values(matrixData[pr.key] || {}).reduce((s, v) => s + v, 0));
     }
     if (colKey.startsWith("ch_")) {
       const chId = colKey.slice(3);
