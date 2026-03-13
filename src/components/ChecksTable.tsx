@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -45,6 +45,7 @@ interface ChecksTableProps {
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onToggleAll: () => void;
+  onFilteredChecksChange?: (filtered: Check[]) => void;
 }
 
 function getCheckTextValue(check: Check, key: string, chalikahMap: Record<string, string>): string {
@@ -93,7 +94,7 @@ function getSortValue(check: Check, key: string, chalikahMap: Record<string, str
   }
 }
 
-export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange, selectedIds, onToggleSelect, onToggleAll }: ChecksTableProps) {
+export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange, selectedIds, onToggleSelect, onToggleAll, onFilteredChecksChange }: ChecksTableProps) {
   const { data: chalikahList = [] } = useChalikah();
   const chalikahMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
   const allSelected = checks.length > 0 && checks.every((c) => selectedIds.has(c.id));
@@ -119,6 +120,11 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
       })
     );
   }, [checks, colLayout.filters, chalikahMap]);
+
+  // Report filtered checks back to parent
+  useEffect(() => {
+    onFilteredChecksChange?.(filteredChecks);
+  }, [filteredChecks, onFilteredChecksChange]);
 
   // Apply sort
   const sortedChecks = useMemo(() => {

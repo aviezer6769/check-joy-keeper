@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,10 @@ const Index = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+  const [displayedChecks, setDisplayedChecks] = useState<Check[]>([]);
+  const handleFilteredChecksChange = useCallback((filtered: Check[]) => {
+    setDisplayedChecks(filtered);
+  }, []);
 
   // Use first account as default once loaded
   const selectedAccountId = activeAccountId || accounts[0]?.id || null;
@@ -210,7 +214,7 @@ const Index = () => {
         )}
 
         {/* Stats */}
-        <StatsCards checks={checks} />
+        <StatsCards checks={displayedChecks.length > 0 || checks.length === 0 ? displayedChecks : checks} />
 
         {/* Search + bulk actions */}
         <div className="flex items-center gap-3">
@@ -248,6 +252,7 @@ const Index = () => {
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             onToggleAll={toggleAll}
+            onFilteredChecksChange={handleFilteredChecksChange}
           />
         )}
       </main>
