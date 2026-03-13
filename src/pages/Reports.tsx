@@ -345,8 +345,8 @@ const Reports = () => {
                 onReorder={colLayout.reorderColumn}
                 onSetWidth={colLayout.setColumnWidth}
                 columnClassName={(key) =>
-                  key === "record_id" || key === "yiddish_name" || key === "payee_name"
-                    ? "sticky left-0 bg-muted z-10 min-w-[120px]"
+                  key === "record_id" || key === "yiddish_name" || key === "payee_name" || key === "memo"
+                    ? "min-w-[120px]"
                     : "text-right min-w-[120px]"
                 }
                 isRtl={(key) => key === "yiddish_name"}
