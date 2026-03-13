@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { usePayees, type Payee } from "@/hooks/usePayees";
 import { useChecks, type Check } from "@/hooks/useChecks";
 import { useChalikah } from "@/hooks/useChalikah";
+import { useAccounts } from "@/hooks/useAccounts";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +66,7 @@ function formatDate(date: string) {
 const Payees = () => {
   const { data: payees = [], isLoading } = usePayees();
   const { data: checks = [] } = useChecks();
+  const { data: accounts = [] } = useAccounts();
   const { data: chalikahList = [] } = useChalikah();
   const [search, setSearch] = useState("");
   const [expandedPayee, setExpandedPayee] = useState<string | null>(null);
@@ -87,6 +89,7 @@ const Payees = () => {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const colLayout = useColumnLayout("payees", PAYEE_COLUMNS);
   const chalikahMap = useMemo(() => Object.fromEntries(chalikahList.map((c) => [c.id, c.name])), [chalikahList]);
+  const accountMap = useMemo(() => Object.fromEntries(accounts.map((a) => [a.id, a.account_name])), [accounts]);
 
   // Match checks to payee by record number (given_to_record_number first, then payee_record_number)
   const checksByRecordId = useMemo(() => {
@@ -523,6 +526,7 @@ const Payees = () => {
                                     items.map((c) => (
                                       <TableRow key={c.id}>
                                         <TableCell className="font-mono text-xs">{c.check_number || "—"}</TableCell>
+                                        <TableCell className="text-xs">{c.account_id ? accountMap[c.account_id] || "—" : "—"}</TableCell>
                                         <TableCell className="text-xs">{formatDate(c.check_date)}</TableCell>
                                         <TableCell className="text-xs">{c.chalikah_id ? chalikahMap[c.chalikah_id] || "—" : "—"}</TableCell>
                                         <TableCell className="text-right font-mono text-xs">
@@ -582,6 +586,7 @@ const Payees = () => {
                                                   <TableHeader>
                                                     <TableRow>
                                                       <TableHead className="text-xs">Check #</TableHead>
+                                                      <TableHead className="text-xs">Account</TableHead>
                                                       <TableHead className="text-xs">Date</TableHead>
                                                       <TableHead className="text-xs">Chalikah</TableHead>
                                                       <TableHead className="text-xs text-right">Amount</TableHead>
@@ -592,7 +597,7 @@ const Payees = () => {
                                                   <TableBody>
                                                     {renderCheckRows(items)}
                                                     <TableRow className="bg-muted/50 font-semibold">
-                                                      <TableCell colSpan={3} className="text-xs">Subtotal ({items.length} checks)</TableCell>
+                                                      <TableCell colSpan={4} className="text-xs">Subtotal ({items.length} checks)</TableCell>
                                                       <TableCell className="text-right font-mono text-xs">{formatCurrency(groupTotal)}</TableCell>
                                                       <TableCell colSpan={2} />
                                                     </TableRow>
@@ -616,6 +621,7 @@ const Payees = () => {
                                       <TableHeader>
                                         <TableRow>
                                           <TableHead className="text-xs">Check #</TableHead>
+                                          <TableHead className="text-xs">Account</TableHead>
                                           <TableHead className="text-xs">Date</TableHead>
                                           <TableHead className="text-xs">Chalikah</TableHead>
                                           <TableHead className="text-xs text-right">Amount</TableHead>
@@ -626,7 +632,7 @@ const Payees = () => {
                                       <TableBody>
                                         {renderCheckRows(sorted)}
                                         <TableRow className="bg-muted/50 font-semibold">
-                                          <TableCell colSpan={3} className="text-xs">Total ({sorted.length} checks)</TableCell>
+                                          <TableCell colSpan={4} className="text-xs">Total ({sorted.length} checks)</TableCell>
                                           <TableCell className="text-right font-mono text-xs">{formatCurrency(total)}</TableCell>
                                           <TableCell colSpan={2} />
                                         </TableRow>
