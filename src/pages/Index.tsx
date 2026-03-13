@@ -2,7 +2,7 @@ import { useState, useRef, useMemo } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, Pencil, Trash2, List, Download } from "lucide-react";
+import { Plus, Search, Users, Pencil, Trash2, List, Download, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert, type CheckStatus } from "@/hooks/useChecks";
 import { useAccounts } from "@/hooks/useAccounts";
@@ -10,7 +10,6 @@ import { CheckForm } from "@/components/CheckForm";
 import { ChecksTable, CHECK_COLUMNS } from "@/components/ChecksTable";
 import { CheckPrintView } from "@/components/CheckPrintView";
 import { StatsCards } from "@/components/StatsCards";
-import { ChalikahDashboard } from "@/components/ChalikahDashboard";
 import { AccountManager } from "@/components/AccountManager";
 import { CheckBulkEdit } from "@/components/CheckBulkEdit";
 import { CheckBulkImport } from "@/components/CheckBulkImport";
@@ -173,6 +172,12 @@ const Index = () => {
                   Chalikah
                 </Button>
               </Link>
+              <Link to="/dashboard">
+                <Button variant="outline">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+              </Link>
               <Button variant="outline" onClick={handleExportChecks}>
                 <Download className="h-4 w-4 mr-2" />
                 Export
@@ -206,7 +211,6 @@ const Index = () => {
 
         {/* Stats */}
         <StatsCards checks={checks} />
-        <ChalikahDashboard checks={checks} />
 
         {/* Search + bulk actions */}
         <div className="flex items-center gap-3">
