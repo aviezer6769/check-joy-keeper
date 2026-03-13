@@ -594,7 +594,8 @@ const Reports = () => {
               rd.chalikahCols || [],
               rd.matrix || {},
               rd.grandTotal || 0,
-              savedCols
+              savedCols,
+              true
             );
           })()}
         </DialogContent>
