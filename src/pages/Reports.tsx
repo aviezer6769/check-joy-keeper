@@ -10,6 +10,7 @@ import { usePayees } from "@/hooks/usePayees";
 import { useSavedReports, useSaveReport, useDeleteReport, type SavedReport } from "@/hooks/useReports";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Dialog,
@@ -30,6 +31,7 @@ const fmt = (n: number) =>
 const STATIC_REPORT_COLS: ColumnDef[] = [
   { key: "sort_order", label: "Sort" },
   { key: "record_id", label: "Record ID" },
+  { key: "is_active", label: "Active" },
   { key: "yiddish_name", label: "Yiddish Name" },
   { key: "payee_name", label: "Payee" },
   { key: "memo", label: "Memo", defaultVisible: false },
@@ -173,6 +175,7 @@ const Reports = () => {
       const row: Record<string, any> = {};
       colLayout.visibleColumns.forEach((col) => {
         if (col.key === "record_id") row["Record ID"] = pr.record_id;
+        else if (col.key === "is_active") row["Active"] = pr.is_active ? "Active" : "Inactive";
         else if (col.key === "yiddish_name") row["Yiddish Name"] = pr.yiddish;
         else if (col.key === "payee_name") row["Payee"] = pr.name;
         else if (col.key === "memo") row["Memo"] = pr.memo || "";
@@ -190,6 +193,7 @@ const Reports = () => {
     colLayout.visibleColumns.forEach((col) => {
       if (col.key === "payee_name") totalsRow["Payee"] = "TOTAL";
       else if (col.key === "record_id") totalsRow["Record ID"] = "";
+      else if (col.key === "is_active") totalsRow["Active"] = "";
       else if (col.key === "yiddish_name") totalsRow["Yiddish Name"] = "";
       else if (col.key === "total") totalsRow["Total"] = src.grandTotal || 0;
       else if (col.key.startsWith("ch_")) {
@@ -215,6 +219,7 @@ const Reports = () => {
   ): string => {
     if (colKey === "sort_order") return "";
     if (colKey === "record_id") return pr.record_id || "";
+    if (colKey === "is_active") return pr.is_active ? "Active" : "Inactive";
     if (colKey === "yiddish_name") return pr.yiddish || "";
     if (colKey === "payee_name") return pr.name;
     if (colKey === "memo") return pr.memo || "";
@@ -237,6 +242,7 @@ const Reports = () => {
       const n = parseFloat(pr.record_id || "");
       return isNaN(n) ? (pr.record_id || "").toLowerCase() : n;
     }
+    if (colKey === "is_active") return pr.is_active ? 1 : 0;
     if (colKey === "yiddish_name") return (pr.yiddish || "").toLowerCase();
     if (colKey === "payee_name") return pr.name.toLowerCase();
     if (colKey === "memo") return (pr.memo || "").toLowerCase();
@@ -399,6 +405,8 @@ const Reports = () => {
                     }
                     if (col.key === "record_id")
                       return <TableCell key={col.key} className="sticky left-0 bg-background z-10">{pr.record_id || "—"}</TableCell>;
+                    if (col.key === "is_active")
+                      return <TableCell key={col.key} className="bg-background">{pr.is_active ? <Badge variant="default" className="bg-success text-success-foreground">Active</Badge> : <Badge variant="secondary">Inactive</Badge>}</TableCell>;
                     if (col.key === "yiddish_name")
                       return <TableCell key={col.key} className="bg-background" dir="rtl">{pr.yiddish || "—"}</TableCell>;
                     if (col.key === "payee_name")
