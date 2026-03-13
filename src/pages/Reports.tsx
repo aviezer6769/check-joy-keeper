@@ -125,7 +125,7 @@ const Reports = () => {
       chalikahIds.add(chId);
       if (!map[dedupeKey]) {
         map[dedupeKey] = {};
-        payeeMap[dedupeKey] = { name: c.payee || "(No Payee)", ...info };
+        payeeMap[dedupeKey] = { key: dedupeKey, name: c.payee || "(No Payee)", ...info };
       }
       map[dedupeKey][chId] = (map[dedupeKey][chId] || 0) + c.amount;
     });
