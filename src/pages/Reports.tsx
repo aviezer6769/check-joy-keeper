@@ -623,6 +623,7 @@ const Reports = () => {
             const rd = viewingReport.report_data as any;
             // Saved reports show all columns from stored data
             const savedCols: ColumnDef[] = [
+              { key: "sort_order", label: "Sort" },
               { key: "record_id", label: "Record ID" },
               { key: "yiddish_name", label: "Yiddish Name" },
               { key: "payee_name", label: "Payee" },
