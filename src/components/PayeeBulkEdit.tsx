@@ -289,27 +289,68 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                   {gridRows.map((row, idx) => (
                     <tr key={row.id} className="border-t border-border">
                       <td className="px-2 py-0.5 text-muted-foreground">{idx + 1}</td>
-                      {GRID_FIELDS.map((f) => (
-                        <td key={f.key} className="px-0.5 py-0.5">
-                          {f.type === "number" ? (
-                            <Input
-                              type="number"
-                              value={(row[f.key] as number) ?? 0}
-                              onChange={(e) => updateGridCell(idx, f.key, e.target.value)}
-                              className="h-7 text-xs min-w-[80px] px-1.5"
-                            />
-                          ) : (
-                            <FieldSuggestInput
-                              dir={f.dir}
-                              value={(row[f.key] as string) ?? ""}
-                              onChange={(v) => updateGridCell(idx, f.key, v)}
-                              suggestions={suggestionsByField[f.key] || []}
-                              placeholder={f.label}
-                              className="h-7 text-xs min-w-[80px] px-1.5"
-                            />
-                          )}
-                        </td>
-                      ))}
+                      {GRID_FIELDS.map((f, colIdx) => {
+                        const mkKeyHandler = (e: React.KeyboardEvent<HTMLInputElement>) => {
+                          const totalCols = GRID_FIELDS.length;
+                          const totalRows = gridRows.length;
+                          let nextRow = idx;
+                          let nextCol = colIdx;
+                          const el = e.target as HTMLInputElement;
+                          if (e.key === "ArrowDown") { nextRow = Math.min(idx + 1, totalRows - 1); }
+                          else if (e.key === "ArrowUp") { nextRow = Math.max(idx - 1, 0); }
+                          else if (e.key === "ArrowRight" && el.selectionStart === el.value.length) {
+                            if (colIdx < totalCols - 1) nextCol = colIdx + 1;
+                            else if (idx < totalRows - 1) { nextRow = idx + 1; nextCol = 0; }
+                          } else if (e.key === "ArrowLeft" && el.selectionStart === 0) {
+                            if (colIdx > 0) nextCol = colIdx - 1;
+                            else if (idx > 0) { nextRow = idx - 1; nextCol = totalCols - 1; }
+                          } else if (e.key === "Tab" && !e.shiftKey) {
+                            if (colIdx < totalCols - 1) nextCol = colIdx + 1;
+                            else if (idx < totalRows - 1) { nextRow = idx + 1; nextCol = 0; }
+                            else return;
+                            e.preventDefault();
+                          } else if (e.key === "Tab" && e.shiftKey) {
+                            if (colIdx > 0) nextCol = colIdx - 1;
+                            else if (idx > 0) { nextRow = idx - 1; nextCol = totalCols - 1; }
+                            else return;
+                            e.preventDefault();
+                          } else if (e.key === "Enter") {
+                            nextRow = Math.min(idx + 1, totalRows - 1);
+                            e.preventDefault();
+                          } else return;
+                          if (nextRow !== idx || nextCol !== colIdx) {
+                            const next = document.querySelector<HTMLInputElement>(`input[data-pgrid-row="${nextRow}"][data-pgrid-col="${nextCol}"]`);
+                            next?.focus();
+                          }
+                        };
+                        return (
+                          <td key={f.key} className="px-0.5 py-0.5">
+                            {f.type === "number" ? (
+                              <Input
+                                type="number"
+                                value={(row[f.key] as number) ?? 0}
+                                onChange={(e) => updateGridCell(idx, f.key, e.target.value)}
+                                className="h-7 text-xs min-w-[80px] px-1.5"
+                                data-pgrid-row={idx}
+                                data-pgrid-col={colIdx}
+                                onKeyDown={mkKeyHandler}
+                              />
+                            ) : (
+                              <FieldSuggestInput
+                                dir={f.dir}
+                                value={(row[f.key] as string) ?? ""}
+                                onChange={(v) => updateGridCell(idx, f.key, v)}
+                                suggestions={suggestionsByField[f.key] || []}
+                                placeholder={f.label}
+                                className="h-7 text-xs min-w-[80px] px-1.5"
+                                data-pgrid-row={idx}
+                                data-pgrid-col={colIdx}
+                                onKeyDown={mkKeyHandler}
+                              />
+                            )}
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))}
                 </tbody>
