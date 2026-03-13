@@ -45,6 +45,7 @@ interface ChecksTableProps {
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onToggleAll: () => void;
+  onFilteredChecksChange?: (filtered: Check[]) => void;
 }
 
 function getCheckTextValue(check: Check, key: string, chalikahMap: Record<string, string>): string {
