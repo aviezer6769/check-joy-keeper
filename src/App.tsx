@@ -8,6 +8,7 @@ import Payees from "./pages/Payees";
 import Chalikah from "./pages/Chalikah";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
+import Reports from "./pages/Reports";
 
 const queryClient = new QueryClient();
 
