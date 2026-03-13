@@ -212,7 +212,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
 
   const handleGridSave = async () => {
     setSaving(true);
-    const promises = gridRows.map((row) => {
+    const { errors: gridErrors } = await batchedUpdates(gridRows, async (row) => {
       const { id, created_at, updated_at, ...rest } = row;
       GRID_FIELDS.forEach((f) => {
         if (f.type === "number") {
@@ -225,15 +225,12 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
           rest[f.key] = rest[f.key] || null;
         }
       });
-      return supabase.from("checks").update(rest).eq("id", id);
+      return supabase.from("checks").update(rest).eq("id", id).select().single();
     });
-
-    const results = await Promise.all(promises);
     setSaving(false);
 
-    const errors = results.filter((r) => r.error);
-    if (errors.length > 0) {
-      toast.error(`${errors.length} row(s) failed to update`);
+    if (gridErrors > 0) {
+      toast.error(`${gridErrors} row(s) failed to update`);
     } else {
       toast.success(`Updated ${gridRows.length} check(s)`);
       qc.invalidateQueries({ queryKey: ["checks"] });
