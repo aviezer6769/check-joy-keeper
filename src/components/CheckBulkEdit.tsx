@@ -119,17 +119,17 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
     // Handle status=Void specially — each check needs its own original_amount
     if (enabledFields.has("status") && values["status"] === "Void") {
       setSaving(true);
-      const { errors } = await batchedUpdates(checks, (c) => {
+      const { errors: voidErrors } = await batchedUpdates(checks, async (c) => {
         const perCheckUpdates = { ...updates };
         if (c.status !== "Void") {
           perCheckUpdates.original_amount = c.amount;
           perCheckUpdates.amount = 0;
         }
-        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id);
+        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id).select().single();
       });
       setSaving(false);
-      if (errors > 0) {
-        toast.error(`${errors} row(s) failed to update`);
+      if (voidErrors > 0) {
+        toast.error(`${voidErrors} row(s) failed to update`);
       } else {
         toast.success(`Updated ${checks.length} check(s)`);
         qc.invalidateQueries({ queryKey: ["checks"] });
@@ -142,18 +142,17 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
     // Handle unvoiding
     if (enabledFields.has("status") && values["status"] !== "Void") {
       setSaving(true);
-      const { errors } = await batchedUpdates(checks, (c) => {
+      const { errors: unvoidErrors } = await batchedUpdates(checks, async (c) => {
         const perCheckUpdates = { ...updates };
         if (c.status === "Void") {
           perCheckUpdates.amount = c.original_amount ?? 0;
           perCheckUpdates.original_amount = null;
         }
-        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id);
+        return supabase.from("checks").update(perCheckUpdates).eq("id", c.id).select().single();
       });
       setSaving(false);
-      const errors = results.filter((r) => r.error);
-      if (errors.length > 0) {
-        toast.error(`${errors.length} row(s) failed to update`);
+      if (unvoidErrors > 0) {
+        toast.error(`${unvoidErrors} row(s) failed to update`);
       } else {
         toast.success(`Updated ${checks.length} check(s)`);
         qc.invalidateQueries({ queryKey: ["checks"] });
