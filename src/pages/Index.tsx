@@ -2,7 +2,7 @@ import { useState, useRef, useMemo, useCallback } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, Pencil, Trash2, List, Download, BarChart3 } from "lucide-react";
+import { Plus, Search, Users, Pencil, Trash2, List, Download, BarChart3, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert, type CheckStatus } from "@/hooks/useChecks";
 import { useAccounts } from "@/hooks/useAccounts";
