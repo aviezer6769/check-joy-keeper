@@ -21,6 +21,8 @@ export function FieldSuggestInput({
   className,
   type = "text",
   dir,
+  onKeyDown: externalKeyDown,
+  ...restProps
 }: FieldSuggestInputProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
