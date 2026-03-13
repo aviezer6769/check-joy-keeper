@@ -230,6 +230,7 @@ const Reports = () => {
     }
     if (colKey === "yiddish_name") return (pr.yiddish || "").toLowerCase();
     if (colKey === "payee_name") return pr.name.toLowerCase();
+    if (colKey === "memo") return (pr.memo || "").toLowerCase();
     if (colKey === "total") return Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0);
     if (colKey.startsWith("ch_")) {
       const chId = colKey.slice(3);
