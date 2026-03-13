@@ -116,7 +116,7 @@ const Payees = () => {
   const getPayeeTextValue = (p: Payee, key: string): string => {
     switch (key) {
       case "record_id": return p.record_id || "";
-      case "sort_order": return String(p.sort_order ?? 0);
+      case "sort_order": return ""; // dynamic, not displayed as text
       case "urgent_level": return p.urgent_level === null || p.urgent_level === undefined ? "?" : String(p.urgent_level);
       case "yiddish_name": return [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ");
       case "payee_name": return [p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ") || p.payee_name;
@@ -175,6 +175,32 @@ const Payees = () => {
     }
     if (!colLayout.sort) return result;
     const { key, dir } = colLayout.sort;
+    if (key === "sort_order") {
+      // Composite sort: active desc, urgent desc (null last), last_name_yiddish asc, first_name_yiddish asc, middle_name_yiddish asc
+      return [...result].sort((a, b) => {
+        const mul = dir === "asc" ? 1 : -1;
+        // 1. Active first
+        const activeA = a.is_active ? 0 : 1;
+        const activeB = b.is_active ? 0 : 1;
+        if (activeA !== activeB) return (activeA - activeB) * mul;
+        // 2. Urgent level desc (higher first), null/0 last
+        const urgA = a.urgent_level ?? -1;
+        const urgB = b.urgent_level ?? -1;
+        if (urgA !== urgB) return (urgB - urgA) * mul;
+        // 3. Last yiddish name asc
+        const lastA = (a.last_name_yiddish || "").toLowerCase();
+        const lastB = (b.last_name_yiddish || "").toLowerCase();
+        if (lastA !== lastB) return lastA.localeCompare(lastB) * mul;
+        // 4. First yiddish name asc
+        const firstA = (a.first_name_yiddish || "").toLowerCase();
+        const firstB = (b.first_name_yiddish || "").toLowerCase();
+        if (firstA !== firstB) return firstA.localeCompare(firstB) * mul;
+        // 5. Middle yiddish name asc
+        const midA = (a.middle_name_yiddish || "").toLowerCase();
+        const midB = (b.middle_name_yiddish || "").toLowerCase();
+        return midA.localeCompare(midB) * mul;
+      });
+    }
     return [...result].sort((a, b) => {
       const va = getPayeeSortValue(a, key);
       const vb = getPayeeSortValue(b, key);
@@ -204,7 +230,13 @@ const Payees = () => {
   const renderPayeeCell = (p: Payee, key: string) => {
     switch (key) {
       case "record_id": return p.record_id || "—";
-      case "sort_order": return p.sort_order;
+      case "sort_order": {
+        const parts = [
+          p.is_active ? "✓" : "✗",
+          p.urgent_level === null || p.urgent_level === undefined ? "?" : String(p.urgent_level),
+        ].join("/");
+        return <span className="text-muted-foreground text-xs">{parts}</span>;
+      }
       case "urgent_level":
         if (p.urgent_level === null || p.urgent_level === undefined) return <Badge variant="outline">?</Badge>;
         return p.urgent_level > 0 ? <Badge variant="destructive">{p.urgent_level}</Badge> : <span className="text-muted-foreground">0</span>;
