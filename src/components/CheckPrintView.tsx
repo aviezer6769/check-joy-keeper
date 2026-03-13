@@ -108,7 +108,7 @@ function PayeeBlock({ payee }: { payee?: Payee | null }) {
   const cityLine = [cityState, payee.zip].filter(Boolean).join(" ");
 
   return (
-    <div className="text-xs leading-tight mt-6">
+    <div className="text-xs leading-tight mt-6 ml-8">
       {yiddishName && <p>{yiddishName}</p>}
       <p>{payee.payee_name}</p>
       {streetLine && <p>{streetLine}</p>}
@@ -195,7 +195,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
 
       {/* ===== STUB 1 (middle) ===== */}
       <div className="px-6 py-4" style={{ minHeight: "180px" }}>
-        <div className="flex justify-between items-start max-w-[620px]">
+        <div className="flex justify-between items-start">
           <PayerBlock account={account} showYiddish boldEnglish />
           <StubRightMeta check={check} />
         </div>
@@ -206,7 +206,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
 
       {/* ===== STUB 2 (bottom) ===== */}
       <div className="px-6 py-4" style={{ minHeight: "180px" }}>
-        <div className="flex justify-between items-start max-w-[620px]">
+        <div className="flex justify-between items-start">
           <PayerBlock account={account} showYiddish={false} boldEnglish={false} />
           <StubRightMeta check={check} includeRecord includeRun />
         </div>
