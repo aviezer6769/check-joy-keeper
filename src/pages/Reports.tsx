@@ -220,7 +220,7 @@ const Reports = () => {
   };
 
   const getRowSortValue = (
-    pr: { name: string; record_id: string; yiddish: string },
+    pr: { name: string; record_id: string; yiddish: string; memo: string },
     colKey: string,
     matrixData: Record<string, Record<string, number>>
   ): string | number => {
