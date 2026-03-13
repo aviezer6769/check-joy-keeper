@@ -267,6 +267,7 @@ const Reports = () => {
       const n = parseFloat(pr.record_id || "");
       return isNaN(n) ? (pr.record_id || "").toLowerCase() : n;
     }
+    if (colKey === "urgent_level") return pr.urgent_level ?? -1;
     if (colKey === "is_active") return pr.is_active ? 1 : 0;
     if (colKey === "yiddish_name") return (pr.yiddish || "").toLowerCase();
     if (colKey === "payee_name") return pr.name.toLowerCase();
