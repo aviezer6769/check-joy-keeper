@@ -32,6 +32,7 @@ const fmt = (n: number) =>
 const STATIC_REPORT_COLS: ColumnDef[] = [
   { key: "sort_order", label: "Sort" },
   { key: "record_id", label: "Record ID" },
+  { key: "urgent_level", label: "Urgent" },
   { key: "is_active", label: "Active" },
   { key: "yiddish_name", label: "Yiddish Name" },
   { key: "payee_name", label: "Payee" },
@@ -191,6 +192,7 @@ const Reports = () => {
       const row: Record<string, any> = {};
       colLayout.visibleColumns.forEach((col) => {
         if (col.key === "record_id") row["Record ID"] = pr.record_id;
+        else if (col.key === "urgent_level") row["Urgent"] = pr.urgent_level == null ? "?" : pr.urgent_level;
         else if (col.key === "is_active") row["Active"] = pr.is_active ? "Active" : "Inactive";
         else if (col.key === "yiddish_name") row["Yiddish Name"] = pr.yiddish;
         else if (col.key === "payee_name") row["Payee"] = pr.name;
@@ -210,6 +212,7 @@ const Reports = () => {
     colLayout.visibleColumns.forEach((col) => {
       if (col.key === "payee_name") totalsRow["Payee"] = "TOTAL";
       else if (col.key === "record_id") totalsRow["Record ID"] = "";
+      else if (col.key === "urgent_level") totalsRow["Urgent"] = "";
       else if (col.key === "is_active") totalsRow["Active"] = "";
       else if (col.key === "yiddish_name") totalsRow["Yiddish Name"] = "";
       else if (col.key === "address") totalsRow["Address"] = "";
@@ -239,6 +242,7 @@ const Reports = () => {
   ): string => {
     if (colKey === "sort_order") return "";
     if (colKey === "record_id") return pr.record_id || "";
+    if (colKey === "urgent_level") return pr.urgent_level == null ? "?" : String(pr.urgent_level);
     if (colKey === "is_active") return pr.is_active ? "Active" : "Inactive";
     if (colKey === "yiddish_name") return pr.yiddish || "";
     if (colKey === "payee_name") return pr.name;
@@ -263,6 +267,7 @@ const Reports = () => {
       const n = parseFloat(pr.record_id || "");
       return isNaN(n) ? (pr.record_id || "").toLowerCase() : n;
     }
+    if (colKey === "urgent_level") return pr.urgent_level ?? -1;
     if (colKey === "is_active") return pr.is_active ? 1 : 0;
     if (colKey === "yiddish_name") return (pr.yiddish || "").toLowerCase();
     if (colKey === "payee_name") return pr.name.toLowerCase();
@@ -464,6 +469,10 @@ const Reports = () => {
                     }
                     if (col.key === "record_id")
                       return <TableCell key={col.key} className="sticky left-0 bg-background z-10">{pr.record_id || "—"}</TableCell>;
+                    if (col.key === "urgent_level") {
+                      if (pr.urgent_level == null) return <TableCell key={col.key} className="bg-background"><Badge variant="outline">?</Badge></TableCell>;
+                      return <TableCell key={col.key} className="bg-background">{pr.urgent_level > 0 ? <Badge variant="destructive">{pr.urgent_level}</Badge> : <span className="text-muted-foreground">0</span>}</TableCell>;
+                    }
                     if (col.key === "is_active")
                       return <TableCell key={col.key} className="bg-background">{pr.is_active ? <Badge variant="default" className="bg-success text-success-foreground">Active</Badge> : <Badge variant="secondary">Inactive</Badge>}</TableCell>;
                     if (col.key === "yiddish_name")
@@ -501,7 +510,7 @@ const Reports = () => {
                   return <TableCell key={col.key} className="bg-muted/50" />;
                 if (col.key === "payee_name")
                   return <TableCell key={col.key} className="bg-muted/50">TOTAL</TableCell>;
-                if (col.key === "address" || col.key === "memo" || col.key === "is_active")
+                if (col.key === "address" || col.key === "memo" || col.key === "is_active" || col.key === "urgent_level")
                   return <TableCell key={col.key} className="bg-muted/50" />;
                 if (col.key === "total")
                   return <TableCell key={col.key} className="text-right tabular-nums">{fmt(total)}</TableCell>;
