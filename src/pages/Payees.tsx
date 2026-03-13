@@ -670,6 +670,12 @@ const Payees = () => {
         onOpenChange={setBulkEditOpen}
         onDone={() => setSelectedIds(new Set())}
       />
+      <BatchCheckDialog
+        open={batchCheckOpen}
+        onOpenChange={setBatchCheckOpen}
+        payees={selectedPayees}
+        onDone={() => setSelectedIds(new Set())}
+      />
     </div>
   );
 };
