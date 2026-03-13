@@ -594,6 +594,7 @@ const Reports = () => {
               { key: "record_id", label: "Record ID" },
               { key: "yiddish_name", label: "Yiddish Name" },
               { key: "payee_name", label: "Payee" },
+              { key: "memo", label: "Memo" },
               ...(rd.chalikahCols || []).map((c: any) => ({ key: `ch_${c.id}`, label: c.name })),
               { key: "total", label: "Total" },
             ];
