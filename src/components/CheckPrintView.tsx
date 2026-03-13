@@ -1,10 +1,12 @@
 import { type Check } from "@/hooks/useChecks";
 import { type Account } from "@/hooks/useAccounts";
+import { type Payee } from "@/hooks/usePayees";
 import signatureImg from "@/assets/signature.png";
 
 interface CheckPrintViewProps {
   check: Check;
   account?: Account | null;
+  payee?: Payee | null;
 }
 
 function numberToWords(num: number): string {
@@ -79,7 +81,35 @@ function PayerBlock({ account }: { account?: Account | null }) {
   );
 }
 
-export function CheckPrintView({ check, account }: CheckPrintViewProps) {
+function PayeeBlock({ payee }: { payee?: Payee | null }) {
+  if (!payee) return null;
+
+  // Build Yiddish display name
+  const yiddishParts = [
+    payee.title_1_yiddish,
+    payee.first_name_yiddish,
+    payee.middle_name_yiddish,
+    payee.last_name_yiddish,
+    payee.title_2_yiddish,
+  ].filter(Boolean);
+  const yiddishName = yiddishParts.length > 0 ? yiddishParts.join(" ") : null;
+
+  // Build address
+  const streetParts = [payee.street_no, payee.street_name].filter(Boolean).join(" ");
+  const streetLine = payee.apt ? `${streetParts} #${payee.apt}` : streetParts;
+  const cityLine = [payee.city, payee.state].filter(Boolean).join(", ") + (payee.zip ? " " + payee.zip : "");
+
+  return (
+    <div className="text-xs leading-tight mt-4">
+      {yiddishName && <p>{yiddishName}</p>}
+      <p>{payee.payee_name}</p>
+      {streetLine && <p>{streetLine}</p>}
+      {cityLine.trim() && <p>{cityLine}</p>}
+    </div>
+  );
+}
+
+export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
   const payeeName = check.payee.startsWith("Payee #") ? "" : check.payee;
 
   return (
@@ -134,6 +164,8 @@ export function CheckPrintView({ check, account }: CheckPrintViewProps) {
 
         {/* MICR line */}
         <div className="mt-4 text-xs tracking-widest font-mono" style={{ color: "#999" }}>
+          {check.check_number && <span>⑈{check.check_number}⑈</span>}
+          {"  "}
           {account?.routing_number && <span>⑈{account.routing_number}⑈</span>}
           {"  "}
           {account?.account_number && <span>{account.account_number}⑈</span>}
@@ -144,29 +176,40 @@ export function CheckPrintView({ check, account }: CheckPrintViewProps) {
       <div className="border-t border-dashed" style={{ borderColor: "#aaa" }} />
 
       {/* ===== STUB 1 (middle) ===== */}
-      <div className="flex justify-between items-start px-6 py-4" style={{ minHeight: "130px" }}>
-        <PayerBlock account={account} />
-        <div className="text-sm font-medium">{payeeName}</div>
-        <div className="text-right text-xs space-y-0.5">
-          <p>{check.check_number || ""}</p>
-          <p>{formatDateShort(check.check_date)}</p>
-          <p>{formatCurrency(check.amount)}</p>
+      <div className="px-6 py-4" style={{ minHeight: "180px" }}>
+        <div className="flex justify-between items-start">
+          <PayerBlock account={account} />
+          <div className="text-right text-xs space-y-0.5">
+            <p>{check.check_number || ""}</p>
+            <p>{formatDateShort(check.check_date)}</p>
+            <p>{formatCurrency(check.amount)}</p>
+          </div>
         </div>
+        <PayeeBlock payee={payee} />
       </div>
 
       {/* ===== Perforated line ===== */}
       <div className="border-t border-dashed" style={{ borderColor: "#aaa" }} />
 
       {/* ===== STUB 2 (bottom) ===== */}
-      <div className="flex justify-between items-start px-6 py-4" style={{ minHeight: "130px" }}>
-        <PayerBlock account={account} />
-        <div className="text-sm font-medium">{payeeName}</div>
-        <div className="text-right text-xs space-y-0.5">
-          <p>{check.check_number || ""}</p>
-          <p>{formatDateShort(check.check_date)}</p>
-          <p>{formatCurrency(check.amount)}</p>
-          <p>{check.payee_record_number || "0"}</p>
+      <div className="px-6 py-4" style={{ minHeight: "180px" }}>
+        <div className="flex justify-between items-start">
+          <div className="text-xs leading-tight">
+            <p className="font-bold">{account?.stub_payer_name || account?.payer_name || account?.account_name || ""}</p>
+            {account?.payer_address && <p>{account.payer_address}</p>}
+            {(account?.payer_city || account?.payer_state || account?.payer_zip) && (
+              <p>{[account?.payer_city, account?.payer_state].filter(Boolean).join(", ")} {account?.payer_zip || ""}</p>
+            )}
+          </div>
+          <div className="text-right text-xs space-y-0.5">
+            <p>{check.check_number || ""}</p>
+            <p>{formatDateShort(check.check_date)}</p>
+            <p>{formatCurrency(check.amount)}</p>
+            <p>{check.payee_record_number || ""}</p>
+            <p>{check.run_no || ""}</p>
+          </div>
         </div>
+        <PayeeBlock payee={payee} />
       </div>
     </div>
   );
