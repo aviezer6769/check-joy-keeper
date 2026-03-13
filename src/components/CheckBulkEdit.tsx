@@ -15,6 +15,21 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+// Run promises in sequential batches to avoid rate limiting
+async function batchedUpdates<T>(
+  items: T[],
+  fn: (item: T) => Promise<{ error: any }>,
+  batchSize = 20
+): Promise<{ errors: number; total: number }> {
+  let errors = 0;
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const results = await Promise.all(batch.map(fn));
+    errors += results.filter((r) => r.error).length;
+  }
+  return { errors, total: items.length };
+}
+
 interface FieldDef {
   key: string;
   label: string;
