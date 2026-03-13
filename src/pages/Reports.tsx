@@ -34,6 +34,7 @@ const STATIC_REPORT_COLS: ColumnDef[] = [
   { key: "is_active", label: "Active" },
   { key: "yiddish_name", label: "Yiddish Name" },
   { key: "payee_name", label: "Payee" },
+  { key: "address", label: "Address" },
   { key: "memo", label: "Memo", defaultVisible: false },
 ];
 
