@@ -54,13 +54,13 @@ const Reports = () => {
 
   // Build payee lookup by record_id and payee_name
   const payeeLookup = useMemo(() => {
-    const byRecord: Record<string, { record_id: string; yiddish: string }> = {};
-    const byName: Record<string, { record_id: string; yiddish: string }> = {};
+    const byRecord: Record<string, { record_id: string; yiddish: string; memo: string }> = {};
+    const byName: Record<string, { record_id: string; yiddish: string; memo: string }> = {};
     payeesList.forEach((p) => {
       const yiddish = [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish]
         .filter(Boolean)
         .join(" ");
-      const entry = { record_id: p.record_id || "", yiddish };
+      const entry = { record_id: p.record_id || "", yiddish, memo: p.memo || "" };
       if (p.record_id) byRecord[p.record_id] = entry;
       byName[p.payee_name.toLowerCase()] = entry;
     });
