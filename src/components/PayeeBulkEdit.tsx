@@ -281,7 +281,18 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                         className="text-left px-1 py-1.5 font-semibold text-muted-foreground whitespace-nowrap"
                         dir={f.dir}
                       >
-                        {f.label}
+                        <div className="flex items-center gap-1">
+                          {f.label}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-5 w-5 opacity-50 hover:opacity-100"
+                            onClick={() => copyDownGrid(f.key)}
+                            title={`Copy first row's ${f.label} to all rows`}
+                          >
+                            <ArrowDown className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </th>
                     ))}
                   </tr>
