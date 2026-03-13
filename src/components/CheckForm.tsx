@@ -407,7 +407,6 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
             </Button>
           </div>
         </form>
-        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
