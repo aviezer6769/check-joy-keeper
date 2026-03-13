@@ -365,6 +365,14 @@ const Reports = () => {
 
     return (
       <div className="overflow-auto border rounded-lg">
+        {!isStatic && selectedNames.size > 0 && (
+          <div className="px-4 py-2 bg-muted/50 border-b text-sm text-muted-foreground flex items-center gap-2">
+            {selectedNames.size} selected
+            <Button variant="ghost" size="sm" onClick={() => setSelectedNames(new Set())}>
+              Clear
+            </Button>
+          </div>
+        )}
         <Table>
           <TableHeader>
             {isStatic ? (
@@ -384,33 +392,62 @@ const Reports = () => {
                 ))}
               </TableRow>
             ) : (
-              <DraggableTableHeader
-                columns={visCols}
-                widths={colLayout.widths}
-                sort={colLayout.sort}
-                onToggleSort={colLayout.toggleSort}
-                onReorder={colLayout.reorderColumn}
-                onSetWidth={colLayout.setColumnWidth}
-                columnClassName={(key) =>
-                  key === "record_id" || key === "yiddish_name" || key === "payee_name" || key === "memo"
-                    ? "min-w-[120px]"
-                    : "text-right min-w-[120px]"
-                }
-                isRtl={(key) => key === "yiddish_name"}
-                showFilters={showFilters}
-                filters={colLayout.filters}
-                filterModes={colLayout.filterModes}
-                onFilterChange={colLayout.setFilter}
-                onFilterModeChange={colLayout.setFilterMode}
-                filterOptions={reportFilterOptions}
-              />
+              <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={rows.length > 0 && rows.every((pr) => selectedNames.has(pr.name))}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedNames(new Set(rows.map((pr) => pr.name)));
+                      } else {
+                        setSelectedNames(new Set());
+                      }
+                    }}
+                  />
+                </TableHead>
+                <DraggableTableHeader
+                  columns={visCols}
+                  widths={colLayout.widths}
+                  sort={colLayout.sort}
+                  onToggleSort={colLayout.toggleSort}
+                  onReorder={colLayout.reorderColumn}
+                  onSetWidth={colLayout.setColumnWidth}
+                  columnClassName={(key) =>
+                    key === "record_id" || key === "yiddish_name" || key === "payee_name" || key === "memo" || key === "address"
+                      ? "min-w-[120px]"
+                      : "text-right min-w-[120px]"
+                  }
+                  isRtl={(key) => key === "yiddish_name"}
+                  showFilters={showFilters}
+                  filters={colLayout.filters}
+                  filterModes={colLayout.filterModes}
+                  onFilterChange={colLayout.setFilter}
+                  onFilterModeChange={colLayout.setFilterMode}
+                  filterOptions={reportFilterOptions}
+                />
+              </TableRow>
             )}
           </TableHeader>
           <TableBody>
             {rows.map((pr) => {
               const rowTotal = Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0);
               return (
-                <TableRow key={pr.name}>
+                <TableRow key={pr.name} className={!isStatic && selectedNames.has(pr.name) ? "bg-muted/30" : undefined}>
+                  {!isStatic && (
+                    <TableCell className="w-10">
+                      <Checkbox
+                        checked={selectedNames.has(pr.name)}
+                        onCheckedChange={(checked) => {
+                          setSelectedNames((prev) => {
+                            const next = new Set(prev);
+                            if (checked) next.add(pr.name);
+                            else next.delete(pr.name);
+                            return next;
+                          });
+                        }}
+                      />
+                    </TableCell>
+                  )}
                   {visCols.map((col) => {
                     if (col.key === "sort_order") {
                       const parts = [pr.is_active ? "✓" : "✗", pr.urgent_level === null || pr.urgent_level === undefined ? "?" : String(pr.urgent_level)].join("/");
@@ -424,6 +461,8 @@ const Reports = () => {
                       return <TableCell key={col.key} className="bg-background" dir="rtl">{pr.yiddish || "—"}</TableCell>;
                     if (col.key === "payee_name")
                       return <TableCell key={col.key} className="bg-background font-medium">{pr.name}</TableCell>;
+                    if (col.key === "address")
+                      return <TableCell key={col.key} className="bg-background">{pr.address || "—"}</TableCell>;
                     if (col.key === "memo")
                       return <TableCell key={col.key} className="bg-background text-sm max-w-[300px] whitespace-pre-line">{pr.memo || "—"}</TableCell>;
                     if (col.key === "total")
@@ -443,6 +482,7 @@ const Reports = () => {
             })}
             {/* Totals row */}
             <TableRow className="bg-muted/50 font-bold">
+              {!isStatic && <TableCell className="bg-muted/50" />}
               {visCols.map((col) => {
                 if (col.key === "sort_order")
                   return <TableCell key={col.key} className="bg-muted/50" />;
@@ -452,7 +492,7 @@ const Reports = () => {
                   return <TableCell key={col.key} className="bg-muted/50" />;
                 if (col.key === "payee_name")
                   return <TableCell key={col.key} className="bg-muted/50">TOTAL</TableCell>;
-                if (col.key === "memo")
+                if (col.key === "address" || col.key === "memo" || col.key === "is_active")
                   return <TableCell key={col.key} className="bg-muted/50" />;
                 if (col.key === "total")
                   return <TableCell key={col.key} className="text-right tabular-nums">{fmt(total)}</TableCell>;
