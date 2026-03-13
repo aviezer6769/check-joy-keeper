@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { type Check, type CheckInsert, CHECK_STATUSES } from "@/hooks/useChecks";
 import { usePayees, type Payee } from "@/hooks/usePayees";
 import { useChalikah, useAddChalikah } from "@/hooks/useChalikah";
