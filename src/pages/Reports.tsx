@@ -192,6 +192,7 @@ const Reports = () => {
     colLayout.visibleColumns.forEach((col) => {
       if (col.key === "payee_name") totalsRow["Payee"] = "TOTAL";
       else if (col.key === "record_id") totalsRow["Record ID"] = "";
+      else if (col.key === "is_active") totalsRow["Active"] = "";
       else if (col.key === "yiddish_name") totalsRow["Yiddish Name"] = "";
       else if (col.key === "total") totalsRow["Total"] = src.grandTotal || 0;
       else if (col.key.startsWith("ch_")) {
