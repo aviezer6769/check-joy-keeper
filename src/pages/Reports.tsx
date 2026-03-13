@@ -31,6 +31,7 @@ const STATIC_REPORT_COLS: ColumnDef[] = [
   { key: "record_id", label: "Record ID" },
   { key: "yiddish_name", label: "Yiddish Name" },
   { key: "payee_name", label: "Payee" },
+  { key: "memo", label: "Memo", defaultVisible: false },
 ];
 
 const Reports = () => {
@@ -53,13 +54,13 @@ const Reports = () => {
 
   // Build payee lookup by record_id and payee_name
   const payeeLookup = useMemo(() => {
-    const byRecord: Record<string, { record_id: string; yiddish: string }> = {};
-    const byName: Record<string, { record_id: string; yiddish: string }> = {};
+    const byRecord: Record<string, { record_id: string; yiddish: string; memo: string }> = {};
+    const byName: Record<string, { record_id: string; yiddish: string; memo: string }> = {};
     payeesList.forEach((p) => {
       const yiddish = [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish]
         .filter(Boolean)
         .join(" ");
-      const entry = { record_id: p.record_id || "", yiddish };
+      const entry = { record_id: p.record_id || "", yiddish, memo: p.memo || "" };
       if (p.record_id) byRecord[p.record_id] = entry;
       byName[p.payee_name.toLowerCase()] = entry;
     });
@@ -70,7 +71,7 @@ const Reports = () => {
     if (recordNumber && payeeLookup.byRecord[recordNumber]) {
       return payeeLookup.byRecord[recordNumber];
     }
-    return payeeLookup.byName[payeeName.toLowerCase()] || { record_id: "", yiddish: "" };
+    return payeeLookup.byName[payeeName.toLowerCase()] || { record_id: "", yiddish: "", memo: "" };
   };
 
   // Filter checks
@@ -98,7 +99,7 @@ const Reports = () => {
   // Build payee × chalikah matrix
   const { matrix, payeeRows, chalikahCols, grandTotal } = useMemo(() => {
     const map: Record<string, Record<string, number>> = {};
-    const payeeMap: Record<string, { name: string; record_id: string; yiddish: string }> = {};
+    const payeeMap: Record<string, { name: string; record_id: string; yiddish: string; memo: string }> = {};
     const chalikahIds = new Set<string>();
 
     filteredChecks.forEach((c) => {
@@ -108,7 +109,7 @@ const Reports = () => {
       if (!map[payee]) {
         map[payee] = {};
         const info = getPayeeInfo(payee, c.payee_record_number);
-        payeeMap[payee] = { name: payee, record_id: info.record_id, yiddish: info.yiddish };
+        payeeMap[payee] = { name: payee, record_id: info.record_id, yiddish: info.yiddish, memo: info.memo };
       }
       map[payee][chId] = (map[payee][chId] || 0) + c.amount;
     });
@@ -167,6 +168,7 @@ const Reports = () => {
         if (col.key === "record_id") row["Record ID"] = pr.record_id;
         else if (col.key === "yiddish_name") row["Yiddish Name"] = pr.yiddish;
         else if (col.key === "payee_name") row["Payee"] = pr.name;
+        else if (col.key === "memo") row["Memo"] = pr.memo || "";
         else if (col.key === "total") row["Total"] = Object.values(src.matrix[pr.name] || {}).reduce((s: number, v: any) => s + Number(v), 0);
         else if (col.key.startsWith("ch_")) {
           const chId = col.key.slice(3);
@@ -200,13 +202,14 @@ const Reports = () => {
 
   // Helper to get cell text value for filtering/sorting
   const getRowTextValue = (
-    pr: { name: string; record_id: string; yiddish: string },
+    pr: { name: string; record_id: string; yiddish: string; memo: string },
     colKey: string,
     matrixData: Record<string, Record<string, number>>
   ): string => {
     if (colKey === "record_id") return pr.record_id || "";
     if (colKey === "yiddish_name") return pr.yiddish || "";
     if (colKey === "payee_name") return pr.name;
+    if (colKey === "memo") return pr.memo || "";
     if (colKey === "total") {
       return String(Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0));
     }
@@ -218,7 +221,7 @@ const Reports = () => {
   };
 
   const getRowSortValue = (
-    pr: { name: string; record_id: string; yiddish: string },
+    pr: { name: string; record_id: string; yiddish: string; memo: string },
     colKey: string,
     matrixData: Record<string, Record<string, number>>
   ): string | number => {
@@ -228,6 +231,7 @@ const Reports = () => {
     }
     if (colKey === "yiddish_name") return (pr.yiddish || "").toLowerCase();
     if (colKey === "payee_name") return pr.name.toLowerCase();
+    if (colKey === "memo") return (pr.memo || "").toLowerCase();
     if (colKey === "total") return Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0);
     if (colKey.startsWith("ch_")) {
       const chId = colKey.slice(3);
@@ -341,8 +345,8 @@ const Reports = () => {
                 onReorder={colLayout.reorderColumn}
                 onSetWidth={colLayout.setColumnWidth}
                 columnClassName={(key) =>
-                  key === "record_id" || key === "yiddish_name" || key === "payee_name"
-                    ? "sticky left-0 bg-muted z-10 min-w-[120px]"
+                  key === "record_id" || key === "yiddish_name" || key === "payee_name" || key === "memo"
+                    ? "min-w-[120px]"
                     : "text-right min-w-[120px]"
                 }
                 isRtl={(key) => key === "yiddish_name"}
@@ -367,6 +371,8 @@ const Reports = () => {
                       return <TableCell key={col.key} className="bg-background" dir="rtl">{pr.yiddish || "—"}</TableCell>;
                     if (col.key === "payee_name")
                       return <TableCell key={col.key} className="bg-background font-medium">{pr.name}</TableCell>;
+                    if (col.key === "memo")
+                      return <TableCell key={col.key} className="bg-background text-sm max-w-[300px] whitespace-pre-line">{pr.memo || "—"}</TableCell>;
                     if (col.key === "total")
                       return <TableCell key={col.key} className="text-right font-bold tabular-nums">{fmt(rowTotal)}</TableCell>;
                     if (col.key.startsWith("ch_")) {
@@ -391,6 +397,8 @@ const Reports = () => {
                   return <TableCell key={col.key} className="bg-muted/50" />;
                 if (col.key === "payee_name")
                   return <TableCell key={col.key} className="bg-muted/50">TOTAL</TableCell>;
+                if (col.key === "memo")
+                  return <TableCell key={col.key} className="bg-muted/50" />;
                 if (col.key === "total")
                   return <TableCell key={col.key} className="text-right tabular-nums">{fmt(total)}</TableCell>;
                 if (col.key.startsWith("ch_")) {
@@ -586,6 +594,7 @@ const Reports = () => {
               { key: "record_id", label: "Record ID" },
               { key: "yiddish_name", label: "Yiddish Name" },
               { key: "payee_name", label: "Payee" },
+              { key: "memo", label: "Memo" },
               ...(rd.chalikahCols || []).map((c: any) => ({ key: `ch_${c.id}`, label: c.name })),
               { key: "total", label: "Total" },
             ];
