@@ -268,7 +268,7 @@ const Reports = () => {
     if (colKey === "total") return Object.values(matrixData[pr.key] || {}).reduce((s, v) => s + v, 0);
     if (colKey.startsWith("ch_")) {
       const chId = colKey.slice(3);
-      return matrixData[pr.name]?.[chId] || 0;
+      return matrixData[pr.key]?.[chId] || 0;
     }
     return "";
   };
