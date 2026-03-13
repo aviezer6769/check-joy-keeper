@@ -182,7 +182,7 @@ const Reports = () => {
     const baseRows = data ? (src.payeeRows as typeof payeeRows) : displayedRows;
     // If there's a selection, export only selected; otherwise export all displayed
     const exportPayees = selectedNames.size > 0
-      ? baseRows.filter((pr) => selectedNames.has(pr.name))
+      ? baseRows.filter((pr) => selectedNames.has(pr.key))
       : baseRows;
     const rows = exportPayees.map((pr) => {
       const row: Record<string, any> = {};
