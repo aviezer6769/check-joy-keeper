@@ -286,14 +286,14 @@ const Reports = () => {
           const activeA = a.is_active ? 0 : 1;
           const activeB = b.is_active ? 0 : 1;
           if (activeA !== activeB) return (activeA - activeB) * mul;
-          const urgA = a.urgent_level ?? -1;
-          const urgB = b.urgent_level ?? -1;
+          const urgA = a.urgent_level == null ? -Infinity : a.urgent_level === 0 ? -Infinity : a.urgent_level;
+          const urgB = b.urgent_level == null ? -Infinity : b.urgent_level === 0 ? -Infinity : b.urgent_level;
           if (urgA !== urgB) return (urgB - urgA) * mul;
-          const lastCmp = a.last_name_yiddish.toLowerCase().localeCompare(b.last_name_yiddish.toLowerCase());
+          const lastCmp = a.last_name_yiddish.localeCompare(b.last_name_yiddish, "he");
           if (lastCmp !== 0) return lastCmp * mul;
-          const firstCmp = a.first_name_yiddish.toLowerCase().localeCompare(b.first_name_yiddish.toLowerCase());
+          const firstCmp = a.first_name_yiddish.localeCompare(b.first_name_yiddish, "he");
           if (firstCmp !== 0) return firstCmp * mul;
-          return a.middle_name_yiddish.toLowerCase().localeCompare(b.middle_name_yiddish.toLowerCase()) * mul;
+          return a.middle_name_yiddish.localeCompare(b.middle_name_yiddish, "he") * mul;
         });
       } else {
         result.sort((a, b) => {
