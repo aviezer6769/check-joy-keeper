@@ -230,7 +230,13 @@ const Payees = () => {
   const renderPayeeCell = (p: Payee, key: string) => {
     switch (key) {
       case "record_id": return p.record_id || "—";
-      case "sort_order": return p.sort_order;
+      case "sort_order": {
+        const parts = [
+          p.is_active ? "✓" : "✗",
+          p.urgent_level === null || p.urgent_level === undefined ? "?" : String(p.urgent_level),
+        ].join("/");
+        return <span className="text-muted-foreground text-xs">{parts}</span>;
+      }
       case "urgent_level":
         if (p.urgent_level === null || p.urgent_level === undefined) return <Badge variant="outline">?</Badge>;
         return p.urgent_level > 0 ? <Badge variant="destructive">{p.urgent_level}</Badge> : <span className="text-muted-foreground">0</span>;
