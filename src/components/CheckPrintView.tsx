@@ -164,7 +164,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
         <div className="flex items-baseline gap-2 mb-3">
           <span className="text-sm whitespace-nowrap">order of</span>
           <span className="flex-1 border-b border-black pb-0.5 pl-2 text-base font-normal">{payeeName}</span>
-          <span className="border border-black px-3 py-1 text-[38?] text-base font-semibold whitespace-nowrap">{formatCurrency(check.amount)}</span>
+          <span className="border border-black px-3 py-1 text-base font-semibold whitespace-nowrap">{formatCurrency(check.amount)}</span>
         </div>
 
         <div className="mb-6">
