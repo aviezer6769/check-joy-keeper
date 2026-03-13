@@ -206,6 +206,7 @@ const Payees = () => {
       case "record_id": return p.record_id || "—";
       case "sort_order": return p.sort_order;
       case "urgent_level":
+        if (p.urgent_level === null || p.urgent_level === undefined) return <Badge variant="outline">?</Badge>;
         return p.urgent_level > 0 ? <Badge variant="destructive">{p.urgent_level}</Badge> : <span className="text-muted-foreground">0</span>;
       case "yiddish_name":
         return [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ") || "—";
