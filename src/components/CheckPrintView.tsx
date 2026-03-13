@@ -206,7 +206,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
 
       {/* ===== STUB 2 (bottom) ===== */}
       <div className="px-6 py-4" style={{ minHeight: "180px" }}>
-        <div className="flex justify-between items-start max-w-[620px]">
+        <div className="flex justify-between items-start">
           <PayerBlock account={account} showYiddish={false} boldEnglish={false} />
           <StubRightMeta check={check} includeRecord includeRun />
         </div>
