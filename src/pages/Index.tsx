@@ -109,7 +109,12 @@ const Index = () => {
   };
 
   const handlePrintCheck = (check: Check) => {
-    setPrintCheck(check);
+    setPrintChecks([check]);
+    setTimeout(() => handlePrint(), 100);
+  };
+
+  const handleBulkPrint = () => {
+    setPrintChecks(selectedChecks);
     setTimeout(() => handlePrint(), 100);
   };
 
