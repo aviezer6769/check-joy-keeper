@@ -198,12 +198,117 @@ const Reports = () => {
     XLSX.writeFile(wb, "report.xlsx");
   };
 
+  // Helper to get cell text value for filtering/sorting
+  const getRowTextValue = (
+    pr: { name: string; record_id: string; yiddish: string },
+    colKey: string,
+    matrixData: Record<string, Record<string, number>>
+  ): string => {
+    if (colKey === "record_id") return pr.record_id || "";
+    if (colKey === "yiddish_name") return pr.yiddish || "";
+    if (colKey === "payee_name") return pr.name;
+    if (colKey === "total") {
+      return String(Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0));
+    }
+    if (colKey.startsWith("ch_")) {
+      const chId = colKey.slice(3);
+      return String(matrixData[pr.name]?.[chId] || 0);
+    }
+    return "";
+  };
+
+  const getRowSortValue = (
+    pr: { name: string; record_id: string; yiddish: string },
+    colKey: string,
+    matrixData: Record<string, Record<string, number>>
+  ): string | number => {
+    if (colKey === "record_id") {
+      const n = parseFloat(pr.record_id || "");
+      return isNaN(n) ? (pr.record_id || "").toLowerCase() : n;
+    }
+    if (colKey === "yiddish_name") return (pr.yiddish || "").toLowerCase();
+    if (colKey === "payee_name") return pr.name.toLowerCase();
+    if (colKey === "total") return Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0);
+    if (colKey.startsWith("ch_")) {
+      const chId = colKey.slice(3);
+      return matrixData[pr.name]?.[chId] || 0;
+    }
+    return "";
+  };
+
+  // Apply column filters + sorting to payeeRows
+  const displayedRows = useMemo(() => {
+    const activeFilters = Object.entries(colLayout.filters).filter(([, v]) => v.length > 0);
+    let result = [...payeeRows];
+
+    if (activeFilters.length > 0) {
+      result = result.filter((pr) =>
+        activeFilters.every(([key, val]) => {
+          const text = getRowTextValue(pr, key, matrix);
+          if (val === "__blank__") return !text || text.trim() === "" || text === "0";
+          const mode = colLayout.filterModes[key] || "contains";
+          const tl = text.toLowerCase();
+          const vl = val.toLowerCase();
+          const numT = parseFloat(text);
+          const numV = parseFloat(val);
+          switch (mode) {
+            case "equals": return tl === vl;
+            case "not": return tl !== vl;
+            case "gt": return !isNaN(numT) && !isNaN(numV) && numT > numV;
+            case "lt": return !isNaN(numT) && !isNaN(numV) && numT < numV;
+            case "gte": return !isNaN(numT) && !isNaN(numV) && numT >= numV;
+            case "lte": return !isNaN(numT) && !isNaN(numV) && numT <= numV;
+            case "contains":
+            default: return tl.includes(vl);
+          }
+        })
+      );
+    }
+
+    if (colLayout.sort) {
+      const { key, dir } = colLayout.sort;
+      result.sort((a, b) => {
+        const va = getRowSortValue(a, key, matrix);
+        const vb = getRowSortValue(b, key, matrix);
+        if (va < vb) return dir === "asc" ? -1 : 1;
+        if (va > vb) return dir === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [payeeRows, matrix, colLayout.filters, colLayout.filterModes, colLayout.sort]);
+
+  // Filter options for dropdown
+  const reportFilterOptions = useMemo(() => {
+    const opts: Record<string, Set<string>> = {};
+    for (const col of colLayout.visibleColumns) opts[col.key] = new Set();
+    for (const pr of payeeRows) {
+      for (const col of colLayout.visibleColumns) {
+        const val = getRowTextValue(pr, col.key, matrix);
+        if (val && val !== "0") opts[col.key]?.add(val);
+      }
+    }
+    const result: Record<string, string[]> = {};
+    for (const [key, set] of Object.entries(opts)) {
+      result[key] = Array.from(set).sort();
+    }
+    return result;
+  }, [payeeRows, matrix, colLayout.visibleColumns]);
+
+  // Compute filtered grand total
+  const filteredGrandTotal = useMemo(() =>
+    displayedRows.reduce((s, pr) =>
+      s + Object.values(matrix[pr.name] || {}).reduce((ss, v) => ss + v, 0), 0
+    ), [displayedRows, matrix]);
+
   const renderMatrix = (
     rows: typeof payeeRows,
     cols: typeof chalikahCols,
     matrixData: Record<string, Record<string, number>>,
     total: number,
-    visibleCols?: ColumnDef[]
+    visibleCols?: ColumnDef[],
+    isStatic?: boolean
   ) => {
     const visCols = visibleCols || colLayout.visibleColumns;
 
@@ -211,21 +316,44 @@ const Reports = () => {
       <div className="overflow-auto border rounded-lg">
         <Table>
           <TableHeader>
-            <TableRow>
-              {visCols.map((col) => (
-                <TableHead
-                  key={col.key}
-                  className={
-                    col.key === "record_id" || col.key === "yiddish_name" || col.key === "payee_name"
-                      ? "sticky left-0 bg-muted z-10 min-w-[120px]"
-                      : "text-right min-w-[120px]"
-                  }
-                  style={col.key === "yiddish_name" ? { direction: "rtl" } : undefined}
-                >
-                  {col.label}
-                </TableHead>
-              ))}
-            </TableRow>
+            {isStatic ? (
+              <TableRow>
+                {visCols.map((col) => (
+                  <TableHead
+                    key={col.key}
+                    className={
+                      col.key === "record_id" || col.key === "yiddish_name" || col.key === "payee_name"
+                        ? "sticky left-0 bg-muted z-10 min-w-[120px]"
+                        : "text-right min-w-[120px]"
+                    }
+                    style={col.key === "yiddish_name" ? { direction: "rtl" } : undefined}
+                  >
+                    {col.label}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ) : (
+              <DraggableTableHeader
+                columns={visCols}
+                widths={colLayout.widths}
+                sort={colLayout.sort}
+                onToggleSort={colLayout.toggleSort}
+                onReorder={colLayout.reorderColumn}
+                onSetWidth={colLayout.setColumnWidth}
+                columnClassName={(key) =>
+                  key === "record_id" || key === "yiddish_name" || key === "payee_name"
+                    ? "sticky left-0 bg-muted z-10 min-w-[120px]"
+                    : "text-right min-w-[120px]"
+                }
+                isRtl={(key) => key === "yiddish_name"}
+                showFilters={showFilters}
+                filters={colLayout.filters}
+                filterModes={colLayout.filterModes}
+                onFilterChange={colLayout.setFilter}
+                onFilterModeChange={colLayout.setFilterMode}
+                filterOptions={reportFilterOptions}
+              />
+            )}
           </TableHeader>
           <TableBody>
             {rows.map((pr) => {
