@@ -28,6 +28,7 @@ const fmt = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
 const STATIC_REPORT_COLS: ColumnDef[] = [
+  { key: "sort_order", label: "Sort" },
   { key: "record_id", label: "Record ID" },
   { key: "yiddish_name", label: "Yiddish Name" },
   { key: "payee_name", label: "Payee" },
@@ -54,13 +55,19 @@ const Reports = () => {
 
   // Build payee lookup by record_id and payee_name
   const payeeLookup = useMemo(() => {
-    const byRecord: Record<string, { record_id: string; yiddish: string; memo: string }> = {};
-    const byName: Record<string, { record_id: string; yiddish: string; memo: string }> = {};
+    const byRecord: Record<string, { record_id: string; yiddish: string; memo: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
+    const byName: Record<string, typeof byRecord[string]> = {};
     payeesList.forEach((p) => {
       const yiddish = [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish]
         .filter(Boolean)
         .join(" ");
-      const entry = { record_id: p.record_id || "", yiddish, memo: p.memo || "" };
+      const entry = {
+        record_id: p.record_id || "", yiddish, memo: p.memo || "",
+        is_active: p.is_active, urgent_level: p.urgent_level,
+        last_name_yiddish: p.last_name_yiddish || "",
+        first_name_yiddish: p.first_name_yiddish || "",
+        middle_name_yiddish: p.middle_name_yiddish || "",
+      };
       if (p.record_id) byRecord[p.record_id] = entry;
       byName[p.payee_name.toLowerCase()] = entry;
     });
@@ -71,7 +78,7 @@ const Reports = () => {
     if (recordNumber && payeeLookup.byRecord[recordNumber]) {
       return payeeLookup.byRecord[recordNumber];
     }
-    return payeeLookup.byName[payeeName.toLowerCase()] || { record_id: "", yiddish: "", memo: "" };
+    return payeeLookup.byName[payeeName.toLowerCase()] || { record_id: "", yiddish: "", memo: "", is_active: true, urgent_level: null, last_name_yiddish: "", first_name_yiddish: "", middle_name_yiddish: "" };
   };
 
   // Filter checks
@@ -99,7 +106,7 @@ const Reports = () => {
   // Build payee × chalikah matrix
   const { matrix, payeeRows, chalikahCols, grandTotal } = useMemo(() => {
     const map: Record<string, Record<string, number>> = {};
-    const payeeMap: Record<string, { name: string; record_id: string; yiddish: string; memo: string }> = {};
+    const payeeMap: Record<string, { name: string; record_id: string; yiddish: string; memo: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
     const chalikahIds = new Set<string>();
 
     filteredChecks.forEach((c) => {
@@ -109,7 +116,7 @@ const Reports = () => {
       if (!map[payee]) {
         map[payee] = {};
         const info = getPayeeInfo(payee, c.payee_record_number);
-        payeeMap[payee] = { name: payee, record_id: info.record_id, yiddish: info.yiddish, memo: info.memo };
+        payeeMap[payee] = { name: payee, ...info };
       }
       map[payee][chId] = (map[payee][chId] || 0) + c.amount;
     });
@@ -202,10 +209,11 @@ const Reports = () => {
 
   // Helper to get cell text value for filtering/sorting
   const getRowTextValue = (
-    pr: { name: string; record_id: string; yiddish: string; memo: string },
+    pr: typeof payeeRows[number],
     colKey: string,
     matrixData: Record<string, Record<string, number>>
   ): string => {
+    if (colKey === "sort_order") return "";
     if (colKey === "record_id") return pr.record_id || "";
     if (colKey === "yiddish_name") return pr.yiddish || "";
     if (colKey === "payee_name") return pr.name;
@@ -221,7 +229,7 @@ const Reports = () => {
   };
 
   const getRowSortValue = (
-    pr: { name: string; record_id: string; yiddish: string; memo: string },
+    pr: typeof payeeRows[number],
     colKey: string,
     matrixData: Record<string, Record<string, number>>
   ): string | number => {
@@ -271,13 +279,31 @@ const Reports = () => {
 
     if (colLayout.sort) {
       const { key, dir } = colLayout.sort;
-      result.sort((a, b) => {
-        const va = getRowSortValue(a, key, matrix);
-        const vb = getRowSortValue(b, key, matrix);
-        if (va < vb) return dir === "asc" ? -1 : 1;
-        if (va > vb) return dir === "asc" ? 1 : -1;
-        return 0;
-      });
+      if (key === "sort_order") {
+        // Composite sort: active desc, urgent desc (null last), last yiddish, first yiddish, middle yiddish
+        result.sort((a, b) => {
+          const mul = dir === "asc" ? 1 : -1;
+          const activeA = a.is_active ? 0 : 1;
+          const activeB = b.is_active ? 0 : 1;
+          if (activeA !== activeB) return (activeA - activeB) * mul;
+          const urgA = a.urgent_level ?? -1;
+          const urgB = b.urgent_level ?? -1;
+          if (urgA !== urgB) return (urgB - urgA) * mul;
+          const lastCmp = a.last_name_yiddish.toLowerCase().localeCompare(b.last_name_yiddish.toLowerCase());
+          if (lastCmp !== 0) return lastCmp * mul;
+          const firstCmp = a.first_name_yiddish.toLowerCase().localeCompare(b.first_name_yiddish.toLowerCase());
+          if (firstCmp !== 0) return firstCmp * mul;
+          return a.middle_name_yiddish.toLowerCase().localeCompare(b.middle_name_yiddish.toLowerCase()) * mul;
+        });
+      } else {
+        result.sort((a, b) => {
+          const va = getRowSortValue(a, key, matrix);
+          const vb = getRowSortValue(b, key, matrix);
+          if (va < vb) return dir === "asc" ? -1 : 1;
+          if (va > vb) return dir === "asc" ? 1 : -1;
+          return 0;
+        });
+      }
     }
 
     return result;
@@ -365,6 +391,10 @@ const Reports = () => {
               return (
                 <TableRow key={pr.name}>
                   {visCols.map((col) => {
+                    if (col.key === "sort_order") {
+                      const parts = [pr.is_active ? "✓" : "✗", pr.urgent_level === null || pr.urgent_level === undefined ? "?" : String(pr.urgent_level)].join("/");
+                      return <TableCell key={col.key} className="bg-background"><span className="text-muted-foreground text-xs">{parts}</span></TableCell>;
+                    }
                     if (col.key === "record_id")
                       return <TableCell key={col.key} className="sticky left-0 bg-background z-10">{pr.record_id || "—"}</TableCell>;
                     if (col.key === "yiddish_name")
@@ -391,6 +421,8 @@ const Reports = () => {
             {/* Totals row */}
             <TableRow className="bg-muted/50 font-bold">
               {visCols.map((col) => {
+                if (col.key === "sort_order")
+                  return <TableCell key={col.key} className="bg-muted/50" />;
                 if (col.key === "record_id")
                   return <TableCell key={col.key} className="sticky left-0 bg-muted/50 z-10" />;
                 if (col.key === "yiddish_name")
@@ -591,6 +623,7 @@ const Reports = () => {
             const rd = viewingReport.report_data as any;
             // Saved reports show all columns from stored data
             const savedCols: ColumnDef[] = [
+              { key: "sort_order", label: "Sort" },
               { key: "record_id", label: "Record ID" },
               { key: "yiddish_name", label: "Yiddish Name" },
               { key: "payee_name", label: "Payee" },
