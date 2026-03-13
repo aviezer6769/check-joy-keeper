@@ -471,6 +471,14 @@ const Reports = () => {
                 <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-[160px]" />
               </div>
               <div className="flex gap-2 ml-auto">
+                <Button
+                  variant={showFilters ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Column Filters
+                </Button>
                 <ColumnLayoutManager
                   visibleColumns={colLayout.visibleColumns}
                   hiddenColumns={colLayout.hiddenColumns}
@@ -500,7 +508,7 @@ const Reports = () => {
         ) : payeeRows.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">No checks match the current filters.</div>
         ) : (
-          renderMatrix(payeeRows, chalikahCols, matrix, grandTotal)
+          renderMatrix(displayedRows, chalikahCols, matrix, filteredGrandTotal)
         )}
 
         {/* Saved reports */}
