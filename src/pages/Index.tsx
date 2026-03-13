@@ -211,7 +211,6 @@ const Index = () => {
 
         {/* Stats */}
         <StatsCards checks={checks} />
-        <ChalikahDashboard checks={checks} />
 
         {/* Search + bulk actions */}
         <div className="flex items-center gap-3">
