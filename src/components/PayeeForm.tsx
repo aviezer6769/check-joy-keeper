@@ -87,10 +87,24 @@ export function PayeeForm() {
   }, [allPayees]);
 
   const handleChange = (key: keyof PayeeInsert, value: string) => {
-    setForm((prev) => ({
-      ...prev,
-      [key]: key === "sort_order" || key === "urgent_level" ? Number(value) || 0 : value || null,
-    }));
+    setForm((prev) => {
+      const updated = {
+        ...prev,
+        [key]: key === "sort_order" || key === "urgent_level" ? Number(value) || 0 : value || null,
+      };
+      // Auto-fill city, state, zip when street_name matches an existing payee
+      if (key === "street_name" && value) {
+        const match = allPayees.find(
+          (p) => p.street_name?.toLowerCase() === value.toLowerCase()
+        );
+        if (match) {
+          if (!prev.city) updated.city = match.city;
+          if (!prev.state) updated.state = match.state;
+          if (!prev.zip) updated.zip = match.zip;
+        }
+      }
+      return updated;
+    });
   };
 
   const computedName = buildPayeeName(form);
