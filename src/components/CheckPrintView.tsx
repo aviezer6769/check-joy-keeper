@@ -1,4 +1,5 @@
 import { type Check } from "@/hooks/useChecks";
+import signatureImg from "@/assets/signature.png";
 
 interface CheckPrintViewProps {
   check: Check;
@@ -94,8 +95,9 @@ export function CheckPrintView({ check }: CheckPrintViewProps) {
             <p>Memo: {check.memo || "—"}</p>
             {check.payee_record_number && <p>Record #: {check.payee_record_number}</p>}
           </div>
-          <div className="border-t border-foreground pt-1 min-w-[200px] text-center text-sm">
-            Authorized Signature
+          <div className="min-w-[200px] text-center">
+            <img src={signatureImg} alt="Signature" className="h-10 mx-auto object-contain" />
+            <div className="border-t border-foreground pt-1 text-sm">Authorized Signature</div>
           </div>
         </div>
       </div>
