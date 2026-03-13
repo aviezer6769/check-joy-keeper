@@ -49,6 +49,7 @@ const Reports = () => {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [reportName, setReportName] = useState("");
   const [viewingReport, setViewingReport] = useState<SavedReport | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   // Build payee lookup by record_id and payee_name
   const payeeLookup = useMemo(() => {
