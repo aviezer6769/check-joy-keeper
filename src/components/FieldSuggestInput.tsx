@@ -96,6 +96,7 @@ export function FieldSuggestInput({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={className}
+        {...restProps}
       />
       {showSuggestions && filtered.length > 0 && (
         <div ref={listRef} className="absolute z-50 top-full left-0 right-0 mt-0.5 bg-popover border border-border rounded shadow-lg max-h-32 overflow-y-auto min-w-[120px]">
