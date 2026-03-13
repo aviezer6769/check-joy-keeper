@@ -352,12 +352,48 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
         />
       );
     }
+    const colIdx = GRID_FIELDS.indexOf(f);
     return (
       <Input
         type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
         value={f.type === "number" ? (row[f.key] as number) ?? 0 : (row[f.key] as string) ?? ""}
         onChange={(e) => updateGridCell(idx, f.key, e.target.value)}
         className="h-7 text-xs min-w-[80px] px-1.5"
+        data-grid-row={idx}
+        data-grid-col={colIdx}
+        onKeyDown={(e) => {
+          const totalCols = GRID_FIELDS.length;
+          const totalRows = gridRows.length;
+          let nextRow = idx;
+          let nextCol = colIdx;
+          const el = e.target as HTMLInputElement;
+          if (e.key === "ArrowDown") { nextRow = Math.min(idx + 1, totalRows - 1); }
+          else if (e.key === "ArrowUp") { nextRow = Math.max(idx - 1, 0); }
+          else if (e.key === "ArrowRight" && el.selectionStart === el.value.length) {
+            if (colIdx < totalCols - 1) nextCol = colIdx + 1;
+            else if (idx < totalRows - 1) { nextRow = idx + 1; nextCol = 0; }
+          } else if (e.key === "ArrowLeft" && el.selectionStart === 0) {
+            if (colIdx > 0) nextCol = colIdx - 1;
+            else if (idx > 0) { nextRow = idx - 1; nextCol = totalCols - 1; }
+          } else if (e.key === "Tab" && !e.shiftKey) {
+            if (colIdx < totalCols - 1) nextCol = colIdx + 1;
+            else if (idx < totalRows - 1) { nextRow = idx + 1; nextCol = 0; }
+            else return;
+            e.preventDefault();
+          } else if (e.key === "Tab" && e.shiftKey) {
+            if (colIdx > 0) nextCol = colIdx - 1;
+            else if (idx > 0) { nextRow = idx - 1; nextCol = totalCols - 1; }
+            else return;
+            e.preventDefault();
+          } else if (e.key === "Enter") {
+            nextRow = Math.min(idx + 1, totalRows - 1);
+            e.preventDefault();
+          } else return;
+          if (nextRow !== idx || nextCol !== colIdx) {
+            const next = document.querySelector<HTMLInputElement>(`input[data-grid-row="${nextRow}"][data-grid-col="${nextCol}"]`);
+            next?.focus();
+          }
+        }}
       />
     );
   };
