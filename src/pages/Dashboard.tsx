@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useChecks } from "@/hooks/useChecks";
 import { ChalikahDashboard } from "@/components/ChalikahDashboard";
+import { AccountDashboard } from "@/components/AccountDashboard";
 import { StatsCards } from "@/components/StatsCards";
 
 const Dashboard = () => {
-  // No accountId filter — fetches all checks across all accounts
   const { data: checks = [], isLoading } = useChecks(undefined, undefined);
 
   return (
@@ -34,6 +34,7 @@ const Dashboard = () => {
         ) : (
           <>
             <StatsCards checks={checks} />
+            <AccountDashboard checks={checks} />
             <ChalikahDashboard checks={checks} />
           </>
         )}
