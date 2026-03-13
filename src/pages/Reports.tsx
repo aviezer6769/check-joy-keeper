@@ -504,7 +504,7 @@ const Reports = () => {
                   return <TableCell key={col.key} className="text-right tabular-nums">{fmt(total)}</TableCell>;
                 if (col.key.startsWith("ch_")) {
                   const chId = col.key.slice(3);
-                  const colTotal = rows.reduce((s, pr) => s + (matrixData[pr.name]?.[chId] || 0), 0);
+                  const colTotal = rows.reduce((s, pr) => s + (matrixData[pr.key]?.[chId] || 0), 0);
                   return <TableCell key={col.key} className="text-right tabular-nums">{fmt(colTotal)}</TableCell>;
                 }
                 return <TableCell key={col.key} />;
