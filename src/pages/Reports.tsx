@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,7 @@ const STATIC_REPORT_COLS: ColumnDef[] = [
   { key: "is_active", label: "Active" },
   { key: "yiddish_name", label: "Yiddish Name" },
   { key: "payee_name", label: "Payee" },
+  { key: "address", label: "Address" },
   { key: "memo", label: "Memo", defaultVisible: false },
 ];
 
@@ -54,17 +56,18 @@ const Reports = () => {
   const [reportName, setReportName] = useState("");
   const [viewingReport, setViewingReport] = useState<SavedReport | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-
+  const [selectedNames, setSelectedNames] = useState<Set<string>>(new Set());
   // Build payee lookup by record_id and payee_name
   const payeeLookup = useMemo(() => {
-    const byRecord: Record<string, { record_id: string; yiddish: string; memo: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
+    const byRecord: Record<string, { record_id: string; yiddish: string; memo: string; address: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
     const byName: Record<string, typeof byRecord[string]> = {};
     payeesList.forEach((p) => {
       const yiddish = [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish]
         .filter(Boolean)
         .join(" ");
+      const address = [p.street_no, p.street_name, p.apt ? `#${p.apt}` : ""].filter(Boolean).join(" ");
       const entry = {
-        record_id: p.record_id || "", yiddish, memo: p.memo || "",
+        record_id: p.record_id || "", yiddish, memo: p.memo || "", address,
         is_active: p.is_active, urgent_level: p.urgent_level,
         last_name_yiddish: p.last_name_yiddish || "",
         first_name_yiddish: p.first_name_yiddish || "",
@@ -80,7 +83,7 @@ const Reports = () => {
     if (recordNumber && payeeLookup.byRecord[recordNumber]) {
       return payeeLookup.byRecord[recordNumber];
     }
-    return payeeLookup.byName[payeeName.toLowerCase()] || { record_id: "", yiddish: "", memo: "", is_active: true, urgent_level: null, last_name_yiddish: "", first_name_yiddish: "", middle_name_yiddish: "" };
+    return payeeLookup.byName[payeeName.toLowerCase()] || { record_id: "", yiddish: "", memo: "", address: "", is_active: true, urgent_level: null, last_name_yiddish: "", first_name_yiddish: "", middle_name_yiddish: "" };
   };
 
   // Filter checks
@@ -108,7 +111,7 @@ const Reports = () => {
   // Build payee × chalikah matrix
   const { matrix, payeeRows, chalikahCols, grandTotal } = useMemo(() => {
     const map: Record<string, Record<string, number>> = {};
-    const payeeMap: Record<string, { name: string; record_id: string; yiddish: string; memo: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
+    const payeeMap: Record<string, { name: string; record_id: string; yiddish: string; memo: string; address: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
     const chalikahIds = new Set<string>();
 
     filteredChecks.forEach((c) => {
@@ -171,13 +174,18 @@ const Reports = () => {
 
   const handleExport = (data?: any) => {
     const src = data || buildReportData();
-    const rows = (src.payeeRows as typeof payeeRows).map((pr) => {
+    // If there's a selection, export only selected; otherwise export all displayed
+    const exportPayees = selectedNames.size > 0
+      ? (src.payeeRows as typeof payeeRows).filter((pr) => selectedNames.has(pr.name))
+      : (src.payeeRows as typeof payeeRows);
+    const rows = exportPayees.map((pr) => {
       const row: Record<string, any> = {};
       colLayout.visibleColumns.forEach((col) => {
         if (col.key === "record_id") row["Record ID"] = pr.record_id;
         else if (col.key === "is_active") row["Active"] = pr.is_active ? "Active" : "Inactive";
         else if (col.key === "yiddish_name") row["Yiddish Name"] = pr.yiddish;
         else if (col.key === "payee_name") row["Payee"] = pr.name;
+        else if (col.key === "address") row["Address"] = pr.address || "";
         else if (col.key === "memo") row["Memo"] = pr.memo || "";
         else if (col.key === "total") row["Total"] = Object.values(src.matrix[pr.name] || {}).reduce((s: number, v: any) => s + Number(v), 0);
         else if (col.key.startsWith("ch_")) {
@@ -195,10 +203,13 @@ const Reports = () => {
       else if (col.key === "record_id") totalsRow["Record ID"] = "";
       else if (col.key === "is_active") totalsRow["Active"] = "";
       else if (col.key === "yiddish_name") totalsRow["Yiddish Name"] = "";
-      else if (col.key === "total") totalsRow["Total"] = src.grandTotal || 0;
-      else if (col.key.startsWith("ch_")) {
+      else if (col.key === "address") totalsRow["Address"] = "";
+      else if (col.key === "total") {
+        totalsRow["Total"] = exportPayees.reduce((s: number, pr: any) =>
+          s + (Object.values(src.matrix[pr.name] || {}) as number[]).reduce((ss, v) => ss + Number(v), 0), 0);
+      } else if (col.key.startsWith("ch_")) {
         const chId = col.key.slice(3);
-        totalsRow[col.label] = (src.payeeRows as typeof payeeRows).reduce(
+        totalsRow[col.label] = exportPayees.reduce(
           (s: number, pr: any) => s + (src.matrix[pr.name]?.[chId] || 0), 0
         );
       }
@@ -222,6 +233,7 @@ const Reports = () => {
     if (colKey === "is_active") return pr.is_active ? "Active" : "Inactive";
     if (colKey === "yiddish_name") return pr.yiddish || "";
     if (colKey === "payee_name") return pr.name;
+    if (colKey === "address") return pr.address || "";
     if (colKey === "memo") return pr.memo || "";
     if (colKey === "total") {
       return String(Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0));
@@ -245,6 +257,7 @@ const Reports = () => {
     if (colKey === "is_active") return pr.is_active ? 1 : 0;
     if (colKey === "yiddish_name") return (pr.yiddish || "").toLowerCase();
     if (colKey === "payee_name") return pr.name.toLowerCase();
+    if (colKey === "address") return (pr.address || "").toLowerCase();
     if (colKey === "memo") return (pr.memo || "").toLowerCase();
     if (colKey === "total") return Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0);
     if (colKey.startsWith("ch_")) {
@@ -352,6 +365,14 @@ const Reports = () => {
 
     return (
       <div className="overflow-auto border rounded-lg">
+        {!isStatic && selectedNames.size > 0 && (
+          <div className="px-4 py-2 bg-muted/50 border-b text-sm text-muted-foreground flex items-center gap-2">
+            {selectedNames.size} selected
+            <Button variant="ghost" size="sm" onClick={() => setSelectedNames(new Set())}>
+              Clear
+            </Button>
+          </div>
+        )}
         <Table>
           <TableHeader>
             {isStatic ? (
@@ -379,7 +400,7 @@ const Reports = () => {
                 onReorder={colLayout.reorderColumn}
                 onSetWidth={colLayout.setColumnWidth}
                 columnClassName={(key) =>
-                  key === "record_id" || key === "yiddish_name" || key === "payee_name" || key === "memo"
+                  key === "record_id" || key === "yiddish_name" || key === "payee_name" || key === "memo" || key === "address"
                     ? "min-w-[120px]"
                     : "text-right min-w-[120px]"
                 }
@@ -390,6 +411,20 @@ const Reports = () => {
                 onFilterChange={colLayout.setFilter}
                 onFilterModeChange={colLayout.setFilterMode}
                 filterOptions={reportFilterOptions}
+                prefix={
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={rows.length > 0 && rows.every((pr) => selectedNames.has(pr.name))}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedNames(new Set(rows.map((pr) => pr.name)));
+                        } else {
+                          setSelectedNames(new Set());
+                        }
+                      }}
+                    />
+                  </TableHead>
+                }
               />
             )}
           </TableHeader>
@@ -397,7 +432,22 @@ const Reports = () => {
             {rows.map((pr) => {
               const rowTotal = Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0);
               return (
-                <TableRow key={pr.name}>
+                <TableRow key={pr.name} className={!isStatic && selectedNames.has(pr.name) ? "bg-muted/30" : undefined}>
+                  {!isStatic && (
+                    <TableCell className="w-10">
+                      <Checkbox
+                        checked={selectedNames.has(pr.name)}
+                        onCheckedChange={(checked) => {
+                          setSelectedNames((prev) => {
+                            const next = new Set(prev);
+                            if (checked) next.add(pr.name);
+                            else next.delete(pr.name);
+                            return next;
+                          });
+                        }}
+                      />
+                    </TableCell>
+                  )}
                   {visCols.map((col) => {
                     if (col.key === "sort_order") {
                       const parts = [pr.is_active ? "✓" : "✗", pr.urgent_level === null || pr.urgent_level === undefined ? "?" : String(pr.urgent_level)].join("/");
@@ -411,6 +461,8 @@ const Reports = () => {
                       return <TableCell key={col.key} className="bg-background" dir="rtl">{pr.yiddish || "—"}</TableCell>;
                     if (col.key === "payee_name")
                       return <TableCell key={col.key} className="bg-background font-medium">{pr.name}</TableCell>;
+                    if (col.key === "address")
+                      return <TableCell key={col.key} className="bg-background">{pr.address || "—"}</TableCell>;
                     if (col.key === "memo")
                       return <TableCell key={col.key} className="bg-background text-sm max-w-[300px] whitespace-pre-line">{pr.memo || "—"}</TableCell>;
                     if (col.key === "total")
@@ -430,6 +482,7 @@ const Reports = () => {
             })}
             {/* Totals row */}
             <TableRow className="bg-muted/50 font-bold">
+              {!isStatic && <TableCell className="bg-muted/50" />}
               {visCols.map((col) => {
                 if (col.key === "sort_order")
                   return <TableCell key={col.key} className="bg-muted/50" />;
@@ -439,7 +492,7 @@ const Reports = () => {
                   return <TableCell key={col.key} className="bg-muted/50" />;
                 if (col.key === "payee_name")
                   return <TableCell key={col.key} className="bg-muted/50">TOTAL</TableCell>;
-                if (col.key === "memo")
+                if (col.key === "address" || col.key === "memo" || col.key === "is_active")
                   return <TableCell key={col.key} className="bg-muted/50" />;
                 if (col.key === "total")
                   return <TableCell key={col.key} className="text-right tabular-nums">{fmt(total)}</TableCell>;
@@ -541,7 +594,7 @@ const Reports = () => {
                 />
                 <Button variant="outline" onClick={() => handleExport()}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {selectedNames.size > 0 ? `Export ${selectedNames.size} Selected` : "Export"}
                 </Button>
                 <Button onClick={() => setSaveDialogOpen(true)}>
                   <Save className="h-4 w-4 mr-2" />
