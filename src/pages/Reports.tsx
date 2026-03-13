@@ -242,6 +242,7 @@ const Reports = () => {
   ): string => {
     if (colKey === "sort_order") return "";
     if (colKey === "record_id") return pr.record_id || "";
+    if (colKey === "urgent_level") return pr.urgent_level == null ? "?" : String(pr.urgent_level);
     if (colKey === "is_active") return pr.is_active ? "Active" : "Inactive";
     if (colKey === "yiddish_name") return pr.yiddish || "";
     if (colKey === "payee_name") return pr.name;
