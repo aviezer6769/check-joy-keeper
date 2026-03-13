@@ -66,6 +66,7 @@ function formatDate(date: string) {
 const Payees = () => {
   const { data: payees = [], isLoading } = usePayees();
   const { data: checks = [] } = useChecks();
+  const { data: accounts = [] } = useAccounts();
   const { data: chalikahList = [] } = useChalikah();
   const [search, setSearch] = useState("");
   const [expandedPayee, setExpandedPayee] = useState<string | null>(null);
