@@ -371,6 +371,8 @@ const Reports = () => {
                       return <TableCell key={col.key} className="bg-background" dir="rtl">{pr.yiddish || "—"}</TableCell>;
                     if (col.key === "payee_name")
                       return <TableCell key={col.key} className="bg-background font-medium">{pr.name}</TableCell>;
+                    if (col.key === "memo")
+                      return <TableCell key={col.key} className="bg-background text-sm max-w-[300px] whitespace-pre-line">{pr.memo || "—"}</TableCell>;
                     if (col.key === "total")
                       return <TableCell key={col.key} className="text-right font-bold tabular-nums">{fmt(rowTotal)}</TableCell>;
                     if (col.key.startsWith("ch_")) {
