@@ -397,7 +397,7 @@ export function CheckBulkImport({ accountId, existingChecks = [] }: CheckBulkImp
                 <tbody>
                   {rows.map((row, idx) => (
                     <tr key={idx}>
-                      {MULTI_ROW_KEYS.map((k) => (
+                       {MULTI_ROW_KEYS.map((k, colIdx) => (
                         <td key={k} className="px-1 py-0.5">
                           <Input
                             className="h-8 text-xs"
@@ -405,6 +405,40 @@ export function CheckBulkImport({ accountId, existingChecks = [] }: CheckBulkImp
                             onChange={(e) => updateRow(idx, k, e.target.value)}
                             placeholder={CHECK_COLUMN_LABELS[k]}
                             type={k === "amount" ? "number" : k === "check_date" ? "date" : "text"}
+                            data-row={idx}
+                            data-col={colIdx}
+                            onKeyDown={(e) => {
+                              const totalCols = MULTI_ROW_KEYS.length;
+                              const totalRows = rows.length;
+                              let nextRow = idx;
+                              let nextCol = colIdx;
+                              if (e.key === "ArrowDown") { nextRow = Math.min(idx + 1, totalRows - 1); }
+                              else if (e.key === "ArrowUp") { nextRow = Math.max(idx - 1, 0); }
+                              else if (e.key === "ArrowRight" && (e.target as HTMLInputElement).selectionStart === (e.target as HTMLInputElement).value.length) {
+                                if (colIdx < totalCols - 1) nextCol = colIdx + 1;
+                                else if (idx < totalRows - 1) { nextRow = idx + 1; nextCol = 0; }
+                              } else if (e.key === "ArrowLeft" && (e.target as HTMLInputElement).selectionStart === 0) {
+                                if (colIdx > 0) nextCol = colIdx - 1;
+                                else if (idx > 0) { nextRow = idx - 1; nextCol = totalCols - 1; }
+                              } else if (e.key === "Tab" && !e.shiftKey) {
+                                if (colIdx < totalCols - 1) { nextCol = colIdx + 1; }
+                                else if (idx < totalRows - 1) { nextRow = idx + 1; nextCol = 0; }
+                                else return;
+                                e.preventDefault();
+                              } else if (e.key === "Tab" && e.shiftKey) {
+                                if (colIdx > 0) { nextCol = colIdx - 1; }
+                                else if (idx > 0) { nextRow = idx - 1; nextCol = totalCols - 1; }
+                                else return;
+                                e.preventDefault();
+                              } else if (e.key === "Enter") {
+                                nextRow = Math.min(idx + 1, totalRows - 1);
+                                e.preventDefault();
+                              } else return;
+                              if (nextRow !== idx || nextCol !== colIdx) {
+                                const next = document.querySelector<HTMLInputElement>(`input[data-row="${nextRow}"][data-col="${nextCol}"]`);
+                                next?.focus();
+                              }
+                            }}
                           />
                         </td>
                       ))}
