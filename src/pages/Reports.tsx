@@ -58,14 +58,15 @@ const Reports = () => {
   const [selectedNames, setSelectedNames] = useState<Set<string>>(new Set());
   // Build payee lookup by record_id and payee_name
   const payeeLookup = useMemo(() => {
-    const byRecord: Record<string, { record_id: string; yiddish: string; memo: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
+    const byRecord: Record<string, { record_id: string; yiddish: string; memo: string; address: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
     const byName: Record<string, typeof byRecord[string]> = {};
     payeesList.forEach((p) => {
       const yiddish = [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish]
         .filter(Boolean)
         .join(" ");
+      const address = [p.street_no, p.street_name, p.apt ? `#${p.apt}` : ""].filter(Boolean).join(" ");
       const entry = {
-        record_id: p.record_id || "", yiddish, memo: p.memo || "",
+        record_id: p.record_id || "", yiddish, memo: p.memo || "", address,
         is_active: p.is_active, urgent_level: p.urgent_level,
         last_name_yiddish: p.last_name_yiddish || "",
         first_name_yiddish: p.first_name_yiddish || "",
