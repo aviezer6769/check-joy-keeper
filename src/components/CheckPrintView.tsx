@@ -131,7 +131,7 @@ function StubRightMeta({
   includeRun?: boolean;
 }) {
   return (
-    <div className="w-[90px] text-right text-xs leading-tight space-y-1">
+    <div className="w-[104px] text-right text-xs leading-tight space-y-1">
       <p>{check.check_number || ""}</p>
       <p>{formatDateShort(check.check_date)}</p>
       <p>{formatCurrency(check.amount)}</p>
