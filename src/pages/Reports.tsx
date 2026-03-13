@@ -436,9 +436,9 @@ const Reports = () => {
           </TableHeader>
           <TableBody>
             {rows.map((pr) => {
-              const rowTotal = Object.values(matrixData[pr.name] || {}).reduce((s, v) => s + v, 0);
+              const rowTotal = Object.values(matrixData[pr.key] || {}).reduce((s, v) => s + v, 0);
               return (
-                <TableRow key={pr.name} className={!isStatic && selectedNames.has(pr.name) ? "bg-muted/30" : undefined}>
+                <TableRow key={pr.key} className={!isStatic && selectedNames.has(pr.key) ? "bg-muted/30" : undefined}>
                   {!isStatic && (
                     <TableCell className="w-10">
                       <Checkbox
