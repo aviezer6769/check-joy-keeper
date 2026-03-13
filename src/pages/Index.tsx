@@ -252,7 +252,7 @@ const Index = () => {
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             onToggleAll={toggleAll}
-          />
+            onFilteredChecksChange={handleFilteredChecksChange}
         )}
       </main>
 
