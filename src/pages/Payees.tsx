@@ -183,10 +183,12 @@ const Payees = () => {
         const activeA = a.is_active ? 0 : 1;
         const activeB = b.is_active ? 0 : 1;
         if (activeA !== activeB) return (activeA - activeB) * mul;
-        // 2. Urgent level desc (higher first), null/?/0 go last
-        const urgA = a.urgent_level == null ? -Infinity : a.urgent_level === 0 ? -Infinity : a.urgent_level;
-        const urgB = b.urgent_level == null ? -Infinity : b.urgent_level === 0 ? -Infinity : b.urgent_level;
-        if (urgA !== urgB) return (urgB - urgA) * mul;
+        // 2. Urgent level custom priority: 1 > 2 > 3 > 0 > ?
+        const getUrgencyPriority = (value: number | null | undefined) =>
+          value === 1 ? 0 : value === 2 ? 1 : value === 3 ? 2 : value === 0 ? 3 : 4;
+        const urgA = getUrgencyPriority(a.urgent_level);
+        const urgB = getUrgencyPriority(b.urgent_level);
+        if (urgA !== urgB) return (urgA - urgB) * mul;
         // 3-5. Yiddish names: Hebrew alphabetical (אבג) using locale compare
         const lastA = a.last_name_yiddish || "";
         const lastB = b.last_name_yiddish || "";
