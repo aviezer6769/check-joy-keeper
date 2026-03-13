@@ -442,12 +442,12 @@ const Reports = () => {
                   {!isStatic && (
                     <TableCell className="w-10">
                       <Checkbox
-                        checked={selectedNames.has(pr.name)}
+                        checked={selectedNames.has(pr.key)}
                         onCheckedChange={(checked) => {
                           setSelectedNames((prev) => {
                             const next = new Set(prev);
-                            if (checked) next.add(pr.name);
-                            else next.delete(pr.name);
+                            if (checked) next.add(pr.key);
+                            else next.delete(pr.key);
                             return next;
                           });
                         }}
