@@ -158,6 +158,7 @@ const Index = () => {
   };
 
   const selectedChecks = checks.filter((c) => selectedIds.has(c.id));
+  const selectedAccount = accounts.find((a) => a.id === selectedAccountId) || null;
 
   return (
     <div className="min-h-screen bg-background">
