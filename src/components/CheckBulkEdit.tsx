@@ -119,7 +119,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
     // Handle status=Void specially — each check needs its own original_amount
     if (enabledFields.has("status") && values["status"] === "Void") {
       setSaving(true);
-      const promises = checks.map((c) => {
+      const { errors } = await batchedUpdates(checks, (c) => {
         const perCheckUpdates = { ...updates };
         if (c.status !== "Void") {
           perCheckUpdates.original_amount = c.amount;
@@ -127,11 +127,9 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
         }
         return supabase.from("checks").update(perCheckUpdates).eq("id", c.id);
       });
-      const results = await Promise.all(promises);
       setSaving(false);
-      const errors = results.filter((r) => r.error);
-      if (errors.length > 0) {
-        toast.error(`${errors.length} row(s) failed to update`);
+      if (errors > 0) {
+        toast.error(`${errors} row(s) failed to update`);
       } else {
         toast.success(`Updated ${checks.length} check(s)`);
         qc.invalidateQueries({ queryKey: ["checks"] });
@@ -144,7 +142,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
     // Handle unvoiding
     if (enabledFields.has("status") && values["status"] !== "Void") {
       setSaving(true);
-      const promises = checks.map((c) => {
+      const { errors } = await batchedUpdates(checks, (c) => {
         const perCheckUpdates = { ...updates };
         if (c.status === "Void") {
           perCheckUpdates.amount = c.original_amount ?? 0;
@@ -152,7 +150,6 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
         }
         return supabase.from("checks").update(perCheckUpdates).eq("id", c.id);
       });
-      const results = await Promise.all(promises);
       setSaving(false);
       const errors = results.filter((r) => r.error);
       if (errors.length > 0) {
