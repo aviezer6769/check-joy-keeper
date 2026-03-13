@@ -246,7 +246,7 @@ const Reports = () => {
     }
     if (colKey.startsWith("ch_")) {
       const chId = colKey.slice(3);
-      return String(matrixData[pr.name]?.[chId] || 0);
+      return String(matrixData[pr.key]?.[chId] || 0);
     }
     return "";
   };
