@@ -182,9 +182,10 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
 
   return (
     <div
-      className="font-sans text-foreground bg-card"
+      className="text-foreground bg-card"
       id="check-print"
       style={{
+        fontFamily: 'Arial, Helvetica, sans-serif',
         width: inches(PAGE.width),
         height: inches(PAGE.height),
         margin: "0 auto",
