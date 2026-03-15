@@ -146,7 +146,7 @@ function PayeeBlock({
         left: inches(leftOffsetIn),
       }}
     >
-      {yiddishName && <p>{yiddishName}</p>}
+      {yiddishName && <p className="font-hebrew">{yiddishName}</p>}
       <p>{payee.payee_name}</p>
       {streetLine && <p>{streetLine}</p>}
       {cityLine && <p>{cityLine}</p>}
