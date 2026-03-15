@@ -269,7 +269,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
       >
         <div className="relative h-full">
           <div className="text-xs leading-tight" style={{ maxWidth: "calc(100% - 1.45in)" }}>
-            {account?.payer_name_yiddish && <p className="font-bold">{account.payer_name_yiddish}</p>}
+            {account?.payer_name_yiddish && <p className="font-bold font-hebrew">{account.payer_name_yiddish}</p>}
             <p className="font-bold">{stubPayerName}</p>
             {account?.payer_address && <p>{account.payer_address}</p>}
             {(account?.payer_city || account?.payer_state || account?.payer_zip) && (
