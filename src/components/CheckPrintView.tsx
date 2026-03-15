@@ -10,8 +10,9 @@ interface CheckPrintViewProps {
 }
 
 const PAGE_WIDTH_IN = "8.5in";
+const PAGE_HEIGHT_IN = "11in";
 const FACE_HEIGHT_IN = "3.5in";
-const STUB_HEIGHT_IN = "3.0in";
+const STUB_HEIGHT_IN = "3.75in";
 
 function amountToFullWords(num: number): string {
   const ones = [
@@ -35,7 +36,7 @@ function amountToFullWords(num: number): string {
 
   const dollarWords = dollars === 0 ? "Zero" : convert(dollars);
   const centsWords = cents === 0 ? "Zero" : convert(cents);
-  return `${dollarWords} Dollars and ${centsWords} Cents`;
+  return `${dollarWords} Dollars and ${centsWords}`;
 }
 
 function formatCurrency(amount: number) {
@@ -50,12 +51,23 @@ function formatDateShort(date: string) {
   });
 }
 
-function PayeeBlock({ payee }: { payee?: Payee | null }) {
+function PayeeBlock({
+  payee,
+  topOffsetIn,
+  leftOffsetIn = 0.45,
+}: {
+  payee?: Payee | null;
+  topOffsetIn: number;
+  leftOffsetIn?: number;
+}) {
   if (!payee) return null;
 
   const yiddishParts = [
-    payee.title_1_yiddish, payee.first_name_yiddish, payee.middle_name_yiddish,
-    payee.last_name_yiddish, payee.title_2_yiddish,
+    payee.title_1_yiddish,
+    payee.first_name_yiddish,
+    payee.middle_name_yiddish,
+    payee.last_name_yiddish,
+    payee.title_2_yiddish,
   ].filter(Boolean);
   const yiddishName = yiddishParts.length > 0 ? yiddishParts.join(" ") : null;
 
@@ -65,7 +77,10 @@ function PayeeBlock({ payee }: { payee?: Payee | null }) {
   const cityLine = [cityState, payee.zip].filter(Boolean).join(" ");
 
   return (
-    <div className="text-xs leading-snug" style={{ marginTop: "0.55in", marginLeft: "0.45in" }}>
+    <div
+      className="text-xs leading-snug"
+      style={{ position: "absolute", top: `${topOffsetIn}in`, left: `${leftOffsetIn}in` }}
+    >
       {yiddishName && <p>{yiddishName}</p>}
       <p>{payee.payee_name}</p>
       {streetLine && <p>{streetLine}</p>}
@@ -84,7 +99,7 @@ function StubRightMeta({
   includeRun?: boolean;
 }) {
   return (
-    <div className="text-right text-xs leading-snug space-y-0.5" style={{ minWidth: "100px" }}>
+    <div className="text-right text-xs leading-snug space-y-0.5" style={{ minWidth: "1.15in" }}>
       <p>{check.check_number || ""}</p>
       <p>{formatDateShort(check.check_date)}</p>
       <p>{formatCurrency(check.amount)}</p>
@@ -103,35 +118,38 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
     <div
       className="font-sans text-black bg-white"
       id="check-print"
-      style={{ width: PAGE_WIDTH_IN, margin: "0 auto", minHeight: "11in" }}
+      style={{ width: PAGE_WIDTH_IN, height: PAGE_HEIGHT_IN, margin: "0 auto", boxSizing: "border-box" }}
     >
       {/* ===== CHECK FACE ===== */}
       <div
-        className="flex flex-col justify-between"
-        style={{ height: FACE_HEIGHT_IN, padding: "0.25in 0.5in 0.15in 0.5in" }}
+        className="relative"
+        style={{
+          height: FACE_HEIGHT_IN,
+          padding: "0.28in 0.5in 0.16in 0.5in",
+          boxSizing: "border-box",
+        }}
       >
-        {/* Row 1: Payer / Bank / Check# */}
         <div className="flex justify-between items-start">
           <div className="text-xs leading-tight">
             <p className="font-bold text-sm">{payerDisplayName}</p>
-            <p>{[account?.payer_city, account?.payer_state].filter(Boolean).join(" ")} {account?.payer_zip || ""}</p>
+            <p>
+              {[account?.payer_city, account?.payer_state].filter(Boolean).join(" ")} {account?.payer_zip || ""}
+            </p>
           </div>
           <div className="text-sm">{account?.bank_name || ""}</div>
           <div className="text-sm">{check.check_number || ""}</div>
         </div>
 
-        {/* Row 2: Date (right-aligned) */}
-        <div className="flex justify-end" style={{ marginTop: "0.15in" }}>
+        <div className="flex justify-end" style={{ marginTop: "0.19in" }}>
           <span className="text-sm">
             Date&nbsp;&nbsp;
-            <span className="border-b border-black inline-block min-w-[90px] pb-0.5 text-center">
+            <span className="border-b border-black inline-block min-w-[92px] pb-0.5 text-center">
               {formatDateShort(check.check_date)}
             </span>
           </span>
         </div>
 
-        {/* Row 3: Pay to the / order of on separate lines */}
-        <div style={{ marginTop: "0.08in" }}>
+        <div style={{ marginTop: "0.14in" }}>
           <div className="text-sm">Pay to the</div>
           <div className="flex items-baseline gap-2">
             <span className="text-sm whitespace-nowrap">order of</span>
@@ -142,18 +160,16 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
           </div>
         </div>
 
-        {/* Row 4: Amount in words */}
-        <div style={{ marginTop: "0.06in" }}>
+        <div style={{ marginTop: "0.09in" }}>
           <span className="border-b border-black pb-0.5 text-sm inline-block w-full">
             {amountToFullWords(check.amount)}
           </span>
         </div>
 
-        {/* Row 5: Memo + Signature */}
-        <div className="flex justify-between items-end" style={{ marginTop: "0.15in" }}>
+        <div className="flex justify-between items-end" style={{ marginTop: "0.21in" }}>
           <div className="text-sm flex items-baseline">
             <span>Memo</span>
-            <span className="border-b border-black inline-block min-w-[200px] ml-1 pb-0.5 pl-2">
+            <span className="border-b border-black inline-block min-w-[210px] ml-1 pb-0.5 pl-2">
               {check.memo || ""}
             </span>
           </div>
@@ -163,8 +179,10 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
           </div>
         </div>
 
-        {/* Row 6: MICR line */}
-        <div className="text-xs tracking-[0.2em] font-mono text-black/70" style={{ marginTop: "0.12in" }}>
+        <div
+          className="text-xs tracking-[0.2em] font-mono text-black/70"
+          style={{ position: "absolute", left: "0.5in", right: "0.5in", bottom: "0.14in" }}
+        >
           {check.check_number && <span>⑈{check.check_number}⑈</span>}
           {"  "}
           {account?.routing_number && <span>⑈{account.routing_number}⑈</span>}
@@ -173,8 +191,16 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
         </div>
       </div>
 
-      {/* ===== STUB 1 (middle) ===== */}
-      <div style={{ height: STUB_HEIGHT_IN, padding: "0.2in 0.5in 0.15in 0.5in", borderTop: "1px dashed #bbb" }}>
+      {/* ===== STUB 1 (middle, envelope window source) ===== */}
+      <div
+        className="relative"
+        style={{
+          height: STUB_HEIGHT_IN,
+          padding: "0.32in 0.5in 0.16in 0.5in",
+          boxSizing: "border-box",
+          borderTop: "1px dashed hsl(var(--border))",
+        }}
+      >
         <div className="flex justify-between items-start">
           <div className="text-xs leading-tight">
             {account?.payer_name_yiddish && <p className="font-bold">{account.payer_name_yiddish}</p>}
@@ -188,11 +214,19 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
           </div>
           <StubRightMeta check={check} />
         </div>
-        <PayeeBlock payee={payee} />
+        <PayeeBlock payee={payee} topOffsetIn={1.2} leftOffsetIn={0.5} />
       </div>
 
       {/* ===== STUB 2 (bottom) ===== */}
-      <div style={{ height: STUB_HEIGHT_IN, padding: "0.2in 0.5in 0.15in 0.5in", borderTop: "1px dashed #bbb" }}>
+      <div
+        className="relative"
+        style={{
+          height: STUB_HEIGHT_IN,
+          padding: "0.3in 0.5in 0.16in 0.5in",
+          boxSizing: "border-box",
+          borderTop: "1px dashed hsl(var(--border))",
+        }}
+      >
         <div className="flex justify-between items-start">
           <div className="text-xs leading-tight">
             <p>{stubPayerName}</p>
@@ -205,7 +239,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
           </div>
           <StubRightMeta check={check} includeRecord includeRun />
         </div>
-        <PayeeBlock payee={payee} />
+        <PayeeBlock payee={payee} topOffsetIn={1.06} />
       </div>
     </div>
   );
