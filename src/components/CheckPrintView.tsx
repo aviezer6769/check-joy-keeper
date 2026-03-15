@@ -196,9 +196,8 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
         className="relative"
         style={{
           height: STUB_HEIGHT_IN,
-          padding: "0.32in 0.5in 0.16in 0.5in",
+          padding: "0.38in 0.45in 0.16in 0.45in",
           boxSizing: "border-box",
-          borderTop: "1px dashed hsl(var(--border))",
         }}
       >
         <div className="flex justify-between items-start">
@@ -214,7 +213,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
           </div>
           <StubRightMeta check={check} />
         </div>
-        <PayeeBlock payee={payee} topOffsetIn={1.2} leftOffsetIn={0.5} />
+        <PayeeBlock payee={payee} topOffsetIn={1.35} leftOffsetIn={0.45} />
       </div>
 
       {/* ===== STUB 2 (bottom) ===== */}
@@ -222,9 +221,8 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
         className="relative"
         style={{
           height: STUB_HEIGHT_IN,
-          padding: "0.3in 0.5in 0.16in 0.5in",
+          padding: "0.36in 0.45in 0.16in 0.45in",
           boxSizing: "border-box",
-          borderTop: "1px dashed hsl(var(--border))",
         }}
       >
         <div className="flex justify-between items-start">
@@ -239,7 +237,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
           </div>
           <StubRightMeta check={check} includeRecord includeRun />
         </div>
-        <PayeeBlock payee={payee} topOffsetIn={1.06} />
+        <PayeeBlock payee={payee} topOffsetIn={1.2} leftOffsetIn={0.45} />
       </div>
     </div>
   );
