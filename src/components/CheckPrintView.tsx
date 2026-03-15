@@ -125,7 +125,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
         className="relative"
         style={{
           height: FACE_HEIGHT_IN,
-          padding: "0.28in 0.5in 0.16in 0.5in",
+          padding: "0.15in 0.45in 0.16in 0.45in",
           boxSizing: "border-box",
         }}
       >
@@ -140,7 +140,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
           <div className="text-sm">{check.check_number || ""}</div>
         </div>
 
-        <div className="flex justify-end" style={{ marginTop: "0.19in" }}>
+        <div className="flex justify-end" style={{ marginTop: "0.12in" }}>
           <span className="text-sm">
             Date&nbsp;&nbsp;
             <span className="border-b border-black inline-block min-w-[92px] pb-0.5 text-center">
@@ -149,7 +149,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
           </span>
         </div>
 
-        <div style={{ marginTop: "0.14in" }}>
+        <div style={{ marginTop: "0.06in" }}>
           <div className="text-sm">Pay to the</div>
           <div className="flex items-baseline gap-2">
             <span className="text-sm whitespace-nowrap">order of</span>
@@ -160,13 +160,13 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
           </div>
         </div>
 
-        <div style={{ marginTop: "0.09in" }}>
+        <div style={{ marginTop: "0.05in" }}>
           <span className="border-b border-black pb-0.5 text-sm inline-block w-full">
             {amountToFullWords(check.amount)}
           </span>
         </div>
 
-        <div className="flex justify-between items-end" style={{ marginTop: "0.21in" }}>
+        <div className="flex justify-between items-end" style={{ marginTop: "0.16in" }}>
           <div className="text-sm flex items-baseline">
             <span>Memo</span>
             <span className="border-b border-black inline-block min-w-[210px] ml-1 pb-0.5 pl-2">
@@ -181,7 +181,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
 
         <div
           className="text-xs tracking-[0.2em] font-mono text-black/70"
-          style={{ position: "absolute", left: "0.5in", right: "0.5in", bottom: "0.14in" }}
+          style={{ position: "absolute", left: "0.45in", right: "0.45in", bottom: "0.06in" }}
         >
           {check.check_number && <span>⑈{check.check_number}⑈</span>}
           {"  "}
@@ -196,9 +196,8 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
         className="relative"
         style={{
           height: STUB_HEIGHT_IN,
-          padding: "0.32in 0.5in 0.16in 0.5in",
+          padding: "0.38in 0.45in 0.16in 0.45in",
           boxSizing: "border-box",
-          borderTop: "1px dashed hsl(var(--border))",
         }}
       >
         <div className="flex justify-between items-start">
@@ -214,7 +213,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
           </div>
           <StubRightMeta check={check} />
         </div>
-        <PayeeBlock payee={payee} topOffsetIn={1.2} leftOffsetIn={0.5} />
+        <PayeeBlock payee={payee} topOffsetIn={1.35} leftOffsetIn={0.45} />
       </div>
 
       {/* ===== STUB 2 (bottom) ===== */}
@@ -222,9 +221,8 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
         className="relative"
         style={{
           height: STUB_HEIGHT_IN,
-          padding: "0.3in 0.5in 0.16in 0.5in",
+          padding: "0.36in 0.45in 0.16in 0.45in",
           boxSizing: "border-box",
-          borderTop: "1px dashed hsl(var(--border))",
         }}
       >
         <div className="flex justify-between items-start">
@@ -239,7 +237,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
           </div>
           <StubRightMeta check={check} includeRecord includeRun />
         </div>
-        <PayeeBlock payee={payee} topOffsetIn={1.06} />
+        <PayeeBlock payee={payee} topOffsetIn={1.2} leftOffsetIn={0.45} />
       </div>
     </div>
   );
