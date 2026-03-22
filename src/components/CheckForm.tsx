@@ -9,7 +9,7 @@ import { type Check, type CheckInsert, CHECK_STATUSES } from "@/hooks/useChecks"
 import { usePayees, type Payee } from "@/hooks/usePayees";
 import { useChalikah, useAddChalikah } from "@/hooks/useChalikah";
 import { buildPayeeName } from "@/lib/payee-utils";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Printer } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function buildYiddishName(p: Payee) {
@@ -31,12 +31,13 @@ interface CheckFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (check: CheckInsert) => void;
+  onPrintBlank?: (check: { payee: string; check_number: string; check_date: string; payee_record_number: string }) => void;
   initialData?: Check | null;
   isPending?: boolean;
   existingChecks?: Check[];
 }
 
-export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending, existingChecks = [] }: CheckFormProps) {
+export function CheckForm({ open, onOpenChange, onSubmit, onPrintBlank, initialData, isPending, existingChecks = [] }: CheckFormProps) {
   const { data: payees = [] } = usePayees();
   const { data: chalikahList = [] } = useChalikah();
   const addChalikah = useAddChalikah();
@@ -409,6 +410,23 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
           )}
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            {!initialData && onPrintBlank && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  onPrintBlank({
+                    payee,
+                    check_number: checkNumber,
+                    check_date: checkDate,
+                    payee_record_number: payeeRecordNumber,
+                  });
+                }}
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Print Blank
+              </Button>
+            )}
             <Button type="submit" disabled={isPending}>
               {isPending ? "Saving..." : initialData ? "Update" : "Add Check"}
             </Button>

@@ -14,7 +14,7 @@ import { ChecksTable, CHECK_COLUMNS } from "@/components/ChecksTable";
 import { CheckPrintView } from "@/components/CheckPrintView";
 import { StatsCards } from "@/components/StatsCards";
 import { AccountManager } from "@/components/AccountManager";
-import { PayeeAutocomplete } from "@/components/PayeeAutocomplete";
+
 import { CheckBulkEdit } from "@/components/CheckBulkEdit";
 import { CheckBulkImport } from "@/components/CheckBulkImport";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,9 +42,6 @@ const Index = () => {
   const [printChecks, setPrintChecks] = useState<Check[]>([]);
   const [printWithSignature, setPrintWithSignature] = useState(true);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
-  const [blankDialogOpen, setBlankDialogOpen] = useState(false);
-  const [blankPayee, setBlankPayee] = useState("");
-  const [blankCheckNumber, setBlankCheckNumber] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
@@ -128,31 +125,19 @@ const Index = () => {
     setPrintDialogOpen(true);
   };
 
-  const handlePrintBlank = () => {
-    setBlankPayee("");
-    const maxNum = checks
-      .filter((c) => c.account_id === selectedAccountId && c.check_number)
-      .reduce((max, c) => {
-        const n = parseInt(c.check_number!, 10);
-        return !isNaN(n) && n > max ? n : max;
-      }, 0);
-    setBlankCheckNumber(maxNum > 0 ? String(maxNum + 1) : "");
-    setBlankDialogOpen(true);
-  };
-
-  const confirmBlankPrint = () => {
+  const handlePrintBlank = (data: { payee: string; check_number: string; check_date: string; payee_record_number: string }) => {
     const blankCheck: Check = {
       id: "blank",
-      payee: blankPayee,
+      payee: data.payee,
       amount: 0,
-      check_date: new Date().toISOString().split("T")[0],
-      check_number: blankCheckNumber || null,
+      check_date: data.check_date,
+      check_number: data.check_number || null,
       status: "Open",
       memo: null,
       stub_memo: null,
       account_id: selectedAccountId || null,
       chalikah_id: null,
-      payee_record_number: null,
+      payee_record_number: data.payee_record_number || null,
       given_to_payee: null,
       given_to_record_number: null,
       original_amount: null,
@@ -160,7 +145,7 @@ const Index = () => {
       created_at: "",
       updated_at: "",
     };
-    setBlankDialogOpen(false);
+    setFormOpen(false);
     setPrintChecks([blankCheck]);
     setPrintDialogOpen(true);
   };
@@ -251,10 +236,6 @@ const Index = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
-              <Button variant="outline" onClick={handlePrintBlank}>
-                <Printer className="h-4 w-4 mr-2" />
-                Blank Check
-              </Button>
               <CheckBulkImport accountId={selectedAccountId} existingChecks={checks} />
               <Button onClick={() => { setEditingCheck(null); setFormOpen(true); }}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -334,6 +315,7 @@ const Index = () => {
         open={formOpen}
         onOpenChange={(open) => { setFormOpen(open); if (!open) setEditingCheck(null); }}
         onSubmit={handleSubmit}
+        onPrintBlank={handlePrintBlank}
         initialData={editingCheck}
         isPending={addCheck.isPending || updateCheck.isPending}
         existingChecks={checks}
@@ -384,43 +366,6 @@ const Index = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Blank check dialog */}
-      <AlertDialog open={blankDialogOpen} onOpenChange={setBlankDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Print Check (Blank Amount)</AlertDialogTitle>
-            <AlertDialogDescription>All fields will print normally except the amount.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1">
-              <Label htmlFor="blank-payee" className="text-sm">Payee</Label>
-              <PayeeAutocomplete
-                value={blankPayee}
-                onChange={setBlankPayee}
-                payees={payees.filter((p) => p.is_active)}
-                searchField="payee_name"
-                placeholder="Search payee or leave empty"
-                className="h-9 text-sm"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="blank-check-number" className="text-sm">Check Number</Label>
-              <Input
-                id="blank-check-number"
-                placeholder="Leave empty for no number"
-                value={blankCheckNumber}
-                onChange={(e) => setBlankCheckNumber(e.target.value)}
-              />
-            </div>
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmBlankPrint}>
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Hidden print view */}
       <div className="hidden">
