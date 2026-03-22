@@ -114,6 +114,35 @@ function formatMicrLine(checkNumber?: string | null, routingNumber?: string | nu
     .join(" ");
 }
 
+function isHebrew(char: string): boolean {
+  const code = char.charCodeAt(0);
+  return code >= 0x0590 && code <= 0x05FF;
+}
+
+function StubMemoText({ text }: { text: string }) {
+  const segments: { hebrew: boolean; text: string }[] = [];
+  for (const char of text) {
+    const heb = isHebrew(char);
+    const last = segments[segments.length - 1];
+    if (last && last.hebrew === heb) {
+      last.text += char;
+    } else {
+      segments.push({ hebrew: heb, text: char });
+    }
+  }
+  return (
+    <>
+      {segments.map((seg, i) =>
+        seg.hebrew ? (
+          <span key={i} className="font-hebrew" style={{ fontSize: "11pt" }}>{seg.text}</span>
+        ) : (
+          <span key={i}>{seg.text}</span>
+        )
+      )}
+    </>
+  );
+}
+
 function PayeeBlock({
   payee,
   topOffsetIn,
@@ -325,7 +354,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
 
           {check.stub_memo && (
             <div
-              className="absolute border border-muted-foreground/40 rounded-sm px-2 py-1 font-hebrew"
+              className="absolute border border-muted-foreground/40 rounded-sm px-2 py-1"
               style={{
                 fontSize: "10pt",
                 top: inches(STUB_1.payeeTop),
@@ -334,7 +363,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
                 boxSizing: "border-box",
               }}
             >
-              {check.stub_memo}
+              <StubMemoText text={check.stub_memo} />
             </div>
           )}
         </div>
@@ -367,7 +396,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
 
           {check.stub_memo && (
             <div
-              className="absolute border border-muted-foreground/40 rounded-sm px-2 py-1 font-hebrew"
+              className="absolute border border-muted-foreground/40 rounded-sm px-2 py-1"
               style={{
                 fontSize: "10pt",
                 top: inches(STUB_2.payeeTop),
@@ -376,7 +405,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
                 boxSizing: "border-box",
               }}
             >
-              {check.stub_memo}
+              <StubMemoText text={check.stub_memo} />
             </div>
           )}
         </div>
