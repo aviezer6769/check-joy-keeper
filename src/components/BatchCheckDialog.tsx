@@ -136,11 +136,20 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
               <Label>Run No.</Label>
               <Input value={runNo} onChange={(e) => setRunNo(e.target.value)} placeholder="Optional" />
             </div>
-            <div className="flex items-end">
+            <div className="flex flex-col gap-2">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <input type="checkbox" checked={autoCheckNumbers} onChange={(e) => setAutoCheckNumbers(e.target.checked)} className="rounded" />
-                Auto Check # (from {nextCheckNumber})
+                Auto Check #
               </label>
+              {autoCheckNumbers && (
+                <Input
+                  type="number"
+                  value={manualStartNumber}
+                  onChange={(e) => setManualStartNumber(e.target.value)}
+                  placeholder={`Auto: ${nextCheckNumber}`}
+                  className="h-8 text-xs"
+                />
+              )}
             </div>
           </div>
 
