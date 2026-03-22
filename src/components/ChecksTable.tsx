@@ -204,6 +204,8 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
         ) : <span className="text-sm">—</span>;
       case "memo":
         return <span className="text-sm max-w-[200px] truncate block">{check.memo || "—"}</span>;
+      case "stub_memo":
+        return <span className="text-sm max-w-[200px] truncate block">{check.stub_memo || "—"}</span>;
       case "record_number":
         return <span className="font-mono text-sm">{check.payee_record_number || "—"}</span>;
       case "given_to_record":
