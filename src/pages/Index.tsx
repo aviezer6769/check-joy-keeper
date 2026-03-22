@@ -314,6 +314,31 @@ const Index = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Print options dialog */}
+      <AlertDialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Print {printChecks.length} Check{printChecks.length !== 1 ? "s" : ""}</AlertDialogTitle>
+            <AlertDialogDescription>Choose print options before proceeding.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex items-center justify-between py-3">
+            <Label htmlFor="print-signature" className="text-sm">Include Signature</Label>
+            <Switch
+              id="print-signature"
+              checked={printWithSignature}
+              onCheckedChange={setPrintWithSignature}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPrint}>
+              <Printer className="h-4 w-4 mr-2" />
+              Print
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Hidden print view */}
       <div className="hidden">
         <div ref={printRef}>
@@ -329,7 +354,7 @@ const Index = () => {
 
             return (
               <div key={c.id} style={i > 0 ? { pageBreakBefore: "always" } : undefined}>
-                <CheckPrintView check={c} account={selectedAccount} payee={matchedPayee} />
+                <CheckPrintView check={c} account={selectedAccount} payee={matchedPayee} showSignature={printWithSignature} />
               </div>
             );
           })}
