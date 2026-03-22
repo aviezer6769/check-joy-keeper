@@ -151,11 +151,11 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
     );
   };
 
-  const copyDownGrid = (key: string) => {
+  const copyDownGrid = (key: string, fromRow = 0) => {
     setGridRows((prev) => {
-      const firstVal = prev[0]?.[key];
-      if (firstVal === undefined || firstVal === null || firstVal === "") return prev;
-      return prev.map((r) => ({ ...r, [key]: r[key] || firstVal }));
+      const sourceVal = prev[fromRow]?.[key];
+      if (sourceVal === undefined || sourceVal === null || sourceVal === "") return prev;
+      return prev.map((r, i) => (i > fromRow ? { ...r, [key]: sourceVal } : r));
     });
   };
 
@@ -296,7 +296,7 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                             variant="ghost"
                             className="h-5 w-5 opacity-50 hover:opacity-100"
                             onClick={() => copyDownGrid(f.key)}
-                            title={`Copy first row's ${f.label} to all rows`}
+                            title={`Copy first row's ${f.label} down (or Ctrl+D from any cell)`}
                           >
                             <ArrowDown className="h-3 w-3" />
                           </Button>
@@ -311,6 +311,11 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                       <td className="px-2 py-0.5 text-muted-foreground">{idx + 1}</td>
                       {GRID_FIELDS.map((f, colIdx) => {
                         const mkKeyHandler = (e: React.KeyboardEvent<HTMLInputElement>) => {
+                          if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+                            e.preventDefault();
+                            copyDownGrid(f.key, idx);
+                            return;
+                          }
                           const totalCols = GRID_FIELDS.length;
                           const totalRows = gridRows.length;
                           let nextRow = idx;
