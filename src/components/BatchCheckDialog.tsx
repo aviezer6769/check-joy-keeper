@@ -37,6 +37,7 @@ const GRID_COLS: { key: keyof GridRow; label: string; type?: string; readOnly?: 
   { key: "amount", label: "Amount", type: "number" },
   { key: "check_date", label: "Date", type: "date" },
   { key: "memo", label: "Memo" },
+  { key: "stub_memo", label: "Stub Memo" },
   { key: "run_no", label: "Run No." },
 ];
 

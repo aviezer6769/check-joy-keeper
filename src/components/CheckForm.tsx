@@ -331,6 +331,10 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
             <Label htmlFor="memo">Memo</Label>
             <Textarea id="memo" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="Purpose or notes" rows={2} />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="stub_memo">Stub Memo</Label>
+            <Textarea id="stub_memo" value={stubMemo} onChange={(e) => setStubMemo(e.target.value)} placeholder="Memo for check stub" rows={2} />
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Status</Label>

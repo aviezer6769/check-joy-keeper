@@ -14,6 +14,7 @@ export interface Check {
   chalikah_id: string | null;
   status: CheckStatus;
   memo: string | null;
+  stub_memo: string | null;
   payee_record_number: string | null;
   given_to_payee: string | null;
   given_to_record_number: string | null;
