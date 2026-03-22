@@ -220,7 +220,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
 
         {/* Bank name */}
         {account?.bank_name && (
-          <div className="text-right text-xs" style={{ marginTop: inches(0.02) }}>
+          <div className="text-center text-xs" style={{ marginTop: inches(0.02) }}>
             <p>{account.bank_name}</p>
           </div>
         )}
