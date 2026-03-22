@@ -230,7 +230,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         </div>
 
         {/* Pay to line */}
-        <div style={{ marginTop: inches(FACE.payLineTop) }}>
+        <div style={{ marginTop: inches(FACE.payLineTop + 0.06) }}>
           <div className="flex items-baseline gap-1.5" style={{ fontSize: "10pt" }}>
             <span className="whitespace-nowrap font-semibold text-xs">Pay to the<br/>order of</span>
             <span className="flex-1 border-b border-foreground pb-0.5 pl-2" style={{ fontSize: "10pt" }}>
