@@ -114,6 +114,35 @@ function formatMicrLine(checkNumber?: string | null, routingNumber?: string | nu
     .join(" ");
 }
 
+function isHebrew(char: string): boolean {
+  const code = char.charCodeAt(0);
+  return code >= 0x0590 && code <= 0x05FF;
+}
+
+function StubMemoText({ text }: { text: string }) {
+  const segments: { hebrew: boolean; text: string }[] = [];
+  for (const char of text) {
+    const heb = isHebrew(char);
+    const last = segments[segments.length - 1];
+    if (last && last.hebrew === heb) {
+      last.text += char;
+    } else {
+      segments.push({ hebrew: heb, text: char });
+    }
+  }
+  return (
+    <>
+      {segments.map((seg, i) =>
+        seg.hebrew ? (
+          <span key={i} className="font-hebrew" style={{ fontSize: "11pt" }}>{seg.text}</span>
+        ) : (
+          <span key={i}>{seg.text}</span>
+        )
+      )}
+    </>
+  );
+}
+
 function PayeeBlock({
   payee,
   topOffsetIn,
