@@ -325,7 +325,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
 
           {check.stub_memo && (
             <div
-              className="absolute border border-muted-foreground/40 rounded-sm px-2 py-1 font-hebrew"
+              className="absolute border border-muted-foreground/40 rounded-sm px-2 py-1"
               style={{
                 fontSize: "10pt",
                 top: inches(STUB_1.payeeTop),
@@ -334,7 +334,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
                 boxSizing: "border-box",
               }}
             >
-              {check.stub_memo}
+              <StubMemoText text={check.stub_memo} />
             </div>
           )}
         </div>
