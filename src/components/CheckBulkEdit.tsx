@@ -391,6 +391,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
             return;
           }
           const totalCols = GRID_FIELDS.length;
+          const totalRows = gridRows.length;
           let nextRow = idx;
           let nextCol = colIdx;
           const el = e.target as HTMLInputElement;
