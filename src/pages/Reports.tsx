@@ -622,6 +622,41 @@ const Reports = () => {
                   <Save className="h-4 w-4 mr-2" />
                   Save Report
                 </Button>
+                {savedReports.length > 0 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Saved Reports
+                        <ChevronDown className="h-4 w-4 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[280px]">
+                      {savedReports.map((r) => (
+                        <DropdownMenuItem key={r.id} className="flex items-center justify-between gap-2 p-2" onSelect={(e) => e.preventDefault()}>
+                          <button
+                            className="flex-1 text-left truncate text-sm"
+                            onClick={() => setViewingReport(r)}
+                          >
+                            <span className="font-medium">{r.name}</span>
+                            <span className="text-xs text-muted-foreground ml-2">{new Date(r.created_at).toLocaleDateString()}</span>
+                          </button>
+                          <div className="flex gap-0.5 shrink-0">
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRenameReport(r); setRenameValue(r.name); }}>
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleExport(r.report_data as any)}>
+                              <Download className="h-3 w-3" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteReport.mutate(r.id)}>
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </div>
           </CardContent>
