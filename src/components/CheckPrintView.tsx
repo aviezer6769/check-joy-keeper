@@ -7,6 +7,7 @@ interface CheckPrintViewProps {
   check: Check;
   account?: Account | null;
   payee?: Payee | null;
+  showSignature?: boolean;
 }
 
 const PAGE = {
