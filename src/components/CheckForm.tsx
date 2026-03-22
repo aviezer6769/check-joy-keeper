@@ -56,6 +56,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
   const [checkDate, setCheckDate] = useState(initialData?.check_date ?? new Date().toISOString().split("T")[0]);
   const [status, setStatus] = useState<string>(initialData?.status ?? "Open");
   const [memo, setMemo] = useState(initialData?.memo ?? "");
+  const [stubMemo, setStubMemo] = useState(initialData?.stub_memo ?? "");
   const [chalikahId, setChalikahId] = useState(initialData?.chalikah_id ?? "");
   const [newChalikahName, setNewChalikahName] = useState("");
   const [payeeRecordNumber, setPayeeRecordNumber] = useState(initialData?.payee_record_number ?? "");
