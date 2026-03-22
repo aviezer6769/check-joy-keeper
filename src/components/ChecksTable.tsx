@@ -59,6 +59,7 @@ function getCheckTextValue(check: Check, key: string, chalikahMap: Record<string
     case "status": return check.status;
     case "given_to": return check.given_to_payee || "";
     case "memo": return check.memo || "";
+    case "stub_memo": return check.stub_memo || "";
     case "record_number": return check.payee_record_number || "";
     case "given_to_record": return check.given_to_record_number || "";
     case "run_no": return check.run_no || "";
