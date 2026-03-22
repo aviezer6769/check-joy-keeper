@@ -180,7 +180,7 @@ function StubRightMeta({
 }
 
 export function CheckPrintView({ check, account, payee, showSignature = true }: CheckPrintViewProps) {
-  const payeeName = check.payee.startsWith("Payee #") ? "" : check.payee;
+  const payeeName = (check.payee.startsWith("Payee #") || check.payee === "Blank") ? "" : check.payee;
   const payerDisplayName = account?.check_payer_name || account?.payer_name || account?.account_name || "CLYKT";
   const stubPayerName = account?.stub_payer_name || account?.payer_name || account?.account_name;
   const micrLine = formatMicrLine(check.check_number, account?.routing_number, account?.account_number);
