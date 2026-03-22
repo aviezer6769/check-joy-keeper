@@ -135,12 +135,12 @@ function StubMemoText({ text }: { text: string }) {
           }
         }
         return (
-          <div key={li} style={{ direction: segments.some(s => s.hebrew) ? "rtl" : "ltr", wordBreak: "break-word", overflowWrap: "break-word" }}>
+          <div key={li} style={{ direction: segments.some(s => s.hebrew) ? "rtl" : "ltr", overflowWrap: "normal", wordBreak: "normal" }}>
             {segments.length === 0 ? "\u00A0" : segments.map((seg, i) =>
               seg.hebrew ? (
                 <span key={i} className="font-hebrew" style={{ fontSize: "11pt", direction: "rtl" }}>{seg.text}</span>
               ) : (
-                <span key={i} style={{ direction: "ltr", unicodeBidi: "embed", whiteSpace: "nowrap" }}>{seg.text}</span>
+                <span key={i} style={{ direction: "ltr", unicodeBidi: "embed" }}>{seg.text}</span>
               )
             )}
           </div>
@@ -366,7 +366,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
                 fontSize: "10pt",
                 top: inches(STUB_1.payeeTop),
                 right: 0,
-                width: inches(2.8),
+                width: inches(3.5),
                 boxSizing: "border-box",
               }}
             >
@@ -408,7 +408,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
                 fontSize: "10pt",
                 top: inches(STUB_2.payeeTop),
                 right: 0,
-                width: inches(2.8),
+                width: inches(3.5),
                 boxSizing: "border-box",
               }}
             >
