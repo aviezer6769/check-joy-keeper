@@ -239,10 +239,6 @@ const Index = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
-              <Button variant="outline" onClick={handlePrintBlank}>
-                <Printer className="h-4 w-4 mr-2" />
-                Blank Check
-              </Button>
               <CheckBulkImport accountId={selectedAccountId} existingChecks={checks} />
               <Button onClick={() => { setEditingCheck(null); setFormOpen(true); }}>
                 <Plus className="h-4 w-4 mr-2" />
