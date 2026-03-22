@@ -41,6 +41,9 @@ const Index = () => {
   const [printChecks, setPrintChecks] = useState<Check[]>([]);
   const [printWithSignature, setPrintWithSignature] = useState(true);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [blankDialogOpen, setBlankDialogOpen] = useState(false);
+  const [blankPayee, setBlankPayee] = useState("");
+  const [blankCheckNumber, setBlankCheckNumber] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
@@ -125,12 +128,18 @@ const Index = () => {
   };
 
   const handlePrintBlank = () => {
+    setBlankPayee("");
+    setBlankCheckNumber("");
+    setBlankDialogOpen(true);
+  };
+
+  const confirmBlankPrint = () => {
     const blankCheck: Check = {
       id: "blank",
-      payee: "",
+      payee: blankPayee,
       amount: 0,
       check_date: new Date().toISOString().split("T")[0],
-      check_number: null,
+      check_number: blankCheckNumber || null,
       status: "Open",
       memo: null,
       stub_memo: null,
@@ -144,6 +153,7 @@ const Index = () => {
       created_at: "",
       updated_at: "",
     };
+    setBlankDialogOpen(false);
     setPrintChecks([blankCheck]);
     setPrintDialogOpen(true);
   };
@@ -362,6 +372,42 @@ const Index = () => {
             <AlertDialogAction onClick={confirmPrint}>
               <Printer className="h-4 w-4 mr-2" />
               Print
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Blank check dialog */}
+      <AlertDialog open={blankDialogOpen} onOpenChange={setBlankDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Print Blank Check</AlertDialogTitle>
+            <AlertDialogDescription>Optionally enter a payee and check number.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1">
+              <Label htmlFor="blank-payee" className="text-sm">Payee</Label>
+              <Input
+                id="blank-payee"
+                placeholder="Leave empty for fully blank"
+                value={blankPayee}
+                onChange={(e) => setBlankPayee(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="blank-check-number" className="text-sm">Check Number</Label>
+              <Input
+                id="blank-check-number"
+                placeholder="Leave empty for no number"
+                value={blankCheckNumber}
+                onChange={(e) => setBlankCheckNumber(e.target.value)}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBlankPrint}>
+              Continue
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
