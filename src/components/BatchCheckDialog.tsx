@@ -31,6 +31,7 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
   const [chalikahId, setChalikahId] = useState<string>("__none__");
   const [runNo, setRunNo] = useState("");
   const [autoCheckNumbers, setAutoCheckNumbers] = useState(true);
+  const [manualStartNumber, setManualStartNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const nextCheckNumber = useMemo(() => {
@@ -54,10 +55,11 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
     }
 
     setSubmitting(true);
+    const startNum = manualStartNumber ? parseInt(manualStartNumber, 10) : nextCheckNumber;
     const checks: CheckInsert[] = payees.map((p, i) => ({
       payee: p.payee_name,
       amount: parseFloat(amount),
-      check_number: autoCheckNumbers ? String(nextCheckNumber + i) : null,
+      check_number: autoCheckNumbers ? String(startNum + i) : null,
       check_date: checkDate,
       chalikah_id: chalikahId === "__none__" ? null : chalikahId,
       status: "Open" as const,
@@ -134,11 +136,20 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
               <Label>Run No.</Label>
               <Input value={runNo} onChange={(e) => setRunNo(e.target.value)} placeholder="Optional" />
             </div>
-            <div className="flex items-end">
+            <div className="flex flex-col gap-2">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <input type="checkbox" checked={autoCheckNumbers} onChange={(e) => setAutoCheckNumbers(e.target.checked)} className="rounded" />
-                Auto Check # (from {nextCheckNumber})
+                Auto Check #
               </label>
+              {autoCheckNumbers && (
+                <Input
+                  type="number"
+                  value={manualStartNumber}
+                  onChange={(e) => setManualStartNumber(e.target.value)}
+                  placeholder={`Auto: ${nextCheckNumber}`}
+                  className="h-8 text-xs"
+                />
+              )}
             </div>
           </div>
 
