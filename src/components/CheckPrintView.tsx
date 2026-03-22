@@ -218,13 +218,6 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
           </div>
         </div>
 
-        {/* Bank name under payer info */}
-        {account?.bank_name && (
-          <div className="text-xs italic opacity-70" style={{ marginTop: inches(0.04) }}>
-            {account.bank_name}
-          </div>
-        )}
-
         {/* Date row */}
         <div className="flex items-baseline justify-end" style={{ marginTop: inches(FACE.dateTop) }}>
           <div className="flex items-baseline gap-1" style={{ fontSize: "10pt" }}>
