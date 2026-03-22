@@ -141,14 +141,15 @@ function PayeeBlock({
 
   return (
     <div
-      className="text-xs leading-snug"
+      className="leading-snug"
       style={{
         position: "absolute",
         top: inches(topOffsetIn),
         left: inches(leftOffsetIn),
+        fontSize: "10pt",
       }}
     >
-      {yiddishName && <p className="font-hebrew">{yiddishName}</p>}
+      {yiddishName && <p className="font-hebrew" style={{ fontSize: "11pt" }}>{yiddishName}</p>}
       <p>{payee.payee_name}</p>
       {streetLine && <p>{streetLine}</p>}
       {cityLine && <p>{cityLine}</p>}
@@ -168,7 +169,7 @@ function StubRightMeta({
   payee?: Payee | null;
 }) {
   return (
-    <div className="text-right text-xs leading-snug space-y-0.5" style={{ width: inches(1.25) }}>
+    <div className="text-right leading-snug space-y-0.5" style={{ width: inches(1.25), fontSize: "10pt" }}>
       <p>{check.check_number || ""}</p>
       <p>{formatDateShort(check.check_date)}</p>
       <p>{formatCurrency(check.amount)}</p>
@@ -304,9 +305,9 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         }}
       >
         <div className="relative h-full">
-          <div className="text-xs leading-tight" style={{ maxWidth: "calc(100% - 1.45in)" }}>
-            {account?.payer_name_yiddish && <p className="font-bold font-hebrew">{account.payer_name_yiddish}</p>}
-            <p className="font-bold">{stubPayerName}</p>
+          <div className="leading-tight" style={{ maxWidth: "calc(100% - 1.45in)", fontSize: "10pt" }}>
+            {account?.payer_name_yiddish && <p className="font-hebrew" style={{ fontSize: "11pt" }}>{account.payer_name_yiddish}</p>}
+            <p>{stubPayerName}</p>
             {account?.payer_address && <p>{account.payer_address}</p>}
             {(account?.payer_city || account?.payer_state || account?.payer_zip) && (
               <p>
@@ -332,7 +333,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         }}
       >
         <div className="relative h-full">
-          <div className="text-xs leading-tight" style={{ maxWidth: "calc(100% - 1.45in)" }}>
+          <div className="leading-tight" style={{ maxWidth: "calc(100% - 1.45in)", fontSize: "10pt" }}>
             <p>{stubPayerName}</p>
             {account?.payer_address && <p>{account.payer_address}</p>}
             {(account?.payer_city || account?.payer_state || account?.payer_zip) && (
