@@ -203,52 +203,85 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
           boxSizing: "border-box",
         }}
       >
-        <div className="relative min-h-[0.42in]">
-          <div className="text-xs leading-tight max-w-[2.55in]">
-            <p className="font-bold text-sm">{payerDisplayName}</p>
+        {/* Top row: Payer info left, Check number right */}
+        <div className="flex justify-between items-start">
+          <div className="text-xs leading-tight max-w-[3in]">
+            <p className="font-bold" style={{ fontSize: "11pt" }}>{payerDisplayName}</p>
+            {account?.payer_address && <p>{account.payer_address}</p>}
             <p>
-              {[account?.payer_city, account?.payer_state].filter(Boolean).join(" ")} {account?.payer_zip || ""}
+              {[account?.payer_city, account?.payer_state].filter(Boolean).join(", ")} {account?.payer_zip || ""}
             </p>
+            {account?.payer_phone && <p>{account.payer_phone}</p>}
           </div>
-          <div className="absolute left-1/2 -translate-x-1/2 top-0 text-sm whitespace-nowrap">{account?.bank_name || ""}</div>
-          <div className="absolute right-0 top-0 text-sm">{check.check_number || ""}</div>
+          <div className="text-right">
+            <p className="font-semibold" style={{ fontSize: "10pt" }}>{check.check_number || ""}</p>
+          </div>
         </div>
 
-        <div className="flex justify-end" style={{ marginTop: inches(FACE.dateTop) }}>
-          <span className="text-sm">
-            Date&nbsp;&nbsp;
-            <span className="border-b border-foreground inline-block min-w-[92px] pb-0.5 text-center">
+        {/* Date row with bank name centered */}
+        <div className="flex items-baseline justify-between" style={{ marginTop: inches(0.08) }}>
+          <div className="text-xs italic opacity-70">{account?.bank_name || ""}</div>
+          <div className="flex items-baseline gap-1" style={{ fontSize: "10pt" }}>
+            <span className="font-semibold">Date</span>
+            <span className="border-b-2 border-foreground inline-block min-w-[120px] pb-0.5 text-center">
               {formatDateShort(check.check_date)}
             </span>
-          </span>
+          </div>
         </div>
 
-        <div style={{ marginTop: inches(FACE.payLineTop) }}>
-          <div className="text-sm">Pay to the</div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-sm whitespace-nowrap">order of</span>
-            <span className="flex-1 border-b border-foreground pb-0.5 pl-1 text-sm">{payeeName}</span>
-            <span className="border border-foreground px-3 py-1 text-sm font-semibold whitespace-nowrap">
+        {/* Pay to line */}
+        <div style={{ marginTop: inches(0.1) }}>
+          <div className="flex items-baseline gap-1.5" style={{ fontSize: "10pt" }}>
+            <span className="whitespace-nowrap font-semibold">Pay to the<br/>order of</span>
+            <span className="flex-1 border-b-2 border-foreground pb-0.5 pl-2 font-medium" style={{ fontSize: "11pt" }}>
+              {payeeName}
+            </span>
+            <span
+              className="font-bold whitespace-nowrap"
+              style={{
+                fontSize: "11pt",
+                border: "2px solid currentColor",
+                padding: "2px 10px",
+                minWidth: "100px",
+                textAlign: "center",
+              }}
+            >
               {formatCurrency(check.amount)}
             </span>
           </div>
         </div>
 
-        <div style={{ marginTop: inches(FACE.wordsTop) }}>
-          <span className="border-b border-foreground pb-0.5 text-sm inline-block w-full">{amountToFullWords(check.amount)}</span>
-        </div>
-
-        <div className="flex justify-between items-end" style={{ marginTop: inches(FACE.memoTop) }}>
-          <div className="text-sm flex items-baseline">
-            <span>Memo</span>
-            <span className="border-b border-foreground inline-block min-w-[210px] ml-1 pb-0.5 pl-2">{check.memo || ""}</span>
-          </div>
-          <div className="min-w-[200px] text-center">
-            {showSignature && <img src={signatureImg} alt="Signature" className="h-9 mx-auto object-contain" />}
-            <div className="border-t border-foreground" />
+        {/* Amount in words */}
+        <div style={{ marginTop: inches(0.06) }}>
+          <div className="flex items-baseline gap-1">
+            <span
+              className="flex-1 border-b-2 border-foreground pb-0.5 pl-1"
+              style={{ fontSize: "9pt" }}
+            >
+              {amountToFullWords(check.amount)}
+            </span>
+            <span style={{ fontSize: "9pt" }} className="whitespace-nowrap font-semibold">Dollars</span>
           </div>
         </div>
 
+        {/* Memo and Signature */}
+        <div className="flex justify-between items-end" style={{ marginTop: inches(0.14) }}>
+          <div className="flex items-baseline gap-1" style={{ fontSize: "9pt" }}>
+            <span className="font-semibold">Memo</span>
+            <span className="border-b border-foreground inline-block min-w-[220px] pb-0.5 pl-2">
+              {check.memo || ""}
+            </span>
+          </div>
+          <div style={{ minWidth: "210px", textAlign: "center" }}>
+            {showSignature && (
+              <img src={signatureImg} alt="Signature" className="h-10 mx-auto object-contain" />
+            )}
+            <div className="border-t-2 border-foreground mt-0.5" />
+            <span style={{ fontSize: "7pt" }} className="opacity-50">AUTHORIZED SIGNATURE</span>
+          </div>
+        </div>
+
+        {/* MICR line */}
         <div
           className="tracking-[0.16em] text-foreground"
           style={{
