@@ -667,44 +667,6 @@ const Reports = () => {
           renderMatrix(displayedRows, chalikahCols, matrix, filteredGrandTotal)
         )}
 
-        {/* Saved reports */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Saved Reports</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {reportsLoading ? (
-              <p className="text-muted-foreground">Loading...</p>
-            ) : savedReports.length === 0 ? (
-              <p className="text-muted-foreground">No saved reports yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {savedReports.map((r) => (
-                  <div key={r.id} className="flex items-center justify-between rounded-lg border p-3">
-                    <div className="flex items-center gap-3">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">{r.name}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => setViewingReport(r)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleExport(r.report_data as any)}>
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => deleteReport.mutate(r.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </main>
 
       {/* Save dialog */}
