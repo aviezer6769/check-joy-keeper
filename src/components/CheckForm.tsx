@@ -37,7 +37,7 @@ interface CheckFormProps {
   existingChecks?: Check[];
 }
 
-export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending, existingChecks = [] }: CheckFormProps) {
+export function CheckForm({ open, onOpenChange, onSubmit, onPrintBlank, initialData, isPending, existingChecks = [] }: CheckFormProps) {
   const { data: payees = [] } = usePayees();
   const { data: chalikahList = [] } = useChalikah();
   const addChalikah = useAddChalikah();
