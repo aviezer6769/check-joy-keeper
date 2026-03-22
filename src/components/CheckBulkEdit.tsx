@@ -211,7 +211,13 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
     setGridRows((prev) => {
       const sourceVal = prev[fromRow]?.[key];
       if (sourceVal === undefined || sourceVal === null || sourceVal === "") return prev;
-      return prev.map((r, i) => (i > fromRow ? { ...r, [key]: sourceVal } : r));
+      const isNumericFill = key === "check_number" && /^\d+$/.test(String(sourceVal));
+      const startNum = isNumericFill ? parseInt(String(sourceVal), 10) : 0;
+      return prev.map((r, i) => {
+        if (i <= fromRow) return r;
+        const newVal = isNumericFill ? String(startNum + (i - fromRow)) : sourceVal;
+        return { ...r, [key]: newVal };
+      });
     });
   };
 
