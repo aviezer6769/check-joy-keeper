@@ -623,26 +623,13 @@ const Reports = () => {
           </CardContent>
         </Card>
 
-        {/* Live matrix */}
-        {checksLoading ? (
-          <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>
-        ) : payeeRows.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">No checks match the current filters.</div>
-        ) : (
-          renderMatrix(displayedRows, chalikahCols, matrix, filteredGrandTotal)
-        )}
-
         {/* Saved reports */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Saved Reports</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {reportsLoading ? (
-              <p className="text-muted-foreground">Loading...</p>
-            ) : savedReports.length === 0 ? (
-              <p className="text-muted-foreground">No saved reports yet.</p>
-            ) : (
+        {savedReports.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Saved Reports</CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-2">
                 {savedReports.map((r) => (
                   <div key={r.id} className="flex items-center justify-between rounded-lg border p-3">
@@ -667,9 +654,19 @@ const Reports = () => {
                   </div>
                 ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Live matrix */}
+        {checksLoading ? (
+          <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>
+        ) : payeeRows.length === 0 ? (
+          <div className="text-center py-16 text-muted-foreground">No checks match the current filters.</div>
+        ) : (
+          renderMatrix(displayedRows, chalikahCols, matrix, filteredGrandTotal)
+        )}
+
       </main>
 
       {/* Save dialog */}
