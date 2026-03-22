@@ -250,7 +250,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         </div>
 
         <div
-          className="tracking-[0.16em] text-foreground/70"
+          className="tracking-[0.16em] text-foreground"
           style={{
             fontFamily: "'MICR', monospace",
             fontSize: "9pt",
