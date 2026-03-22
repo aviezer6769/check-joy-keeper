@@ -311,6 +311,11 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                       <td className="px-2 py-0.5 text-muted-foreground">{idx + 1}</td>
                       {GRID_FIELDS.map((f, colIdx) => {
                         const mkKeyHandler = (e: React.KeyboardEvent<HTMLInputElement>) => {
+                          if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+                            e.preventDefault();
+                            copyDownGrid(f.key, idx);
+                            return;
+                          }
                           const totalCols = GRID_FIELDS.length;
                           const totalRows = gridRows.length;
                           let nextRow = idx;
