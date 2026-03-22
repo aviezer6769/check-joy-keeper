@@ -143,7 +143,8 @@ const Index = () => {
       run_no: null,
     };
     addCheck.mutate(checkInsert, {
-      onSuccess: (savedCheck) => {
+      onSuccess: (savedData) => {
+        const savedCheck = savedData as unknown as Check;
         setFormOpen(false);
         setPrintChecks([savedCheck]);
         setPrintDialogOpen(true);
