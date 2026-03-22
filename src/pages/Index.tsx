@@ -3,6 +3,8 @@ import { useReactToPrint } from "react-to-print";
 import { usePayees } from "@/hooks/usePayees";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Plus, Search, Users, Pencil, Trash2, List, Download, BarChart3, FileText, Printer } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert, type CheckStatus } from "@/hooks/useChecks";
@@ -37,6 +39,8 @@ const Index = () => {
   const [editingCheck, setEditingCheck] = useState<Check | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [printChecks, setPrintChecks] = useState<Check[]>([]);
+  const [printWithSignature, setPrintWithSignature] = useState(true);
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
@@ -112,11 +116,16 @@ const Index = () => {
 
   const handlePrintCheck = (check: Check) => {
     setPrintChecks([check]);
-    setTimeout(() => handlePrint(), 100);
+    setPrintDialogOpen(true);
   };
 
   const handleBulkPrint = () => {
     setPrintChecks(selectedChecks);
+    setPrintDialogOpen(true);
+  };
+
+  const confirmPrint = () => {
+    setPrintDialogOpen(false);
     setTimeout(() => handlePrint(), 100);
   };
 
@@ -305,6 +314,31 @@ const Index = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Print options dialog */}
+      <AlertDialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Print {printChecks.length} Check{printChecks.length !== 1 ? "s" : ""}</AlertDialogTitle>
+            <AlertDialogDescription>Choose print options before proceeding.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex items-center justify-between py-3">
+            <Label htmlFor="print-signature" className="text-sm">Include Signature</Label>
+            <Switch
+              id="print-signature"
+              checked={printWithSignature}
+              onCheckedChange={setPrintWithSignature}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPrint}>
+              <Printer className="h-4 w-4 mr-2" />
+              Print
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Hidden print view */}
       <div className="hidden">
         <div ref={printRef}>
@@ -320,7 +354,7 @@ const Index = () => {
 
             return (
               <div key={c.id} style={i > 0 ? { pageBreakBefore: "always" } : undefined}>
-                <CheckPrintView check={c} account={selectedAccount} payee={matchedPayee} />
+                <CheckPrintView check={c} account={selectedAccount} payee={matchedPayee} showSignature={printWithSignature} />
               </div>
             );
           })}

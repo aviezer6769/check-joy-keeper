@@ -7,6 +7,7 @@ interface CheckPrintViewProps {
   check: Check;
   account?: Account | null;
   payee?: Payee | null;
+  showSignature?: boolean;
 }
 
 const PAGE = {
@@ -174,7 +175,7 @@ function StubRightMeta({
   );
 }
 
-export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
+export function CheckPrintView({ check, account, payee, showSignature = true }: CheckPrintViewProps) {
   const payeeName = check.payee.startsWith("Payee #") ? "" : check.payee;
   const payerDisplayName = account?.check_payer_name || account?.payer_name || account?.account_name || "CLYKT";
   const stubPayerName = account?.stub_payer_name || account?.payer_name || account?.account_name;
@@ -241,7 +242,7 @@ export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
             <span className="border-b border-foreground inline-block min-w-[210px] ml-1 pb-0.5 pl-2">{check.memo || ""}</span>
           </div>
           <div className="min-w-[200px] text-center">
-            <img src={signatureImg} alt="Signature" className="h-9 mx-auto object-contain" />
+            {showSignature && <img src={signatureImg} alt="Signature" className="h-9 mx-auto object-contain" />}
             <div className="border-t border-foreground" />
           </div>
         </div>
