@@ -368,43 +368,6 @@ const Index = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Blank check dialog */}
-      <AlertDialog open={blankDialogOpen} onOpenChange={setBlankDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Print Check (Blank Amount)</AlertDialogTitle>
-            <AlertDialogDescription>All fields will print normally except the amount.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1">
-              <Label htmlFor="blank-payee" className="text-sm">Payee</Label>
-              <PayeeAutocomplete
-                value={blankPayee}
-                onChange={setBlankPayee}
-                payees={payees.filter((p) => p.is_active)}
-                searchField="payee_name"
-                placeholder="Search payee or leave empty"
-                className="h-9 text-sm"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="blank-check-number" className="text-sm">Check Number</Label>
-              <Input
-                id="blank-check-number"
-                placeholder="Leave empty for no number"
-                value={blankCheckNumber}
-                onChange={(e) => setBlankCheckNumber(e.target.value)}
-              />
-            </div>
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmBlankPrint}>
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Hidden print view */}
       <div className="hidden">
