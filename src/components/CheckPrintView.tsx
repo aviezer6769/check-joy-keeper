@@ -333,7 +333,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         }}
       >
         <div className="relative h-full">
-          <div className="text-xs leading-tight" style={{ maxWidth: "calc(100% - 1.45in)" }}>
+          <div className="leading-tight" style={{ maxWidth: "calc(100% - 1.45in)", fontSize: "10pt" }}>
             <p>{stubPayerName}</p>
             {account?.payer_address && <p>{account.payer_address}</p>}
             {(account?.payer_city || account?.payer_state || account?.payer_zip) && (
