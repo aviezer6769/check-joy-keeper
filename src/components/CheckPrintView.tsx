@@ -158,11 +158,13 @@ function PayeeBlock({
 function StubRightMeta({
   check,
   includeRecord,
-  includeRun,
+  includeUrgent,
+  payee,
 }: {
   check: Check;
   includeRecord?: boolean;
-  includeRun?: boolean;
+  includeUrgent?: boolean;
+  payee?: Payee | null;
 }) {
   return (
     <div className="text-right text-xs leading-snug space-y-0.5" style={{ width: inches(1.25) }}>
@@ -170,7 +172,7 @@ function StubRightMeta({
       <p>{formatDateShort(check.check_date)}</p>
       <p>{formatCurrency(check.amount)}</p>
       {includeRecord && <p>{check.payee_record_number || ""}</p>}
-      {includeRun && <p>{check.run_no || ""}</p>}
+      {includeUrgent && <p>{payee?.urgent_level != null ? payee.urgent_level : ""}</p>}
     </div>
   );
 }
