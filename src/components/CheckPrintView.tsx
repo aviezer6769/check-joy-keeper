@@ -366,7 +366,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
                 fontSize: "10pt",
                 top: inches(STUB_1.payeeTop),
                 right: 0,
-                width: inches(2.8),
+                width: inches(3.5),
                 boxSizing: "border-box",
               }}
             >
