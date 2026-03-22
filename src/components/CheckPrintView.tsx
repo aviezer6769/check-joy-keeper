@@ -169,7 +169,7 @@ function StubRightMeta({
   payee?: Payee | null;
 }) {
   return (
-    <div className="text-right text-xs leading-snug space-y-0.5" style={{ width: inches(1.25) }}>
+    <div className="text-right leading-snug space-y-0.5" style={{ width: inches(1.25), fontSize: "10pt" }}>
       <p>{check.check_number || ""}</p>
       <p>{formatDateShort(check.check_date)}</p>
       <p>{formatCurrency(check.amount)}</p>
