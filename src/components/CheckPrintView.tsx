@@ -263,8 +263,8 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
 
         {/* Memo and Signature */}
         <div className="flex justify-between items-end" style={{ marginTop: inches(FACE.memoTop + 0.06) }}>
-          <div className="flex items-baseline gap-1" style={{ fontSize: "9pt" }}>
-            <span className="font-semibold">Memo</span>
+          <div className="flex items-end gap-1" style={{ fontSize: "9pt", paddingBottom: "0px" }}>
+            <span className="font-semibold" style={{ lineHeight: 1, paddingBottom: "2px" }}>Memo</span>
             <span style={{ borderBottom: "1px solid currentColor", display: "inline-block", minWidth: "220px", paddingBottom: "2px", paddingLeft: "8px" }}>
               {check.memo || ""}
             </span>
