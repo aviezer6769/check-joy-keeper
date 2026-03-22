@@ -14,17 +14,18 @@ const PAGE = {
   width: 8.5,
   height: 11,
   marginX: 0.45,
+  marginRight: 0.6,
 };
 
 const FACE = {
   height: 3.5,
-  padTop: 0.14,
+  padTop: 0.28,
   padBottom: 0.14,
   dateTop: 0.11,
   payLineTop: 0.06,
   wordsTop: 0.05,
   memoTop: 0.14,
-  micrBottom: 0.04,
+  micrBottom: 0.12,
 };
 
 const STUB_1 = {
