@@ -276,7 +276,7 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
 
           <TabsContent value="grid" className="pt-2 flex flex-col min-h-0 flex-1" style={{ display: "flex" }}>
             <p className="text-sm text-muted-foreground mb-3 shrink-0">
-              Edit each payee individually in the grid below. Right-click any cell to copy that column down from the current row.
+              Edit each payee individually. Use the header arrow to copy from top, or the small arrow in any row to continue from that row.
             </p>
             <div className="rounded border border-border flex-1 min-h-0 overflow-auto" style={{ scrollbarGutter: 'stable' }}>
               <table className="w-full text-xs min-w-max">
@@ -292,11 +292,12 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                         <div className="flex items-center gap-1">
                           {f.label}
                           <Button
+                            type="button"
                             size="icon"
                             variant="ghost"
                             className="h-5 w-5 opacity-50 hover:opacity-100"
-                            onClick={() => copyDownGrid(f.key)}
-                            title={`Copy first row's ${f.label} down, or right-click any cell in this column`}
+                            onClick={() => copyDownGrid(f.key, 0)}
+                            title={`Copy ${f.label} down from top row`}
                           >
                             <ArrowDown className="h-3 w-3" />
                           </Button>
@@ -350,39 +351,53 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                         };
                         return (
                           <td key={f.key} className="px-0.5 py-0.5">
-                            {f.type === "number" ? (
-                              <Input
-                                type="number"
-                                value={(row[f.key] as number) ?? 0}
-                                onChange={(e) => updateGridCell(idx, f.key, e.target.value)}
-                                className="h-7 text-xs min-w-[80px] px-1.5"
-                                data-pgrid-row={idx}
-                                data-pgrid-col={colIdx}
-                                onContextMenu={(e) => {
-                                  e.preventDefault();
-                                  copyDownGrid(f.key, idx);
-                                }}
-                                title={`Right-click to copy ${f.label} down from this row`}
-                                onKeyDown={mkKeyHandler}
-                              />
-                            ) : (
-                              <FieldSuggestInput
-                                dir={f.dir}
-                                value={(row[f.key] as string) ?? ""}
-                                onChange={(v) => updateGridCell(idx, f.key, v)}
-                                suggestions={suggestionsByField[f.key] || []}
-                                placeholder={f.label}
-                                className="h-7 text-xs min-w-[80px] px-1.5"
-                                data-pgrid-row={idx}
-                                data-pgrid-col={colIdx}
-                                onContextMenu={(e: React.MouseEvent<HTMLInputElement>) => {
-                                  e.preventDefault();
-                                  copyDownGrid(f.key, idx);
-                                }}
-                                title={`Right-click to copy ${f.label} down from this row`}
-                                onKeyDown={mkKeyHandler}
-                              />
-                            )}
+                            <div className="flex items-center gap-0.5">
+                              <div className="min-w-[80px] flex-1">
+                                {f.type === "number" ? (
+                                  <Input
+                                    type="number"
+                                    value={(row[f.key] as number) ?? 0}
+                                    onChange={(e) => updateGridCell(idx, f.key, e.target.value)}
+                                    className="h-7 text-xs min-w-[80px] px-1.5"
+                                    data-pgrid-row={idx}
+                                    data-pgrid-col={colIdx}
+                                    onContextMenu={(e) => {
+                                      e.preventDefault();
+                                      copyDownGrid(f.key, idx);
+                                    }}
+                                    title={`Right-click to copy ${f.label} down from this row`}
+                                    onKeyDown={mkKeyHandler}
+                                  />
+                                ) : (
+                                  <FieldSuggestInput
+                                    dir={f.dir}
+                                    value={(row[f.key] as string) ?? ""}
+                                    onChange={(v) => updateGridCell(idx, f.key, v)}
+                                    suggestions={suggestionsByField[f.key] || []}
+                                    placeholder={f.label}
+                                    className="h-7 text-xs min-w-[80px] px-1.5"
+                                    data-pgrid-row={idx}
+                                    data-pgrid-col={colIdx}
+                                    onContextMenu={(e: React.MouseEvent<HTMLInputElement>) => {
+                                      e.preventDefault();
+                                      copyDownGrid(f.key, idx);
+                                    }}
+                                    title={`Right-click to copy ${f.label} down from this row`}
+                                    onKeyDown={mkKeyHandler}
+                                  />
+                                )}
+                              </div>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 opacity-40 hover:opacity-100"
+                                onClick={() => copyDownGrid(f.key, idx)}
+                                title={`Copy ${f.label} down from row ${idx + 1}`}
+                              >
+                                <ArrowDown className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </td>
                         );
                       })}

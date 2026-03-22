@@ -491,7 +491,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
 
           <TabsContent value="grid" className="pt-2 flex flex-col min-h-0 flex-1" style={{ display: "flex" }}>
             <p className="text-sm text-muted-foreground mb-3 shrink-0">
-              Edit each check individually in the grid below. Right-click any cell to fill/copy that column down from the current row.
+              Edit each check individually. Use the header arrow to fill/copy from top, or the small arrow in any row to continue from that row.
             </p>
             <div className="rounded border border-border flex-1 min-h-0 overflow-auto" style={{ scrollbarGutter: "stable" }}>
               <table className="w-full text-xs min-w-max">
@@ -503,11 +503,12 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
                         <div className="flex items-center gap-1">
                           {f.label}
                           <Button
+                            type="button"
                             size="icon"
                             variant="ghost"
                             className="h-5 w-5 opacity-50 hover:opacity-100"
-                            onClick={() => copyDownGrid(f.key)}
-                            title={`${f.key === "check_number" ? "Fill" : "Copy"} first row's ${f.label} down, or right-click any cell in this column`}
+                            onClick={() => copyDownGrid(f.key, 0)}
+                            title={`${f.key === "check_number" ? "Fill" : "Copy"} ${f.label} down from top row`}
                           >
                             <ArrowDown className="h-3 w-3" />
                           </Button>
@@ -522,7 +523,19 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
                       <td className="px-2 py-0.5 text-muted-foreground">{idx + 1}</td>
                       {GRID_FIELDS.map((f) => (
                         <td key={f.key} className="px-0.5 py-0.5">
-                          {renderGridCell(row, idx, f)}
+                          <div className="flex items-center gap-0.5">
+                            <div className="min-w-[80px] flex-1">{renderGridCell(row, idx, f)}</div>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 opacity-40 hover:opacity-100"
+                              onClick={() => copyDownGrid(f.key, idx)}
+                              title={`${f.key === "check_number" ? "Fill" : "Copy"} ${f.label} down from row ${idx + 1}`}
+                            >
+                              <ArrowDown className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </td>
                       ))}
                     </tr>
