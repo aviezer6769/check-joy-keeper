@@ -245,7 +245,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
               {payeeName}
             </span>
             <span className="font-bold whitespace-nowrap border border-muted-foreground/40 bg-muted/50 px-2 py-0.5" style={{ fontSize: "10pt" }}>
-              $ {formatCurrency(check.amount).replace("$", "")}
+              $ {check.amount > 0 ? formatCurrency(check.amount).replace("$", "") : ""}
             </span>
           </div>
         </div>
