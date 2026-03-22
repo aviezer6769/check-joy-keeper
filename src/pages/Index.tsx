@@ -126,13 +126,13 @@ const Index = () => {
   };
 
   const handlePrintBlank = (data: { payee: string; check_number: string; check_date: string; payee_record_number: string }) => {
-    const blankCheck: Check = {
-      id: "blank",
-      payee: data.payee,
+    // Save the check to the database first
+    const checkInsert: CheckInsert = {
+      payee: data.payee || "Blank",
       amount: 0,
       check_date: data.check_date,
       check_number: data.check_number || null,
-      status: "Open",
+      status: "Printed",
       memo: null,
       stub_memo: null,
       account_id: selectedAccountId || null,
@@ -140,14 +140,16 @@ const Index = () => {
       payee_record_number: data.payee_record_number || null,
       given_to_payee: null,
       given_to_record_number: null,
-      original_amount: null,
       run_no: null,
-      created_at: "",
-      updated_at: "",
     };
-    setFormOpen(false);
-    setPrintChecks([blankCheck]);
-    setPrintDialogOpen(true);
+    addCheck.mutate(checkInsert, {
+      onSuccess: (savedData) => {
+        const savedCheck = savedData as unknown as Check;
+        setFormOpen(false);
+        setPrintChecks([savedCheck]);
+        setPrintDialogOpen(true);
+      },
+    });
   };
 
   const confirmPrint = () => {
