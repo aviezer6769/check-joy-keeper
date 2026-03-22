@@ -158,11 +158,13 @@ function PayeeBlock({
 function StubRightMeta({
   check,
   includeRecord,
-  includeRun,
+  includeUrgent,
+  payee,
 }: {
   check: Check;
   includeRecord?: boolean;
-  includeRun?: boolean;
+  includeUrgent?: boolean;
+  payee?: Payee | null;
 }) {
   return (
     <div className="text-right text-xs leading-snug space-y-0.5" style={{ width: inches(1.25) }}>
@@ -170,7 +172,7 @@ function StubRightMeta({
       <p>{formatDateShort(check.check_date)}</p>
       <p>{formatCurrency(check.amount)}</p>
       {includeRecord && <p>{check.payee_record_number || ""}</p>}
-      {includeRun && <p>{check.run_no || ""}</p>}
+      {includeUrgent && <p>{payee?.urgent_level != null ? payee.urgent_level : ""}</p>}
     </div>
   );
 }
@@ -308,7 +310,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
           </div>
 
           <div className="absolute right-0 top-0">
-            <StubRightMeta check={check} includeRecord includeRun />
+            <StubRightMeta check={check} includeRecord includeUrgent payee={payee} />
           </div>
 
           <PayeeBlock payee={payee} topOffsetIn={STUB_2.payeeTop} leftOffsetIn={0.48} />
