@@ -124,6 +124,30 @@ const Index = () => {
     setPrintDialogOpen(true);
   };
 
+  const handlePrintBlank = () => {
+    const blankCheck: Check = {
+      id: "blank",
+      payee: "",
+      amount: 0,
+      check_date: new Date().toISOString().split("T")[0],
+      check_number: null,
+      status: "Open",
+      memo: null,
+      stub_memo: null,
+      account_id: selectedAccountId || null,
+      chalikah_id: null,
+      payee_record_number: null,
+      given_to_payee: null,
+      given_to_record_number: null,
+      original_amount: null,
+      run_no: null,
+      created_at: "",
+      updated_at: "",
+    };
+    setPrintChecks([blankCheck]);
+    setPrintDialogOpen(true);
+  };
+
   const confirmPrint = () => {
     setPrintDialogOpen(false);
     setTimeout(() => handlePrint(), 100);
