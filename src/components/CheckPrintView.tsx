@@ -135,12 +135,12 @@ function StubMemoText({ text }: { text: string }) {
           }
         }
         return (
-          <div key={li}>
+          <div key={li} style={{ direction: segments.some(s => s.hebrew) ? "rtl" : "ltr" }}>
             {segments.length === 0 ? "\u00A0" : segments.map((seg, i) =>
               seg.hebrew ? (
-                <span key={i} className="font-hebrew" style={{ fontSize: "11pt" }}>{seg.text}</span>
+                <span key={i} className="font-hebrew" style={{ fontSize: "11pt", direction: "rtl" }}>{seg.text}</span>
               ) : (
-                <span key={i}>{seg.text}</span>
+                <span key={i} style={{ direction: "ltr", unicodeBidi: "embed" }}>{seg.text}</span>
               )
             )}
           </div>
