@@ -264,10 +264,17 @@ export function CheckBulkImport({ accountId, existingChecks = [] }: CheckBulkImp
   const addRow = () => setRows((prev) => [...prev, EMPTY_ROW()]);
   const removeRow = (idx: number) => setRows((prev) => prev.filter((_, i) => i !== idx));
 
-  const copyDown = (key: string) => {
+  const copyDown = (key: string, fromRow = 0) => {
     setRows((prev) => {
-      const firstVal = prev[0]?.[key] || "";
-      return prev.map((r) => ({ ...r, [key]: r[key] || firstVal }));
+      const sourceVal = prev[fromRow]?.[key];
+      if (sourceVal === undefined || sourceVal === null || sourceVal === "") return prev;
+      const isNumericFill = key === "check_number" && /^\d+$/.test(String(sourceVal));
+      const startNum = isNumericFill ? parseInt(String(sourceVal), 10) : 0;
+      return prev.map((r, i) => {
+        if (i <= fromRow) return r;
+        const newVal = isNumericFill ? String(startNum + (i - fromRow)) : sourceVal;
+        return { ...r, [key]: newVal };
+      });
     });
   };
 
