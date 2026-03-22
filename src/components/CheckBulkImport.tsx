@@ -389,7 +389,7 @@ export function CheckBulkImport({ accountId, existingChecks = [] }: CheckBulkImp
               <Button size="sm" variant="outline" onClick={autoNumberChecks} title="Auto-fill check numbers starting from next available">
                 Auto Check #s (from {nextCheckNumber})
               </Button>
-              <span className="text-xs text-muted-foreground">Click a column's ↓ to copy the first row's value down.</span>
+              <span className="text-xs text-muted-foreground">Use header ↓ or row ↓ buttons to copy/fill down.</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
@@ -400,11 +400,12 @@ export function CheckBulkImport({ accountId, existingChecks = [] }: CheckBulkImp
                         <div className="flex items-center gap-1">
                           {CHECK_COLUMN_LABELS[k]}
                           <Button
+                            type="button"
                             size="icon"
                             variant="ghost"
                             className="h-5 w-5 opacity-50 hover:opacity-100"
-                            onClick={() => copyDown(k)}
-                            title={`Copy first row's ${CHECK_COLUMN_LABELS[k]} to all rows`}
+                            onClick={() => copyDown(k, 0)}
+                            title={`${k === "check_number" ? "Fill" : "Copy"} ${CHECK_COLUMN_LABELS[k]} down from top row`}
                           >
                             <ArrowDown className="h-3 w-3" />
                           </Button>
@@ -419,47 +420,59 @@ export function CheckBulkImport({ accountId, existingChecks = [] }: CheckBulkImp
                     <tr key={idx}>
                        {MULTI_ROW_KEYS.map((k, colIdx) => (
                         <td key={k} className="px-1 py-0.5">
-                          <Input
-                            className="h-8 text-xs"
-                            value={row[k] || ""}
-                            onChange={(e) => updateRow(idx, k, e.target.value)}
-                            placeholder={CHECK_COLUMN_LABELS[k]}
-                            type={k === "amount" ? "number" : k === "check_date" ? "date" : "text"}
-                            data-row={idx}
-                            data-col={colIdx}
-                            onKeyDown={(e) => {
-                              const totalCols = MULTI_ROW_KEYS.length;
-                              const totalRows = rows.length;
-                              let nextRow = idx;
-                              let nextCol = colIdx;
-                              if (e.key === "ArrowDown") { nextRow = Math.min(idx + 1, totalRows - 1); }
-                              else if (e.key === "ArrowUp") { nextRow = Math.max(idx - 1, 0); }
-                              else if (e.key === "ArrowRight" && (e.target as HTMLInputElement).selectionStart === (e.target as HTMLInputElement).value.length) {
-                                if (colIdx < totalCols - 1) nextCol = colIdx + 1;
-                                else if (idx < totalRows - 1) { nextRow = idx + 1; nextCol = 0; }
-                              } else if (e.key === "ArrowLeft" && (e.target as HTMLInputElement).selectionStart === 0) {
-                                if (colIdx > 0) nextCol = colIdx - 1;
-                                else if (idx > 0) { nextRow = idx - 1; nextCol = totalCols - 1; }
-                              } else if (e.key === "Tab" && !e.shiftKey) {
-                                if (colIdx < totalCols - 1) { nextCol = colIdx + 1; }
-                                else if (idx < totalRows - 1) { nextRow = idx + 1; nextCol = 0; }
-                                else return;
-                                e.preventDefault();
-                              } else if (e.key === "Tab" && e.shiftKey) {
-                                if (colIdx > 0) { nextCol = colIdx - 1; }
-                                else if (idx > 0) { nextRow = idx - 1; nextCol = totalCols - 1; }
-                                else return;
-                                e.preventDefault();
-                              } else if (e.key === "Enter") {
-                                nextRow = Math.min(idx + 1, totalRows - 1);
-                                e.preventDefault();
-                              } else return;
-                              if (nextRow !== idx || nextCol !== colIdx) {
-                                const next = document.querySelector<HTMLInputElement>(`input[data-row="${nextRow}"][data-col="${nextCol}"]`);
-                                next?.focus();
-                              }
-                            }}
-                          />
+                          <div className="flex items-center gap-0.5">
+                            <Input
+                              className="h-8 text-xs flex-1"
+                              value={row[k] || ""}
+                              onChange={(e) => updateRow(idx, k, e.target.value)}
+                              placeholder={CHECK_COLUMN_LABELS[k]}
+                              type={k === "amount" ? "number" : k === "check_date" ? "date" : "text"}
+                              data-row={idx}
+                              data-col={colIdx}
+                              onKeyDown={(e) => {
+                                const totalCols = MULTI_ROW_KEYS.length;
+                                const totalRows = rows.length;
+                                let nextRow = idx;
+                                let nextCol = colIdx;
+                                if (e.key === "ArrowDown") { nextRow = Math.min(idx + 1, totalRows - 1); }
+                                else if (e.key === "ArrowUp") { nextRow = Math.max(idx - 1, 0); }
+                                else if (e.key === "ArrowRight" && (e.target as HTMLInputElement).selectionStart === (e.target as HTMLInputElement).value.length) {
+                                  if (colIdx < totalCols - 1) nextCol = colIdx + 1;
+                                  else if (idx < totalRows - 1) { nextRow = idx + 1; nextCol = 0; }
+                                } else if (e.key === "ArrowLeft" && (e.target as HTMLInputElement).selectionStart === 0) {
+                                  if (colIdx > 0) nextCol = colIdx - 1;
+                                  else if (idx > 0) { nextRow = idx - 1; nextCol = totalCols - 1; }
+                                } else if (e.key === "Tab" && !e.shiftKey) {
+                                  if (colIdx < totalCols - 1) { nextCol = colIdx + 1; }
+                                  else if (idx < totalRows - 1) { nextRow = idx + 1; nextCol = 0; }
+                                  else return;
+                                  e.preventDefault();
+                                } else if (e.key === "Tab" && e.shiftKey) {
+                                  if (colIdx > 0) { nextCol = colIdx - 1; }
+                                  else if (idx > 0) { nextRow = idx - 1; nextCol = totalCols - 1; }
+                                  else return;
+                                  e.preventDefault();
+                                } else if (e.key === "Enter") {
+                                  nextRow = Math.min(idx + 1, totalRows - 1);
+                                  e.preventDefault();
+                                } else return;
+                                if (nextRow !== idx || nextCol !== colIdx) {
+                                  const next = document.querySelector<HTMLInputElement>(`input[data-row="${nextRow}"][data-col="${nextCol}"]`);
+                                  next?.focus();
+                                }
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 shrink-0 opacity-40 hover:opacity-100"
+                              onClick={() => copyDown(k, idx)}
+                              title={`${k === "check_number" ? "Fill" : "Copy"} ${CHECK_COLUMN_LABELS[k]} down from row ${idx + 1}`}
+                            >
+                              <ArrowDown className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </td>
                       ))}
                       <td className="px-1">
