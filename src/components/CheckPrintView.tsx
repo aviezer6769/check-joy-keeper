@@ -218,9 +218,9 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
           </div>
         </div>
 
-        {/* Bank name */}
+        {/* Bank name - aligned with last payer line */}
         {account?.bank_name && (
-          <div className="text-center text-xs" style={{ marginTop: inches(0.02) }}>
+          <div className="text-center text-xs" style={{ marginTop: inches(-0.14) }}>
             <p>{account.bank_name}</p>
           </div>
         )}
