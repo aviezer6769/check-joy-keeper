@@ -109,6 +109,7 @@ export type Database = {
           payee_record_number: string | null
           run_no: string | null
           status: string
+          stub_memo: string | null
           updated_at: string
         }
         Insert: {
@@ -127,6 +128,7 @@ export type Database = {
           payee_record_number?: string | null
           run_no?: string | null
           status?: string
+          stub_memo?: string | null
           updated_at?: string
         }
         Update: {
@@ -145,6 +147,7 @@ export type Database = {
           payee_record_number?: string | null
           run_no?: string | null
           status?: string
+          stub_memo?: string | null
           updated_at?: string
         }
         Relationships: [
