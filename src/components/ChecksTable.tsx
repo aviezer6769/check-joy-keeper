@@ -80,6 +80,7 @@ function getSortValue(check: Check, key: string, chalikahMap: Record<string, str
     case "status": return check.status;
     case "given_to": return (check.given_to_payee || "").toLowerCase();
     case "memo": return (check.memo || "").toLowerCase();
+    case "stub_memo": return (check.stub_memo || "").toLowerCase();
     case "record_number": {
       const n = parseFloat(check.payee_record_number || "");
       return isNaN(n) ? (check.payee_record_number || "") : n;
