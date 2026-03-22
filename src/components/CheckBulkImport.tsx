@@ -13,7 +13,7 @@ import * as XLSX from "xlsx";
 import { type CheckInsert } from "@/hooks/useChecks";
 
 const CHECK_COLUMN_KEYS = [
-  "payee", "amount", "check_number", "check_date", "status", "memo",
+  "payee", "amount", "check_number", "check_date", "status", "memo", "stub_memo",
   "payee_record_number", "given_to_payee", "given_to_record_number", "run_no",
 ] as const;
 
@@ -26,6 +26,7 @@ const CHECK_COLUMN_LABELS: Record<CheckColumnKey, string> = {
   check_date: "Date",
   status: "Status",
   memo: "Memo",
+  stub_memo: "Stub Memo",
   payee_record_number: "Record #",
   given_to_payee: "Given To",
   given_to_record_number: "Given To Record #",
