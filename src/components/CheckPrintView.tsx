@@ -215,13 +215,13 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
           </div>
           <div className="text-right text-xs leading-tight">
             <p className="font-semibold" style={{ fontSize: "10pt" }}>{check.check_number || ""}</p>
-            {account?.bank_name && <p>{account.bank_name}</p>}
           </div>
         </div>
 
         {/* Date row */}
-        <div className="flex items-baseline justify-end" style={{ marginTop: inches(FACE.dateTop) }}>
-          <div className="flex items-baseline gap-1" style={{ fontSize: "10pt" }}>
+        <div className="flex items-baseline justify-between" style={{ marginTop: inches(FACE.dateTop) }}>
+          {account?.bank_name && <p className="text-xs">{account.bank_name}</p>}
+          <div className="flex items-baseline gap-1 ml-auto" style={{ fontSize: "10pt" }}>
             <span className="font-semibold">Date</span>
             <span className="border-b border-foreground inline-block min-w-[120px] pb-0.5 text-center">
               {formatDateShort(check.check_date)}
