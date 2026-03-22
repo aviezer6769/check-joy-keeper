@@ -14,6 +14,7 @@ import { ChecksTable, CHECK_COLUMNS } from "@/components/ChecksTable";
 import { CheckPrintView } from "@/components/CheckPrintView";
 import { StatsCards } from "@/components/StatsCards";
 import { AccountManager } from "@/components/AccountManager";
+import { PayeeAutocomplete } from "@/components/PayeeAutocomplete";
 import { CheckBulkEdit } from "@/components/CheckBulkEdit";
 import { CheckBulkImport } from "@/components/CheckBulkImport";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
