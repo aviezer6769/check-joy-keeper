@@ -53,6 +53,7 @@ const GRID_FIELDS: FieldDef[] = [
   { key: "chalikah_id", label: "Chalikah", type: "chalikah" },
   { key: "status", label: "Status", type: "status" },
   { key: "memo", label: "Memo" },
+  { key: "stub_memo", label: "Stub Memo" },
   { key: "given_to_record_number", label: "Given To #" },
   { key: "given_to_payee", label: "Given To" },
 ];

@@ -41,6 +41,7 @@ const CHECK_HEADER_ALIASES: Record<string, CheckColumnKey> = {
   date: "check_date", check_date: "check_date", "check date": "check_date", checkdate: "check_date",
   status: "status",
   memo: "memo", notes: "memo",
+  "stub memo": "stub_memo", stub_memo: "stub_memo", "stub_memo": "stub_memo",
   "payee record #": "payee_record_number", payee_record_number: "payee_record_number",
   "record #": "payee_record_number", "record number": "payee_record_number",
   "record id": "payee_record_number", record_id: "payee_record_number", recordid: "payee_record_number",
