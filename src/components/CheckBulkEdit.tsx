@@ -207,11 +207,11 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
     );
   };
 
-  const copyDownGrid = (key: string) => {
+  const copyDownGrid = (key: string, fromRow = 0) => {
     setGridRows((prev) => {
-      const firstVal = prev[0]?.[key];
-      if (firstVal === undefined || firstVal === null || firstVal === "") return prev;
-      return prev.map((r) => ({ ...r, [key]: r[key] || firstVal }));
+      const sourceVal = prev[fromRow]?.[key];
+      if (sourceVal === undefined || sourceVal === null || sourceVal === "") return prev;
+      return prev.map((r, i) => (i > fromRow ? { ...r, [key]: sourceVal } : r));
     });
   };
 
