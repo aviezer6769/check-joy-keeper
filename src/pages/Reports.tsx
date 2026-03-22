@@ -49,6 +49,7 @@ const Reports = () => {
   const { data: savedReports = [], isLoading: reportsLoading } = useSavedReports();
   const saveReport = useSaveReport();
   const deleteReport = useDeleteReport();
+  const updateReport = useUpdateReport();
 
   const [accountFilter, setAccountFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("issued");
