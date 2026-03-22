@@ -725,6 +725,40 @@ const Reports = () => {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Rename dialog */}
+      <Dialog open={!!renameReport} onOpenChange={() => setRenameReport(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Report</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label>Report Name</Label>
+            <Input
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && renameReport && renameValue.trim()) {
+                  updateReport.mutate({ id: renameReport.id, name: renameValue.trim() }, { onSuccess: () => setRenameReport(null) });
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameReport(null)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (renameReport && renameValue.trim()) {
+                  updateReport.mutate({ id: renameReport.id, name: renameValue.trim() }, { onSuccess: () => setRenameReport(null) });
+                }
+              }}
+              disabled={!renameValue.trim() || updateReport.isPending}
+            >
+              Rename
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
