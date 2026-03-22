@@ -128,31 +128,19 @@ const Index = () => {
     setPrintDialogOpen(true);
   };
 
-  const handlePrintBlank = () => {
-    setBlankPayee("");
-    const maxNum = checks
-      .filter((c) => c.account_id === selectedAccountId && c.check_number)
-      .reduce((max, c) => {
-        const n = parseInt(c.check_number!, 10);
-        return !isNaN(n) && n > max ? n : max;
-      }, 0);
-    setBlankCheckNumber(maxNum > 0 ? String(maxNum + 1) : "");
-    setBlankDialogOpen(true);
-  };
-
-  const confirmBlankPrint = () => {
+  const handlePrintBlank = (data: { payee: string; check_number: string; check_date: string; payee_record_number: string }) => {
     const blankCheck: Check = {
       id: "blank",
-      payee: blankPayee,
+      payee: data.payee,
       amount: 0,
-      check_date: new Date().toISOString().split("T")[0],
-      check_number: blankCheckNumber || null,
+      check_date: data.check_date,
+      check_number: data.check_number || null,
       status: "Open",
       memo: null,
       stub_memo: null,
       account_id: selectedAccountId || null,
       chalikah_id: null,
-      payee_record_number: null,
+      payee_record_number: data.payee_record_number || null,
       given_to_payee: null,
       given_to_record_number: null,
       original_amount: null,
@@ -160,7 +148,7 @@ const Index = () => {
       created_at: "",
       updated_at: "",
     };
-    setBlankDialogOpen(false);
+    setFormOpen(false);
     setPrintChecks([blankCheck]);
     setPrintDialogOpen(true);
   };
