@@ -101,6 +101,7 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
         amount: amount || "",
         check_date: checkDate,
         memo: "",
+        stub_memo: "",
         run_no: runNo || "",
       }))
     );
