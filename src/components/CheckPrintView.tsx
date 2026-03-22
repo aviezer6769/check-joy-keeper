@@ -310,7 +310,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
           </div>
 
           <div className="absolute right-0 top-0">
-            <StubRightMeta check={check} includeRecord includeRun />
+            <StubRightMeta check={check} includeRecord includeUrgent payee={payee} />
           </div>
 
           <PayeeBlock payee={payee} topOffsetIn={STUB_2.payeeTop} leftOffsetIn={0.48} />
