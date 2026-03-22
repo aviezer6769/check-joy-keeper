@@ -388,8 +388,8 @@ const Index = () => {
       <AlertDialog open={blankDialogOpen} onOpenChange={setBlankDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Print Blank Check</AlertDialogTitle>
-            <AlertDialogDescription>Optionally enter a payee and check number.</AlertDialogDescription>
+            <AlertDialogTitle>Print Check (Blank Amount)</AlertDialogTitle>
+            <AlertDialogDescription>All fields will print normally except the amount.</AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1">
