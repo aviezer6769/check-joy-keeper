@@ -275,7 +275,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
               <img src={signatureImg} alt="Signature" className="h-10 mx-auto object-contain" />
             )}
             <div className="border-t-2 border-foreground mt-0.5" />
-            <span style={{ fontSize: "7pt" }} className="opacity-50">AUTHORIZED SIGNATURE</span>
+            
           </div>
         </div>
 
