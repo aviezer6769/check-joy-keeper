@@ -296,7 +296,7 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                             variant="ghost"
                             className="h-5 w-5 opacity-50 hover:opacity-100"
                             onClick={() => copyDownGrid(f.key)}
-                            title={`Copy first row's ${f.label} down (or Ctrl+Shift+D from any cell)`}
+                            title={`Copy first row's ${f.label} down (or Ctrl+Enter from any cell)`}
                           >
                             <ArrowDown className="h-3 w-3" />
                           </Button>
@@ -311,7 +311,7 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                       <td className="px-2 py-0.5 text-muted-foreground">{idx + 1}</td>
                       {GRID_FIELDS.map((f, colIdx) => {
                         const mkKeyHandler = (e: React.KeyboardEvent<HTMLInputElement>) => {
-                          if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "D") {
+                          if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
                             e.preventDefault();
                             copyDownGrid(f.key, idx);
                             return;
