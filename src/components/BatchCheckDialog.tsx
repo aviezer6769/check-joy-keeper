@@ -27,6 +27,7 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
   const qc = useQueryClient();
 
   const [amount, setAmount] = useState("");
+  const [maxPerCheck, setMaxPerCheck] = useState("");
   const [checkDate, setCheckDate] = useState(new Date().toISOString().split("T")[0]);
   const [chalikahId, setChalikahId] = useState<string>("__none__");
   const [runNo, setRunNo] = useState("");
@@ -44,6 +45,28 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
   // Default to first account
   const effectiveAccountId = accountId || accounts[0]?.id || "";
 
+  // Split an amount into chunks based on maxPerCheck
+  const splitAmount = (total: number, max: number): number[] => {
+    if (!max || max <= 0 || max >= total) return [total];
+    const parts: number[] = [];
+    let remaining = total;
+    while (remaining > 0) {
+      const chunk = Math.min(remaining, max);
+      parts.push(parseFloat(chunk.toFixed(2)));
+      remaining = parseFloat((remaining - chunk).toFixed(2));
+    }
+    return parts;
+  };
+
+  // Calculate total checks preview
+  const totalChecksPreview = useMemo(() => {
+    const amt = parseFloat(amount);
+    const max = parseFloat(maxPerCheck);
+    if (!amt || amt <= 0) return payees.length;
+    const parts = splitAmount(amt, max);
+    return payees.length * parts.length;
+  }, [amount, maxPerCheck, payees.length]);
+
   const handleSubmit = async () => {
     if (!effectiveAccountId) {
       toast.error("Please select an account");
@@ -55,21 +78,34 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
     }
 
     setSubmitting(true);
+    const totalAmount = parseFloat(amount);
+    const max = parseFloat(maxPerCheck);
+    const amountParts = splitAmount(totalAmount, max);
     const startNum = manualStartNumber ? parseInt(manualStartNumber, 10) : nextCheckNumber;
-    const checks: CheckInsert[] = payees.map((p, i) => ({
-      payee: p.payee_name,
-      amount: parseFloat(amount),
-      check_number: autoCheckNumbers ? String(startNum + i) : null,
-      check_date: checkDate,
-      chalikah_id: chalikahId === "__none__" ? null : chalikahId,
-      status: "Open" as const,
-      memo: null,
-      payee_record_number: p.record_id || null,
-      given_to_payee: null,
-      given_to_record_number: null,
-      run_no: runNo || null,
-      account_id: effectiveAccountId,
-    }));
+
+    let checkIndex = 0;
+    const checks: CheckInsert[] = [];
+
+    // Generate checks grouped by payee: all splits for payee 1, then payee 2, etc.
+    for (const p of payees) {
+      for (const partAmount of amountParts) {
+        checks.push({
+          payee: p.payee_name,
+          amount: partAmount,
+          check_number: autoCheckNumbers ? String(startNum + checkIndex) : null,
+          check_date: checkDate,
+          chalikah_id: chalikahId === "__none__" ? null : chalikahId,
+          status: "Open" as const,
+          memo: null,
+          payee_record_number: p.record_id || null,
+          given_to_payee: null,
+          given_to_record_number: null,
+          run_no: runNo || null,
+          account_id: effectiveAccountId,
+        });
+        checkIndex++;
+      }
+    }
 
     const { error } = await supabase.from("checks").insert(checks);
     setSubmitting(false);
