@@ -1,0 +1,1 @@
+ALTER TABLE public.checks ADD COLUMN stub_memo text DEFAULT NULL;

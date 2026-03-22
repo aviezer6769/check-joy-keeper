@@ -13,7 +13,7 @@ import * as XLSX from "xlsx";
 import { type CheckInsert } from "@/hooks/useChecks";
 
 const CHECK_COLUMN_KEYS = [
-  "payee", "amount", "check_number", "check_date", "status", "memo",
+  "payee", "amount", "check_number", "check_date", "status", "memo", "stub_memo",
   "payee_record_number", "given_to_payee", "given_to_record_number", "run_no",
 ] as const;
 
@@ -26,6 +26,7 @@ const CHECK_COLUMN_LABELS: Record<CheckColumnKey, string> = {
   check_date: "Date",
   status: "Status",
   memo: "Memo",
+  stub_memo: "Stub Memo",
   payee_record_number: "Record #",
   given_to_payee: "Given To",
   given_to_record_number: "Given To Record #",
@@ -40,6 +41,7 @@ const CHECK_HEADER_ALIASES: Record<string, CheckColumnKey> = {
   date: "check_date", check_date: "check_date", "check date": "check_date", checkdate: "check_date",
   status: "status",
   memo: "memo", notes: "memo",
+  "stub memo": "stub_memo", stub_memo: "stub_memo", stubmemo: "stub_memo",
   "payee record #": "payee_record_number", payee_record_number: "payee_record_number",
   "record #": "payee_record_number", "record number": "payee_record_number",
   "record id": "payee_record_number", record_id: "payee_record_number", recordid: "payee_record_number",
@@ -154,6 +156,7 @@ function rowToCheck(row: Record<string, string>, accountId: string | null, payee
     check_date: parseDate(row.check_date),
     status: (["Open", "Printed", "Given", "Cleared", "Void"].includes(row.status) ? row.status : "Open") as any,
     memo: row.memo || null,
+    stub_memo: row.stub_memo || null,
     payee_record_number: recordId || null,
     given_to_payee: row.given_to_payee || null,
     given_to_record_number: row.given_to_record_number || null,

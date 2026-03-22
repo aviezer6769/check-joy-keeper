@@ -56,6 +56,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
   const [checkDate, setCheckDate] = useState(initialData?.check_date ?? new Date().toISOString().split("T")[0]);
   const [status, setStatus] = useState<string>(initialData?.status ?? "Open");
   const [memo, setMemo] = useState(initialData?.memo ?? "");
+  const [stubMemo, setStubMemo] = useState(initialData?.stub_memo ?? "");
   const [chalikahId, setChalikahId] = useState(initialData?.chalikah_id ?? "");
   const [newChalikahName, setNewChalikahName] = useState("");
   const [payeeRecordNumber, setPayeeRecordNumber] = useState(initialData?.payee_record_number ?? "");
@@ -150,6 +151,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       chalikah_id: chalikahId || null,
       status: status as any,
       memo: memo || null,
+      stub_memo: stubMemo || null,
       payee_record_number: payeeRecordNumber || null,
       given_to_payee: givenToPayee || null,
       given_to_record_number: givenToRecordNumber || null,
@@ -164,6 +166,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       setChalikahId("");
       setStatus("Open");
       setMemo("");
+      setStubMemo("");
       setPayeeRecordNumber("");
       setGivenToPayee("");
       setGivenToRecordNumber("");
@@ -327,6 +330,10 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
           <div className="space-y-2">
             <Label htmlFor="memo">Memo</Label>
             <Textarea id="memo" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="Purpose or notes" rows={2} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="stub_memo">Stub Memo</Label>
+            <Textarea id="stub_memo" value={stubMemo} onChange={(e) => setStubMemo(e.target.value)} placeholder="Memo for check stub" rows={2} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

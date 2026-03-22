@@ -14,6 +14,7 @@ export interface Check {
   chalikah_id: string | null;
   status: CheckStatus;
   memo: string | null;
+  stub_memo: string | null;
   payee_record_number: string | null;
   given_to_payee: string | null;
   given_to_record_number: string | null;
@@ -41,7 +42,7 @@ export function useChecks(search?: string, accountId?: string | null) {
 
       if (search) {
         query = query.or(
-          `payee.ilike.%${search}%,check_number.ilike.%${search}%,memo.ilike.%${search}%,payee_record_number.ilike.%${search}%,given_to_payee.ilike.%${search}%,given_to_record_number.ilike.%${search}%,run_no.ilike.%${search}%`
+          `payee.ilike.%${search}%,check_number.ilike.%${search}%,memo.ilike.%${search}%,stub_memo.ilike.%${search}%,payee_record_number.ilike.%${search}%,given_to_payee.ilike.%${search}%,given_to_record_number.ilike.%${search}%,run_no.ilike.%${search}%`
         );
       }
 

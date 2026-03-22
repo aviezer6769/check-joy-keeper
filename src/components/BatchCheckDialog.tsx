@@ -27,6 +27,7 @@ interface GridRow {
   amount: string;
   check_date: string;
   memo: string;
+  stub_memo: string;
   run_no: string;
 }
 
@@ -36,6 +37,7 @@ const GRID_COLS: { key: keyof GridRow; label: string; type?: string; readOnly?: 
   { key: "amount", label: "Amount", type: "number" },
   { key: "check_date", label: "Date", type: "date" },
   { key: "memo", label: "Memo" },
+  { key: "stub_memo", label: "Stub Memo" },
   { key: "run_no", label: "Run No." },
 ];
 
@@ -99,6 +101,7 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
         amount: amount || "",
         check_date: checkDate,
         memo: "",
+        stub_memo: "",
         run_no: runNo || "",
       }))
     );
@@ -146,7 +149,8 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
           check_date: checkDate,
           chalikah_id: chalikahId === "__none__" ? null : chalikahId,
           status: "Open" as const,
-          memo: null,
+           memo: null,
+          stub_memo: null,
           payee_record_number: p.record_id || null,
           given_to_payee: null,
           given_to_record_number: null,
@@ -202,6 +206,7 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
           chalikah_id: chalikahId === "__none__" ? null : chalikahId,
           status: "Open" as const,
           memo: row.memo || null,
+          stub_memo: row.stub_memo || null,
           payee_record_number: row.record_id || null,
           given_to_payee: null,
           given_to_record_number: null,

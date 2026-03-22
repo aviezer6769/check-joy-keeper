@@ -31,6 +31,7 @@ const CHECK_COLUMNS: ColumnDef[] = [
   { key: "status", label: "Status" },
   { key: "given_to", label: "Given To" },
   { key: "memo", label: "Memo" },
+  { key: "stub_memo", label: "Stub Memo", defaultVisible: false },
   { key: "record_number", label: "Record #" },
   { key: "given_to_record", label: "Given To #", defaultVisible: false },
   { key: "run_no", label: "Run No.", defaultVisible: false },
@@ -58,6 +59,7 @@ function getCheckTextValue(check: Check, key: string, chalikahMap: Record<string
     case "status": return check.status;
     case "given_to": return check.given_to_payee || "";
     case "memo": return check.memo || "";
+    case "stub_memo": return check.stub_memo || "";
     case "record_number": return check.payee_record_number || "";
     case "given_to_record": return check.given_to_record_number || "";
     case "run_no": return check.run_no || "";
@@ -78,6 +80,7 @@ function getSortValue(check: Check, key: string, chalikahMap: Record<string, str
     case "status": return check.status;
     case "given_to": return (check.given_to_payee || "").toLowerCase();
     case "memo": return (check.memo || "").toLowerCase();
+    case "stub_memo": return (check.stub_memo || "").toLowerCase();
     case "record_number": {
       const n = parseFloat(check.payee_record_number || "");
       return isNaN(n) ? (check.payee_record_number || "") : n;
@@ -201,6 +204,8 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
         ) : <span className="text-sm">—</span>;
       case "memo":
         return <span className="text-sm max-w-[200px] truncate block">{check.memo || "—"}</span>;
+      case "stub_memo":
+        return <span className="text-sm max-w-[200px] truncate block">{check.stub_memo || "—"}</span>;
       case "record_number":
         return <span className="font-mono text-sm">{check.payee_record_number || "—"}</span>;
       case "given_to_record":
