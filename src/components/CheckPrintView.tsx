@@ -283,7 +283,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
 
         {/* MICR line */}
         <div
-          className="tracking-[0.16em] text-foreground"
+          className="tracking-[0.16em]"
           style={{
             fontFamily: "'MICR', monospace",
             fontSize: "9pt",
