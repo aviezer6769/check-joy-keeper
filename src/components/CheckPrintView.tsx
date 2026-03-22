@@ -141,14 +141,15 @@ function PayeeBlock({
 
   return (
     <div
-      className="text-xs leading-snug"
+      className="leading-snug"
       style={{
         position: "absolute",
         top: inches(topOffsetIn),
         left: inches(leftOffsetIn),
+        fontSize: "10pt",
       }}
     >
-      {yiddishName && <p className="font-hebrew">{yiddishName}</p>}
+      {yiddishName && <p className="font-hebrew" style={{ fontSize: "11pt" }}>{yiddishName}</p>}
       <p>{payee.payee_name}</p>
       {streetLine && <p>{streetLine}</p>}
       {cityLine && <p>{cityLine}</p>}
