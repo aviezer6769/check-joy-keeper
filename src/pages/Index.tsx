@@ -128,12 +128,18 @@ const Index = () => {
   };
 
   const handlePrintBlank = () => {
+    setBlankPayee("");
+    setBlankCheckNumber("");
+    setBlankDialogOpen(true);
+  };
+
+  const confirmBlankPrint = () => {
     const blankCheck: Check = {
       id: "blank",
-      payee: "",
+      payee: blankPayee,
       amount: 0,
       check_date: new Date().toISOString().split("T")[0],
-      check_number: null,
+      check_number: blankCheckNumber || null,
       status: "Open",
       memo: null,
       stub_memo: null,
@@ -147,6 +153,7 @@ const Index = () => {
       created_at: "",
       updated_at: "",
     };
+    setBlankDialogOpen(false);
     setPrintChecks([blankCheck]);
     setPrintDialogOpen(true);
   };
