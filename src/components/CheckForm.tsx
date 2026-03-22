@@ -410,6 +410,23 @@ export function CheckForm({ open, onOpenChange, onSubmit, onPrintBlank, initialD
           )}
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            {!initialData && onPrintBlank && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  onPrintBlank({
+                    payee,
+                    check_number: checkNumber,
+                    check_date: checkDate,
+                    payee_record_number: payeeRecordNumber,
+                  });
+                }}
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Print Blank
+              </Button>
+            )}
             <Button type="submit" disabled={isPending}>
               {isPending ? "Saving..." : initialData ? "Update" : "Add Check"}
             </Button>
