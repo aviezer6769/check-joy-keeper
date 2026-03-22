@@ -129,7 +129,13 @@ const Index = () => {
 
   const handlePrintBlank = () => {
     setBlankPayee("");
-    setBlankCheckNumber("");
+    const maxNum = checks
+      .filter((c) => c.account_id === selectedAccountId && c.check_number)
+      .reduce((max, c) => {
+        const n = parseInt(c.check_number!, 10);
+        return !isNaN(n) && n > max ? n : max;
+      }, 0);
+    setBlankCheckNumber(maxNum > 0 ? String(maxNum + 1) : "");
     setBlankDialogOpen(true);
   };
 
