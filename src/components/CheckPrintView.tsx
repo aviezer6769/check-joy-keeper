@@ -270,9 +270,11 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
             </span>
           </div>
           <div style={{ minWidth: "200px", textAlign: "center" }}>
-            {showSignature && (
-              <img src={signatureImg} alt="Signature" className="h-14 mx-auto object-contain" />
-            )}
+            <div style={{ height: "3.5rem", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+              {showSignature && (
+                <img src={signatureImg} alt="Signature" className="h-14 object-contain" />
+              )}
+            </div>
             <div style={{ borderTop: "1px solid currentColor", marginTop: "2px" }} />
           </div>
         </div>
