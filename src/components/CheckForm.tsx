@@ -151,6 +151,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       chalikah_id: chalikahId || null,
       status: status as any,
       memo: memo || null,
+      stub_memo: stubMemo || null,
       payee_record_number: payeeRecordNumber || null,
       given_to_payee: givenToPayee || null,
       given_to_record_number: givenToRecordNumber || null,
