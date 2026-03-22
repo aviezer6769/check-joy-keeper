@@ -318,6 +318,7 @@ const Index = () => {
         open={formOpen}
         onOpenChange={(open) => { setFormOpen(open); if (!open) setEditingCheck(null); }}
         onSubmit={handleSubmit}
+        onPrintBlank={handlePrintBlank}
         initialData={editingCheck}
         isPending={addCheck.isPending || updateCheck.isPending}
         existingChecks={checks}
