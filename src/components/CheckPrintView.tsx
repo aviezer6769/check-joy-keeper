@@ -25,7 +25,7 @@ const FACE = {
   payLineTop: 0.06,
   wordsTop: 0.05,
   memoTop: 0.14,
-  micrBottom: 0.12,
+  micrBottom: 0.16,
 };
 
 const STUB_1 = {
@@ -218,13 +218,6 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
           </div>
         </div>
 
-        {/* Bank name under payer info */}
-        {account?.bank_name && (
-          <div className="text-xs italic opacity-70" style={{ marginTop: inches(0.04) }}>
-            {account.bank_name}
-          </div>
-        )}
-
         {/* Date row */}
         <div className="flex items-baseline justify-end" style={{ marginTop: inches(FACE.dateTop) }}>
           <div className="flex items-baseline gap-1" style={{ fontSize: "10pt" }}>
@@ -262,7 +255,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         </div>
 
         {/* Memo and Signature */}
-        <div className="flex justify-between items-end" style={{ marginTop: inches(FACE.memoTop) }}>
+        <div className="flex justify-between items-end" style={{ marginTop: inches(FACE.memoTop + 0.06) }}>
           <div className="flex items-baseline gap-1" style={{ fontSize: "9pt" }}>
             <span className="font-semibold">Memo</span>
             <span style={{ borderBottom: "1px solid currentColor", display: "inline-block", minWidth: "220px", paddingBottom: "2px", paddingLeft: "8px" }}>
