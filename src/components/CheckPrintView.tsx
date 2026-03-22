@@ -361,7 +361,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
 
           {check.stub_memo && (
             <div
-              className="absolute border border-muted-foreground/40 rounded-sm px-2 py-1"
+              className="absolute border border-muted-foreground/40 rounded-sm px-2 py-1 overflow-hidden"
               style={{
                 fontSize: "10pt",
                 top: inches(STUB_1.payeeTop),
