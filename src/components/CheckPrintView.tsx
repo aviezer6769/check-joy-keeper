@@ -213,8 +213,9 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
             </p>
             {account?.payer_phone && <p>{account.payer_phone}</p>}
           </div>
-          <div className="text-right">
+          <div className="text-right text-xs leading-tight">
             <p className="font-semibold" style={{ fontSize: "10pt" }}>{check.check_number || ""}</p>
+            {account?.bank_name && <p>{account.bank_name}</p>}
           </div>
         </div>
 
