@@ -9,7 +9,7 @@ import { type Check, type CheckInsert, CHECK_STATUSES } from "@/hooks/useChecks"
 import { usePayees, type Payee } from "@/hooks/usePayees";
 import { useChalikah, useAddChalikah } from "@/hooks/useChalikah";
 import { buildPayeeName } from "@/lib/payee-utils";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Printer } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function buildYiddishName(p: Payee) {
