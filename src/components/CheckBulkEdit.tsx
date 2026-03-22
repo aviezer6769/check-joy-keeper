@@ -375,6 +375,11 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
               updateGridCell(idx, "given_to_payee", p.payee_name);
             }
           }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            copyDownGrid(f.key, idx);
+          }}
+          title={`Right-click to ${f.key === "check_number" ? "fill" : "copy"} ${f.label} down from this row`}
           payees={payees}
           searchField={PAYEE_FIELDS[f.key]}
           placeholder={f.label}
@@ -390,6 +395,11 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
         className="h-7 text-xs min-w-[80px] px-1.5"
         data-grid-row={idx}
         data-grid-col={colIdx}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          copyDownGrid(f.key, idx);
+        }}
+        title={`Right-click to ${f.key === "check_number" ? "fill" : "copy"} ${f.label} down from this row`}
         onKeyDown={(e) => {
           if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
             e.preventDefault();
@@ -481,7 +491,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
 
           <TabsContent value="grid" className="pt-2 flex flex-col min-h-0 flex-1" style={{ display: "flex" }}>
             <p className="text-sm text-muted-foreground mb-3 shrink-0">
-              Edit each check individually in the grid below.
+              Edit each check individually in the grid below. Right-click any cell to fill/copy that column down from the current row.
             </p>
             <div className="rounded border border-border flex-1 min-h-0 overflow-auto" style={{ scrollbarGutter: "stable" }}>
               <table className="w-full text-xs min-w-max">
@@ -497,7 +507,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
                             variant="ghost"
                             className="h-5 w-5 opacity-50 hover:opacity-100"
                             onClick={() => copyDownGrid(f.key)}
-                            title={`Copy first row's ${f.label} down (or Ctrl+Enter from any cell)`}
+                            title={`${f.key === "check_number" ? "Fill" : "Copy"} first row's ${f.label} down, or right-click any cell in this column`}
                           >
                             <ArrowDown className="h-3 w-3" />
                           </Button>

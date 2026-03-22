@@ -11,6 +11,9 @@ interface PayeeAutocompleteProps {
   placeholder?: string;
   className?: string;
   type?: string;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onContextMenu?: (e: React.MouseEvent<HTMLInputElement>) => void;
+  [key: string]: any;
 }
 
 export function PayeeAutocomplete({
@@ -22,6 +25,9 @@ export function PayeeAutocomplete({
   placeholder,
   className = "h-7 text-xs min-w-[80px] px-1.5",
   type = "text",
+  onKeyDown: externalKeyDown,
+  onContextMenu,
+  ...restProps
 }: PayeeAutocompleteProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -60,8 +66,12 @@ export function PayeeAutocomplete({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showSuggestions || filtered.length === 0) return;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || filtered.length === 0) {
+      externalKeyDown?.(e);
+      return;
+    }
+
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActiveIndex((prev) => (prev < filtered.length - 1 ? prev + 1 : 0));
@@ -74,6 +84,8 @@ export function PayeeAutocomplete({
       setShowSuggestions(false);
     } else if (e.key === "Escape") {
       setShowSuggestions(false);
+    } else {
+      externalKeyDown?.(e);
     }
   };
 
@@ -95,8 +107,10 @@ export function PayeeAutocomplete({
         }}
         onFocus={() => query && setShowSuggestions(true)}
         onKeyDown={handleKeyDown}
+        onContextMenu={onContextMenu}
         placeholder={placeholder}
         className={className}
+        {...restProps}
       />
       {showSuggestions && filtered.length > 0 && (
         <div ref={listRef} className="absolute z-50 top-full left-0 right-0 mt-0.5 bg-popover border border-border rounded shadow-lg max-h-40 overflow-y-auto min-w-[180px]">

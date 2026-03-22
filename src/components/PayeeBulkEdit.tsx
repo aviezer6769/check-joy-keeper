@@ -276,7 +276,7 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
 
           <TabsContent value="grid" className="pt-2 flex flex-col min-h-0 flex-1" style={{ display: "flex" }}>
             <p className="text-sm text-muted-foreground mb-3 shrink-0">
-              Edit each payee individually in the grid below.
+              Edit each payee individually in the grid below. Right-click any cell to copy that column down from the current row.
             </p>
             <div className="rounded border border-border flex-1 min-h-0 overflow-auto" style={{ scrollbarGutter: 'stable' }}>
               <table className="w-full text-xs min-w-max">
@@ -296,7 +296,7 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                             variant="ghost"
                             className="h-5 w-5 opacity-50 hover:opacity-100"
                             onClick={() => copyDownGrid(f.key)}
-                            title={`Copy first row's ${f.label} down (or Ctrl+Enter from any cell)`}
+                            title={`Copy first row's ${f.label} down, or right-click any cell in this column`}
                           >
                             <ArrowDown className="h-3 w-3" />
                           </Button>
@@ -358,6 +358,11 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                                 className="h-7 text-xs min-w-[80px] px-1.5"
                                 data-pgrid-row={idx}
                                 data-pgrid-col={colIdx}
+                                onContextMenu={(e) => {
+                                  e.preventDefault();
+                                  copyDownGrid(f.key, idx);
+                                }}
+                                title={`Right-click to copy ${f.label} down from this row`}
                                 onKeyDown={mkKeyHandler}
                               />
                             ) : (
@@ -370,6 +375,11 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
                                 className="h-7 text-xs min-w-[80px] px-1.5"
                                 data-pgrid-row={idx}
                                 data-pgrid-col={colIdx}
+                                onContextMenu={(e: React.MouseEvent<HTMLInputElement>) => {
+                                  e.preventDefault();
+                                  copyDownGrid(f.key, idx);
+                                }}
+                                title={`Right-click to copy ${f.label} down from this row`}
                                 onKeyDown={mkKeyHandler}
                               />
                             )}
