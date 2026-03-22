@@ -114,11 +114,16 @@ const Index = () => {
 
   const handlePrintCheck = (check: Check) => {
     setPrintChecks([check]);
-    setTimeout(() => handlePrint(), 100);
+    setPrintDialogOpen(true);
   };
 
   const handleBulkPrint = () => {
     setPrintChecks(selectedChecks);
+    setPrintDialogOpen(true);
+  };
+
+  const confirmPrint = () => {
+    setPrintDialogOpen(false);
     setTimeout(() => handlePrint(), 100);
   };
 
