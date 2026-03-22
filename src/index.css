@@ -1,3 +1,10 @@
+@font-face {
+  font-family: 'MICR';
+  src: url('/fonts/MICRPlain.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Frank+Ruhl+Libre:wght@400;500;700&display=swap');
 
 @tailwind base;
