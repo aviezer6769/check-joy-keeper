@@ -207,53 +207,46 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         <div className="flex justify-between items-start">
           <div className="text-xs leading-tight max-w-[3in]">
             <p className="font-bold" style={{ fontSize: "11pt" }}>{payerDisplayName}</p>
+            {account?.payer_address && <p>{account.payer_address}</p>}
             <p>
               {[account?.payer_city, account?.payer_state].filter(Boolean).join(", ")} {account?.payer_zip || ""}
             </p>
+            {account?.payer_phone && <p>{account.payer_phone}</p>}
           </div>
           <div className="text-right">
             <p className="font-semibold" style={{ fontSize: "10pt" }}>{check.check_number || ""}</p>
           </div>
         </div>
 
-        {/* Date row with bank name centered */}
-        <div className="flex items-baseline justify-between" style={{ marginTop: inches(0.08) }}>
+        {/* Date row with bank name */}
+        <div className="flex items-baseline justify-between" style={{ marginTop: inches(FACE.dateTop) }}>
           <div className="text-xs italic opacity-70">{account?.bank_name || ""}</div>
           <div className="flex items-baseline gap-1" style={{ fontSize: "10pt" }}>
             <span className="font-semibold">Date</span>
-            <span className="border-b-2 border-foreground inline-block min-w-[120px] pb-0.5 text-center">
+            <span className="border-b border-foreground inline-block min-w-[120px] pb-0.5 text-center">
               {formatDateShort(check.check_date)}
             </span>
           </div>
         </div>
 
         {/* Pay to line */}
-        <div style={{ marginTop: inches(0.1) }}>
+        <div style={{ marginTop: inches(FACE.payLineTop) }}>
           <div className="flex items-baseline gap-1.5" style={{ fontSize: "10pt" }}>
-            <span className="whitespace-nowrap font-semibold">Pay to the<br/>order of</span>
-            <span className="flex-1 border-b-2 border-foreground pb-0.5 pl-2 font-medium" style={{ fontSize: "11pt" }}>
+            <span className="whitespace-nowrap font-semibold text-xs">Pay to the<br/>order of</span>
+            <span className="flex-1 border-b border-foreground pb-0.5 pl-2" style={{ fontSize: "10pt" }}>
               {payeeName}
             </span>
-            <span
-              className="font-bold whitespace-nowrap"
-              style={{
-                fontSize: "11pt",
-                border: "2px solid currentColor",
-                padding: "2px 10px",
-                minWidth: "100px",
-                textAlign: "center",
-              }}
-            >
-              {formatCurrency(check.amount)}
+            <span className="font-bold whitespace-nowrap" style={{ fontSize: "10pt" }}>
+              $ {formatCurrency(check.amount).replace("$", "")}
             </span>
           </div>
         </div>
 
         {/* Amount in words */}
-        <div style={{ marginTop: inches(0.06) }}>
+        <div style={{ marginTop: inches(FACE.wordsTop) }}>
           <div className="flex items-baseline gap-1">
             <span
-              className="flex-1 border-b-2 border-foreground pb-0.5 pl-1"
+              className="flex-1 border-b border-foreground pb-0.5 pl-1"
               style={{ fontSize: "9pt" }}
             >
               {amountToFullWords(check.amount)}
@@ -263,19 +256,18 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         </div>
 
         {/* Memo and Signature */}
-        <div className="flex justify-between items-end" style={{ marginTop: inches(0.14) }}>
+        <div className="flex justify-between items-end" style={{ marginTop: inches(FACE.memoTop) }}>
           <div className="flex items-baseline gap-1" style={{ fontSize: "9pt" }}>
             <span className="font-semibold">Memo</span>
             <span className="border-b border-foreground inline-block min-w-[220px] pb-0.5 pl-2">
               {check.memo || ""}
             </span>
           </div>
-          <div style={{ minWidth: "210px", textAlign: "center" }}>
+          <div style={{ minWidth: "200px", textAlign: "center" }}>
             {showSignature && (
               <img src={signatureImg} alt="Signature" className="h-10 mx-auto object-contain" />
             )}
-            <div className="border-t-2 border-foreground mt-0.5" />
-            
+            <div className="border-t border-foreground mt-0.5" />
           </div>
         </div>
 
