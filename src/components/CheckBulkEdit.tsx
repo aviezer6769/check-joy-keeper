@@ -41,6 +41,7 @@ const APPLY_ALL_FIELDS: FieldDef[] = [
   { key: "status", label: "Status", type: "status" },
   { key: "chalikah_id", label: "Chalikah", type: "chalikah" },
   { key: "memo", label: "Memo" },
+  { key: "stub_memo", label: "Stub Memo" },
 ];
 
 const GRID_FIELDS: FieldDef[] = [
