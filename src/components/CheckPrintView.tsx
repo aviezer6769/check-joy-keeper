@@ -366,7 +366,16 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
           <PayeeBlock payee={payee} topOffsetIn={STUB_2.payeeTop} leftOffsetIn={0.48} />
 
           {check.stub_memo && (
-            <div className="absolute bottom-0 left-0 right-0 border border-muted-foreground/40 rounded-sm px-2 py-1" style={{ fontSize: "10pt" }}>
+            <div
+              className="absolute border border-muted-foreground/40 rounded-sm px-2 py-1 font-hebrew"
+              style={{
+                fontSize: "10pt",
+                top: inches(STUB_2.payeeTop),
+                right: 0,
+                width: inches(2.8),
+                boxSizing: "border-box",
+              }}
+            >
               {check.stub_memo}
             </div>
           )}
