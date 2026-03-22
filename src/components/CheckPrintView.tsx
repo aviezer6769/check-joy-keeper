@@ -207,11 +207,9 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         <div className="flex justify-between items-start">
           <div className="text-xs leading-tight max-w-[3in]">
             <p className="font-bold" style={{ fontSize: "11pt" }}>{payerDisplayName}</p>
-            {account?.payer_address && <p>{account.payer_address}</p>}
             <p>
               {[account?.payer_city, account?.payer_state].filter(Boolean).join(", ")} {account?.payer_zip || ""}
             </p>
-            {account?.payer_phone && <p>{account.payer_phone}</p>}
           </div>
           <div className="text-right">
             <p className="font-semibold" style={{ fontSize: "10pt" }}>{check.check_number || ""}</p>
@@ -277,7 +275,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
               <img src={signatureImg} alt="Signature" className="h-10 mx-auto object-contain" />
             )}
             <div className="border-t-2 border-foreground mt-0.5" />
-            <span style={{ fontSize: "7pt" }} className="opacity-50">AUTHORIZED SIGNATURE</span>
+            
           </div>
         </div>
 
