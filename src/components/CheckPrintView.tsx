@@ -187,10 +187,11 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
 
   return (
     <div
-      className="text-foreground bg-card"
+      className="bg-card"
       id="check-print"
       style={{
         fontFamily: "'MS Reference Sans Serif', 'Reference Sans Serif', Arial, Helvetica, sans-serif",
+        color: "#000000",
         width: inches(PAGE.width),
         height: inches(PAGE.height),
         margin: "0 auto",
