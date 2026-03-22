@@ -27,6 +27,7 @@ interface GridRow {
   amount: string;
   check_date: string;
   memo: string;
+  stub_memo: string;
   run_no: string;
 }
 
