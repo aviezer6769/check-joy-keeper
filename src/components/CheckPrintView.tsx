@@ -244,7 +244,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
             <span className="flex-1 border-b border-foreground pb-0.5 pl-2" style={{ fontSize: "10pt" }}>
               {payeeName}
             </span>
-            <span className="font-bold whitespace-nowrap border border-muted-foreground/40 bg-muted/50 px-2 py-0.5" style={{ fontSize: "10pt", minWidth: "120px", display: "inline-block", textAlign: "right" }}>
+            <span className="font-bold whitespace-nowrap border border-muted-foreground/40 bg-muted/50 px-2 py-0.5" style={{ fontSize: "10pt", minWidth: "120px", display: "inline-block", textAlign: check.amount > 0 ? "right" : "left" }}>
               $ {check.amount > 0 ? formatCurrency(check.amount).replace("$", "") : ""}
             </span>
           </div>
