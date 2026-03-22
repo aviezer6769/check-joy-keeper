@@ -42,9 +42,6 @@ const Index = () => {
   const [printChecks, setPrintChecks] = useState<Check[]>([]);
   const [printWithSignature, setPrintWithSignature] = useState(true);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
-  const [blankDialogOpen, setBlankDialogOpen] = useState(false);
-  const [blankPayee, setBlankPayee] = useState("");
-  const [blankCheckNumber, setBlankCheckNumber] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
