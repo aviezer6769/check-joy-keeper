@@ -21,7 +21,7 @@ const FACE = {
   height: 3.5,
   padTop: 0.28,
   padBottom: 0.14,
-  dateTop: 0.11,
+  dateTop: 0.06,
   payLineTop: 0.06,
   wordsTop: 0.05,
   memoTop: 0.14,
