@@ -180,7 +180,7 @@ function StubRightMeta({
 }
 
 export function CheckPrintView({ check, account, payee, showSignature = true }: CheckPrintViewProps) {
-  const payeeName = check.payee.startsWith("Payee #") ? "" : check.payee;
+  const payeeName = (check.payee.startsWith("Payee #") || check.payee === "Blank") ? "" : check.payee;
   const payerDisplayName = account?.check_payer_name || account?.payer_name || account?.account_name || "CLYKT";
   const stubPayerName = account?.stub_payer_name || account?.payer_name || account?.account_name;
   const micrLine = formatMicrLine(check.check_number, account?.routing_number, account?.account_number);
@@ -241,8 +241,8 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         <div style={{ marginTop: inches(FACE.payLineTop + 0.06) }}>
           <div className="flex items-baseline gap-1.5" style={{ fontSize: "10pt" }}>
             <span className="whitespace-nowrap font-semibold text-xs">Pay to the<br/>order of</span>
-            <span className="flex-1 border-b border-foreground pb-0.5 pl-2" style={{ fontSize: "10pt" }}>
-              {payeeName}
+            <span className="flex-1 border-b border-foreground pb-0.5 pl-2" style={{ fontSize: "10pt", minHeight: "1.2em" }}>
+              {payeeName || "\u00A0"}
             </span>
             <span className="font-bold whitespace-nowrap border border-muted-foreground/40 bg-muted/50 px-2 py-0.5" style={{ fontSize: "10pt", minWidth: "120px", display: "inline-block", textAlign: check.amount > 0 ? "right" : "left" }}>
               $ {check.amount > 0 ? formatCurrency(check.amount).replace("$", "") : ""}
