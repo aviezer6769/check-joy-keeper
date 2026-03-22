@@ -54,6 +54,8 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
   const [checkDate, setCheckDate] = useState(new Date().toISOString().split("T")[0]);
   const [chalikahId, setChalikahId] = useState<string>("__none__");
   const [runNo, setRunNo] = useState("");
+  const [memo, setMemo] = useState("");
+  const [stubMemo, setStubMemo] = useState("");
   const [autoCheckNumbers, setAutoCheckNumbers] = useState(true);
   const [manualStartNumber, setManualStartNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
