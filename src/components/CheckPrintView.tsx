@@ -14,17 +14,18 @@ const PAGE = {
   width: 8.5,
   height: 11,
   marginX: 0.45,
+  marginRight: 0.6,
 };
 
 const FACE = {
   height: 3.5,
-  padTop: 0.14,
+  padTop: 0.28,
   padBottom: 0.14,
   dateTop: 0.11,
   payLineTop: 0.06,
   wordsTop: 0.05,
   memoTop: 0.14,
-  micrBottom: 0.04,
+  micrBottom: 0.12,
 };
 
 const STUB_1 = {
@@ -199,7 +200,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         className="relative"
         style={{
           height: inches(FACE.height),
-          padding: `${inches(FACE.padTop)} ${inches(PAGE.marginX)} ${inches(FACE.padBottom)} ${inches(PAGE.marginX)}`,
+          padding: `${inches(FACE.padTop)} ${inches(PAGE.marginRight)} ${inches(FACE.padBottom)} ${inches(PAGE.marginX)}`,
           boxSizing: "border-box",
         }}
       >
@@ -207,7 +208,6 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         <div className="flex justify-between items-start">
           <div className="text-xs leading-tight max-w-[3in]">
             <p className="font-bold" style={{ fontSize: "11pt" }}>{payerDisplayName}</p>
-            {account?.payer_address && <p>{account.payer_address}</p>}
             <p>
               {[account?.payer_city, account?.payer_state].filter(Boolean).join(", ")} {account?.payer_zip || ""}
             </p>
@@ -218,9 +218,15 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
           </div>
         </div>
 
-        {/* Date row with bank name */}
-        <div className="flex items-baseline justify-between" style={{ marginTop: inches(FACE.dateTop) }}>
-          <div className="text-xs italic opacity-70">{account?.bank_name || ""}</div>
+        {/* Bank name under payer info */}
+        {account?.bank_name && (
+          <div className="text-xs italic opacity-70" style={{ marginTop: inches(0.04) }}>
+            {account.bank_name}
+          </div>
+        )}
+
+        {/* Date row */}
+        <div className="flex items-baseline justify-end" style={{ marginTop: inches(FACE.dateTop) }}>
           <div className="flex items-baseline gap-1" style={{ fontSize: "10pt" }}>
             <span className="font-semibold">Date</span>
             <span className="border-b border-foreground inline-block min-w-[120px] pb-0.5 text-center">
@@ -259,7 +265,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         <div className="flex justify-between items-end" style={{ marginTop: inches(FACE.memoTop) }}>
           <div className="flex items-baseline gap-1" style={{ fontSize: "9pt" }}>
             <span className="font-semibold">Memo</span>
-            <span className="border-b border-foreground inline-block min-w-[220px] pb-0.5 pl-2">
+            <span style={{ borderBottom: "1px solid currentColor", display: "inline-block", minWidth: "220px", paddingBottom: "2px", paddingLeft: "8px" }}>
               {check.memo || ""}
             </span>
           </div>
@@ -267,7 +273,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
             {showSignature && (
               <img src={signatureImg} alt="Signature" className="h-10 mx-auto object-contain" />
             )}
-            <div className="border-t border-foreground mt-0.5" />
+            <div style={{ borderTop: "1px solid currentColor", marginTop: "2px" }} />
           </div>
         </div>
 
@@ -279,7 +285,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
             fontSize: "9pt",
             position: "absolute",
             left: inches(PAGE.marginX),
-            right: inches(PAGE.marginX),
+            right: inches(PAGE.marginRight),
             bottom: inches(FACE.micrBottom),
           }}
         >
