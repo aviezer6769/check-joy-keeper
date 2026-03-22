@@ -385,7 +385,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
         data-grid-row={idx}
         data-grid-col={colIdx}
         onKeyDown={(e) => {
-          if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+          if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "D") {
             e.preventDefault();
             copyDownGrid(f.key, idx);
             return;
@@ -491,7 +491,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
                             variant="ghost"
                             className="h-5 w-5 opacity-50 hover:opacity-100"
                             onClick={() => copyDownGrid(f.key)}
-                            title={`Copy first row's ${f.label} down (or Ctrl+D from any cell)`}
+                            title={`Copy first row's ${f.label} down (or Ctrl+Shift+D from any cell)`}
                           >
                             <ArrowDown className="h-3 w-3" />
                           </Button>
