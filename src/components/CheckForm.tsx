@@ -166,6 +166,7 @@ export function CheckForm({ open, onOpenChange, onSubmit, initialData, isPending
       setChalikahId("");
       setStatus("Open");
       setMemo("");
+      setStubMemo("");
       setPayeeRecordNumber("");
       setGivenToPayee("");
       setGivenToRecordNumber("");
