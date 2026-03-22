@@ -393,11 +393,13 @@ const Index = () => {
           <div className="space-y-3 py-2">
             <div className="space-y-1">
               <Label htmlFor="blank-payee" className="text-sm">Payee</Label>
-              <Input
-                id="blank-payee"
-                placeholder="Leave empty for fully blank"
+              <PayeeAutocomplete
                 value={blankPayee}
-                onChange={(e) => setBlankPayee(e.target.value)}
+                onChange={setBlankPayee}
+                payees={payees.filter((p) => p.is_active)}
+                searchField="payee_name"
+                placeholder="Search payee or leave empty"
+                className="h-9 text-sm"
               />
             </div>
             <div className="space-y-1">
