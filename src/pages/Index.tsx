@@ -377,6 +377,42 @@ const Index = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Blank check dialog */}
+      <AlertDialog open={blankDialogOpen} onOpenChange={setBlankDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Print Blank Check</AlertDialogTitle>
+            <AlertDialogDescription>Optionally enter a payee and check number.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1">
+              <Label htmlFor="blank-payee" className="text-sm">Payee</Label>
+              <Input
+                id="blank-payee"
+                placeholder="Leave empty for fully blank"
+                value={blankPayee}
+                onChange={(e) => setBlankPayee(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="blank-check-number" className="text-sm">Check Number</Label>
+              <Input
+                id="blank-check-number"
+                placeholder="Leave empty for no number"
+                value={blankCheckNumber}
+                onChange={(e) => setBlankCheckNumber(e.target.value)}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBlankPrint}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Hidden print view */}
       <div className="hidden">
         <div ref={printRef}>
