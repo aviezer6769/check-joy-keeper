@@ -490,7 +490,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
                             variant="ghost"
                             className="h-5 w-5 opacity-50 hover:opacity-100"
                             onClick={() => copyDownGrid(f.key)}
-                            title={`Copy first row's ${f.label} to all rows`}
+                            title={`Copy first row's ${f.label} down (or Ctrl+D from any cell)`}
                           >
                             <ArrowDown className="h-3 w-3" />
                           </Button>
