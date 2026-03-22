@@ -154,6 +154,7 @@ function rowToCheck(row: Record<string, string>, accountId: string | null, payee
     check_date: parseDate(row.check_date),
     status: (["Open", "Printed", "Given", "Cleared", "Void"].includes(row.status) ? row.status : "Open") as any,
     memo: row.memo || null,
+    stub_memo: row.stub_memo || null,
     payee_record_number: recordId || null,
     given_to_payee: row.given_to_payee || null,
     given_to_record_number: row.given_to_record_number || null,

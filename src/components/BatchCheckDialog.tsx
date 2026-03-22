@@ -206,6 +206,7 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
           chalikah_id: chalikahId === "__none__" ? null : chalikahId,
           status: "Open" as const,
           memo: row.memo || null,
+          stub_memo: row.stub_memo || null,
           payee_record_number: row.record_id || null,
           given_to_payee: null,
           given_to_record_number: null,
