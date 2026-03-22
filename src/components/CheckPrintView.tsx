@@ -305,9 +305,9 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         }}
       >
         <div className="relative h-full">
-          <div className="text-xs leading-tight" style={{ maxWidth: "calc(100% - 1.45in)" }}>
-            {account?.payer_name_yiddish && <p className="font-bold font-hebrew">{account.payer_name_yiddish}</p>}
-            <p className="font-bold">{stubPayerName}</p>
+          <div className="leading-tight" style={{ maxWidth: "calc(100% - 1.45in)", fontSize: "10pt" }}>
+            {account?.payer_name_yiddish && <p className="font-hebrew" style={{ fontSize: "11pt" }}>{account.payer_name_yiddish}</p>}
+            <p>{stubPayerName}</p>
             {account?.payer_address && <p>{account.payer_address}</p>}
             {(account?.payer_city || account?.payer_state || account?.payer_zip) && (
               <p>
