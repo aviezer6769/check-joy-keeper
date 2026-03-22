@@ -25,7 +25,7 @@ const FACE = {
   payLineTop: 0.06,
   wordsTop: 0.05,
   memoTop: 0.14,
-  micrBottom: 0.16,
+  micrBottom: 0.22,
 };
 
 const STUB_1 = {
