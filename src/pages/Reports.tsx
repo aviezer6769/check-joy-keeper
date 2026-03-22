@@ -2,12 +2,13 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Save, Download, Trash2, FileText, Eye, Filter } from "lucide-react";
+import { ArrowLeft, Save, Download, Trash2, FileText, Eye, Filter, Pencil, ChevronDown } from "lucide-react";
 import { useChecks, type Check } from "@/hooks/useChecks";
 import { useChalikah } from "@/hooks/useChalikah";
 import { useAccounts } from "@/hooks/useAccounts";
 import { usePayees } from "@/hooks/usePayees";
-import { useSavedReports, useSaveReport, useDeleteReport, type SavedReport } from "@/hooks/useReports";
+import { useSavedReports, useSaveReport, useDeleteReport, useUpdateReport, type SavedReport } from "@/hooks/useReports";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +49,7 @@ const Reports = () => {
   const { data: savedReports = [], isLoading: reportsLoading } = useSavedReports();
   const saveReport = useSaveReport();
   const deleteReport = useDeleteReport();
+  const updateReport = useUpdateReport();
 
   const [accountFilter, setAccountFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("issued");
@@ -58,6 +60,8 @@ const Reports = () => {
   const [viewingReport, setViewingReport] = useState<SavedReport | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedNames, setSelectedNames] = useState<Set<string>>(new Set());
+  const [renameReport, setRenameReport] = useState<SavedReport | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   // Build payee lookup by record_id and payee_name
   const payeeLookup = useMemo(() => {
     const byRecord: Record<string, { record_id: string; yiddish: string; memo: string; address: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
@@ -618,45 +622,46 @@ const Reports = () => {
                   <Save className="h-4 w-4 mr-2" />
                   Save Report
                 </Button>
+                {savedReports.length > 0 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Saved Reports
+                        <ChevronDown className="h-4 w-4 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[280px]">
+                      {savedReports.map((r) => (
+                        <DropdownMenuItem key={r.id} className="flex items-center justify-between gap-2 p-2" onSelect={(e) => e.preventDefault()}>
+                          <button
+                            className="flex-1 text-left truncate text-sm"
+                            onClick={() => setViewingReport(r)}
+                          >
+                            <span className="font-medium">{r.name}</span>
+                            <span className="text-xs text-muted-foreground ml-2">{new Date(r.created_at).toLocaleDateString()}</span>
+                          </button>
+                          <div className="flex gap-0.5 shrink-0">
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRenameReport(r); setRenameValue(r.name); }}>
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleExport(r.report_data as any)}>
+                              <Download className="h-3 w-3" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteReport.mutate(r.id)}>
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Saved reports */}
-        {savedReports.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Saved Reports</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {savedReports.map((r) => (
-                  <div key={r.id} className="flex items-center justify-between rounded-lg border p-3">
-                    <div className="flex items-center gap-3">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">{r.name}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => setViewingReport(r)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleExport(r.report_data as any)}>
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => deleteReport.mutate(r.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Live matrix */}
         {checksLoading ? (
@@ -718,6 +723,40 @@ const Reports = () => {
               true
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Rename dialog */}
+      <Dialog open={!!renameReport} onOpenChange={() => setRenameReport(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Report</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label>Report Name</Label>
+            <Input
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && renameReport && renameValue.trim()) {
+                  updateReport.mutate({ id: renameReport.id, name: renameValue.trim() }, { onSuccess: () => setRenameReport(null) });
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameReport(null)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (renameReport && renameValue.trim()) {
+                  updateReport.mutate({ id: renameReport.id, name: renameValue.trim() }, { onSuccess: () => setRenameReport(null) });
+                }
+              }}
+              disabled={!renameValue.trim() || updateReport.isPending}
+            >
+              Rename
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

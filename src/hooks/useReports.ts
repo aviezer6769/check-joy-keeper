@@ -51,6 +51,27 @@ export function useSaveReport() {
   });
 }
 
+export function useUpdateReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { data, error } = await supabase
+        .from("saved_reports")
+        .update({ name })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["saved_reports"] });
+      toast.success("Report renamed");
+    },
+    onError: (e) => toast.error("Failed to rename: " + e.message),
+  });
+}
+
 export function useDeleteReport() {
   const qc = useQueryClient();
   return useMutation({
