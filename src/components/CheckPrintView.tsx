@@ -120,25 +120,32 @@ function isHebrew(char: string): boolean {
 }
 
 function StubMemoText({ text }: { text: string }) {
-  const segments: { hebrew: boolean; text: string }[] = [];
-  for (const char of text) {
-    const heb = isHebrew(char);
-    const last = segments[segments.length - 1];
-    if (last && last.hebrew === heb) {
-      last.text += char;
-    } else {
-      segments.push({ hebrew: heb, text: char });
-    }
-  }
+  const lines = text.split("\n");
   return (
     <>
-      {segments.map((seg, i) =>
-        seg.hebrew ? (
-          <span key={i} className="font-hebrew" style={{ fontSize: "11pt" }}>{seg.text}</span>
-        ) : (
-          <span key={i}>{seg.text}</span>
-        )
-      )}
+      {lines.map((line, li) => {
+        const segments: { hebrew: boolean; text: string }[] = [];
+        for (const char of line) {
+          const heb = isHebrew(char);
+          const last = segments[segments.length - 1];
+          if (last && last.hebrew === heb) {
+            last.text += char;
+          } else {
+            segments.push({ hebrew: heb, text: char });
+          }
+        }
+        return (
+          <div key={li}>
+            {segments.length === 0 ? "\u00A0" : segments.map((seg, i) =>
+              seg.hebrew ? (
+                <span key={i} className="font-hebrew" style={{ fontSize: "11pt" }}>{seg.text}</span>
+              ) : (
+                <span key={i}>{seg.text}</span>
+              )
+            )}
+          </div>
+        );
+      })}
     </>
   );
 }
