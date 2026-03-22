@@ -385,7 +385,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
         data-grid-row={idx}
         data-grid-col={colIdx}
         onKeyDown={(e) => {
-          if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+          if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "D") {
             e.preventDefault();
             copyDownGrid(f.key, idx);
             return;
