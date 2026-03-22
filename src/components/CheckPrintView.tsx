@@ -32,7 +32,7 @@ const STUB_1 = {
   height: 3.75,
   padTop: 0.36,
   padBottom: 0.16,
-  payeeTop: 1.5,
+  payeeTop: 1.62,
 };
 
 const STUB_2 = {
