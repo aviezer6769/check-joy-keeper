@@ -31,6 +31,7 @@ const CHECK_COLUMNS: ColumnDef[] = [
   { key: "status", label: "Status" },
   { key: "given_to", label: "Given To" },
   { key: "memo", label: "Memo" },
+  { key: "stub_memo", label: "Stub Memo", defaultVisible: false },
   { key: "record_number", label: "Record #" },
   { key: "given_to_record", label: "Given To #", defaultVisible: false },
   { key: "run_no", label: "Run No.", defaultVisible: false },
