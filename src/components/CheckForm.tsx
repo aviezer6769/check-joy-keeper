@@ -31,6 +31,7 @@ interface CheckFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (check: CheckInsert) => void;
+  onPrintBlank?: (check: { payee: string; check_number: string; check_date: string; payee_record_number: string }) => void;
   initialData?: Check | null;
   isPending?: boolean;
   existingChecks?: Check[];
