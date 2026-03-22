@@ -153,6 +153,10 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
               <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
             </div>
             <div>
+              <Label>Max Per Check</Label>
+              <Input type="number" value={maxPerCheck} onChange={(e) => setMaxPerCheck(e.target.value)} placeholder="No limit" />
+            </div>
+            <div>
               <Label>Date</Label>
               <Input type="date" value={checkDate} onChange={(e) => setCheckDate(e.target.value)} />
             </div>
@@ -192,7 +196,7 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button onClick={handleSubmit} disabled={submitting}>
-              {submitting ? "Creating..." : `Create ${payees.length} Check(s)`}
+              {submitting ? "Creating..." : `Create ${totalChecksPreview} Check(s)`}
             </Button>
           </div>
         </div>
