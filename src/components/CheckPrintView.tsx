@@ -257,7 +257,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
               className="flex-1 border-b border-foreground pb-0.5 pl-1"
               style={{ fontSize: "9pt" }}
             >
-              {amountToFullWords(check.amount)}
+              {check.amount > 0 ? amountToFullWords(check.amount) : ""}
             </span>
             <span style={{ fontSize: "9pt" }} className="whitespace-nowrap font-semibold">Dollars</span>
           </div>
