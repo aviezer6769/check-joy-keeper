@@ -175,7 +175,7 @@ function StubRightMeta({
   );
 }
 
-export function CheckPrintView({ check, account, payee }: CheckPrintViewProps) {
+export function CheckPrintView({ check, account, payee, showSignature = true }: CheckPrintViewProps) {
   const payeeName = check.payee.startsWith("Payee #") ? "" : check.payee;
   const payerDisplayName = account?.check_payer_name || account?.payer_name || account?.account_name || "CLYKT";
   const stubPayerName = account?.stub_payer_name || account?.payer_name || account?.account_name;
