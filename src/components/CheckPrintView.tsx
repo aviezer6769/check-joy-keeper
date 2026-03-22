@@ -226,7 +226,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
         )}
 
         {/* Date row */}
-        <div className="flex items-baseline justify-end" style={{ marginTop: inches(FACE.dateTop) }}>
+        <div className="flex items-baseline justify-end" style={{ marginTop: inches(FACE.dateTop), paddingRight: inches(0.3) }}>
           <div className="flex items-baseline gap-1" style={{ fontSize: "10pt" }}>
             <span className="font-semibold">Date</span>
             <span className="border-b border-foreground inline-block min-w-[120px] pb-0.5 text-center">
