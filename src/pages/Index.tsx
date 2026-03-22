@@ -3,6 +3,8 @@ import { useReactToPrint } from "react-to-print";
 import { usePayees } from "@/hooks/usePayees";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Plus, Search, Users, Pencil, Trash2, List, Download, BarChart3, FileText, Printer } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert, type CheckStatus } from "@/hooks/useChecks";
