@@ -54,6 +54,8 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
   const [checkDate, setCheckDate] = useState(new Date().toISOString().split("T")[0]);
   const [chalikahId, setChalikahId] = useState<string>("__none__");
   const [runNo, setRunNo] = useState("");
+  const [memo, setMemo] = useState("");
+  const [stubMemo, setStubMemo] = useState("");
   const [autoCheckNumbers, setAutoCheckNumbers] = useState(true);
   const [manualStartNumber, setManualStartNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -149,8 +151,8 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
           check_date: checkDate,
           chalikah_id: chalikahId === "__none__" ? null : chalikahId,
           status: "Open" as const,
-           memo: null,
-          stub_memo: null,
+           memo: memo || null,
+          stub_memo: stubMemo || null,
           payee_record_number: p.record_id || null,
           given_to_payee: null,
           given_to_record_number: null,
@@ -343,6 +345,14 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
               <div>
                 <Label>Run No.</Label>
                 <Input value={runNo} onChange={(e) => setRunNo(e.target.value)} placeholder="Optional" />
+              </div>
+              <div>
+                <Label>Memo</Label>
+                <Input value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="Optional" />
+              </div>
+              <div>
+                <Label>Stub Memo</Label>
+                <Input value={stubMemo} onChange={(e) => setStubMemo(e.target.value)} placeholder="Optional" />
               </div>
               <div className="flex flex-col gap-2">
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
