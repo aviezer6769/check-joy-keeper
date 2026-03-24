@@ -398,7 +398,18 @@ const Payees = () => {
       case "zip": return p.zip || "";
       case "is_active": return p.is_active ? "Active" : "Inactive";
       case "memo": return p.memo || "";
-      default: return "";
+      case "ch_total": {
+        if (!p.record_id) return 0;
+        const m = payeeChalikahMatrix[p.record_id];
+        return m ? Object.values(m).reduce((s, v) => s + v, 0) : 0;
+      }
+      default:
+        if (key.startsWith("ch_")) {
+          const chId = key.slice(3);
+          if (!p.record_id) return 0;
+          return payeeChalikahMatrix[p.record_id]?.[chId] || 0;
+        }
+        return "";
     }
   };
 
