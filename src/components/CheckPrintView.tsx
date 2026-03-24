@@ -322,7 +322,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
           className="tracking-[0.16em]"
           style={{
             fontFamily: "'MICR', monospace",
-            fontSize: "9pt",
+            fontSize: "12pt",
             position: "absolute",
             left: inches(PAGE.marginX),
             right: inches(PAGE.marginRight),
