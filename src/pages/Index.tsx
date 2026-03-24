@@ -121,7 +121,12 @@ const Index = () => {
   };
 
   const handleBulkPrint = () => {
-    setPrintChecks(selectedChecks);
+    const sorted = [...selectedChecks].sort((a, b) => {
+      const numA = parseInt(a.check_number || "0", 10);
+      const numB = parseInt(b.check_number || "0", 10);
+      return numA - numB;
+    });
+    setPrintChecks(sorted);
     setPrintDialogOpen(true);
   };
 
