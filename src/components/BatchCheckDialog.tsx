@@ -307,7 +307,7 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
           {/* Uniform tab */}
           <TabsContent value="uniform" className="space-y-4 pt-2 overflow-y-auto">
             <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto border border-border rounded p-2">
-              {payees.map((p) => (
+              {sortedPayees.map((p) => (
                 <div key={p.id} className="flex justify-between text-xs py-0.5">
                   <span>{p.payee_name}</span>
                   <span className="text-muted-foreground font-mono">{p.record_id || "—"}</span>
