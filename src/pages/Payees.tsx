@@ -87,9 +87,41 @@ const Payees = () => {
   const deletePayee = useDeletePayee();
   const qc = useQueryClient();
   const [bulkDeleting, setBulkDeleting] = useState(false);
-  const colLayout = useColumnLayout("payees", PAYEE_COLUMNS);
   const chalikahMap = useMemo(() => Object.fromEntries(chalikahList.map((c) => [c.id, c.name])), [chalikahList]);
   const accountMap = useMemo(() => Object.fromEntries(accounts.map((a) => [a.id, a.account_name])), [accounts]);
+
+  // Build payee × chalikah matrix from checks (keyed by payee record_id)
+  const { payeeChalikahMatrix, chalikahColIds } = useMemo(() => {
+    const matrix: Record<string, Record<string, number>> = {};
+    const chIds = new Set<string>();
+    checks.forEach((c) => {
+      const rid = c.given_to_record_number || c.payee_record_number;
+      if (!rid) return;
+      const chId = c.chalikah_id || "__none__";
+      chIds.add(chId);
+      if (!matrix[rid]) matrix[rid] = {};
+      matrix[rid][chId] = (matrix[rid][chId] || 0) + c.amount;
+    });
+    return { payeeChalikahMatrix: matrix, chalikahColIds: Array.from(chIds) };
+  }, [checks]);
+
+  // Dynamic columns: static + chalikah amounts + total
+  const allPayeeColumns: ColumnDef[] = useMemo(() => {
+    const chalikahCols = chalikahColIds
+      .map((id) => ({
+        key: `ch_${id}`,
+        label: id === "__none__" ? "(No Chalikah)" : chalikahMap[id] || id,
+        defaultVisible: false,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+    return [
+      ...STATIC_PAYEE_COLUMNS,
+      ...chalikahCols,
+      { key: "ch_total", label: "Total", defaultVisible: false },
+    ];
+  }, [chalikahColIds, chalikahMap]);
+
+  const colLayout = useColumnLayout("payees", allPayeeColumns);
 
   // Match checks to payee by record number (given_to_record_number first, then payee_record_number)
   const checksByRecordId = useMemo(() => {
