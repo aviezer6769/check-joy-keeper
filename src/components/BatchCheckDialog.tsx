@@ -93,11 +93,20 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
     return payees.length * parts.length;
   }, [amount, maxPerCheck, payees.length]);
 
-  // Initialize grid from payees
+  // Initialize grid from payees (sorted by sort_order, then payee_name)
+  const sortedPayees = useMemo(() => {
+    return [...payees].sort((a, b) => {
+      const sa = a.sort_order ?? 0;
+      const sb = b.sort_order ?? 0;
+      if (sa !== sb) return sa - sb;
+      return a.payee_name.localeCompare(b.payee_name);
+    });
+  }, [payees]);
+
   const initGrid = () => {
     if (gridInitialized) return;
     setGridRows(
-      payees.map((p) => ({
+      sortedPayees.map((p) => ({
         payee_name: p.payee_name,
         record_id: p.record_id || "",
         amount: amount || "",
