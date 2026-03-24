@@ -148,13 +148,24 @@ const Payees = () => {
   const getPayeeTextValue = (p: Payee, key: string): string => {
     switch (key) {
       case "record_id": return p.record_id || "";
-      case "sort_order": return ""; // dynamic, not displayed as text
+      case "sort_order": return "";
       case "urgent_level": return p.urgent_level === null || p.urgent_level === undefined ? "?" : String(p.urgent_level);
       case "yiddish_name": return [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ");
       case "payee_name": return [p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ") || p.payee_name;
       case "address": return [p.street_no, p.street_name, p.apt, p.city, p.state, p.zip].filter(Boolean).join(" ");
       case "is_active": return p.is_active ? "Active" : "Inactive";
-      default: return ((p as any)[key] || "").toString();
+      case "ch_total": {
+        if (!p.record_id) return "0";
+        const m = payeeChalikahMatrix[p.record_id];
+        return m ? String(Object.values(m).reduce((s, v) => s + v, 0)) : "0";
+      }
+      default:
+        if (key.startsWith("ch_")) {
+          const chId = key.slice(3);
+          if (!p.record_id) return "0";
+          return String(payeeChalikahMatrix[p.record_id]?.[chId] || 0);
+        }
+        return ((p as any)[key] || "").toString();
     }
   };
 
