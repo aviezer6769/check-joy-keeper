@@ -24,7 +24,7 @@ import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 
-const PAYEE_COLUMNS: ColumnDef[] = [
+const STATIC_PAYEE_COLUMNS: ColumnDef[] = [
   { key: "record_id", label: "Record ID" },
   { key: "sort_order", label: "Sort" },
   { key: "urgent_level", label: "Urgent" },
