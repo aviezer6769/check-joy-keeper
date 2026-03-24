@@ -24,7 +24,7 @@ import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 
-const PAYEE_COLUMNS: ColumnDef[] = [
+const STATIC_PAYEE_COLUMNS: ColumnDef[] = [
   { key: "record_id", label: "Record ID" },
   { key: "sort_order", label: "Sort" },
   { key: "urgent_level", label: "Urgent" },
@@ -87,9 +87,41 @@ const Payees = () => {
   const deletePayee = useDeletePayee();
   const qc = useQueryClient();
   const [bulkDeleting, setBulkDeleting] = useState(false);
-  const colLayout = useColumnLayout("payees", PAYEE_COLUMNS);
   const chalikahMap = useMemo(() => Object.fromEntries(chalikahList.map((c) => [c.id, c.name])), [chalikahList]);
   const accountMap = useMemo(() => Object.fromEntries(accounts.map((a) => [a.id, a.account_name])), [accounts]);
+
+  // Build payee × chalikah matrix from checks (keyed by payee record_id)
+  const { payeeChalikahMatrix, chalikahColIds } = useMemo(() => {
+    const matrix: Record<string, Record<string, number>> = {};
+    const chIds = new Set<string>();
+    checks.forEach((c) => {
+      const rid = c.given_to_record_number || c.payee_record_number;
+      if (!rid) return;
+      const chId = c.chalikah_id || "__none__";
+      chIds.add(chId);
+      if (!matrix[rid]) matrix[rid] = {};
+      matrix[rid][chId] = (matrix[rid][chId] || 0) + c.amount;
+    });
+    return { payeeChalikahMatrix: matrix, chalikahColIds: Array.from(chIds) };
+  }, [checks]);
+
+  // Dynamic columns: static + chalikah amounts + total
+  const allPayeeColumns: ColumnDef[] = useMemo(() => {
+    const chalikahCols = chalikahColIds
+      .map((id) => ({
+        key: `ch_${id}`,
+        label: id === "__none__" ? "(No Chalikah)" : chalikahMap[id] || id,
+        defaultVisible: false,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+    return [
+      ...STATIC_PAYEE_COLUMNS,
+      ...chalikahCols,
+      { key: "ch_total", label: "Total", defaultVisible: false },
+    ];
+  }, [chalikahColIds, chalikahMap]);
+
+  const colLayout = useColumnLayout("payees", allPayeeColumns);
 
   // Match checks to payee by record number (given_to_record_number first, then payee_record_number)
   const checksByRecordId = useMemo(() => {
@@ -116,13 +148,24 @@ const Payees = () => {
   const getPayeeTextValue = (p: Payee, key: string): string => {
     switch (key) {
       case "record_id": return p.record_id || "";
-      case "sort_order": return ""; // dynamic, not displayed as text
+      case "sort_order": return "";
       case "urgent_level": return p.urgent_level === null || p.urgent_level === undefined ? "?" : String(p.urgent_level);
       case "yiddish_name": return [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ");
       case "payee_name": return [p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ") || p.payee_name;
       case "address": return [p.street_no, p.street_name, p.apt, p.city, p.state, p.zip].filter(Boolean).join(" ");
       case "is_active": return p.is_active ? "Active" : "Inactive";
-      default: return ((p as any)[key] || "").toString();
+      case "ch_total": {
+        if (!p.record_id) return "0";
+        const m = payeeChalikahMatrix[p.record_id];
+        return m ? String(Object.values(m).reduce((s, v) => s + v, 0)) : "0";
+      }
+      default:
+        if (key.startsWith("ch_")) {
+          const chId = key.slice(3);
+          if (!p.record_id) return "0";
+          return String(payeeChalikahMatrix[p.record_id]?.[chId] || 0);
+        }
+        return ((p as any)[key] || "").toString();
     }
   };
 
@@ -138,7 +181,17 @@ const Payees = () => {
       case "payee_name": return [p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ").toLowerCase() || p.payee_name.toLowerCase();
       case "address": return [p.city, p.state].filter(Boolean).join(", ").toLowerCase();
       case "is_active": return p.is_active ? 1 : 0;
+      case "ch_total": {
+        if (!p.record_id) return 0;
+        const m = payeeChalikahMatrix[p.record_id];
+        return m ? Object.values(m).reduce((s, v) => s + v, 0) : 0;
+      }
       default: {
+        if (key.startsWith("ch_")) {
+          const chId = key.slice(3);
+          if (!p.record_id) return 0;
+          return payeeChalikahMatrix[p.record_id]?.[chId] || 0;
+        }
         const raw = ((p as any)[key] || "").toString();
         const n = parseFloat(raw);
         return isNaN(n) ? raw.toLowerCase() : n;
@@ -215,11 +268,11 @@ const Payees = () => {
   // Compute unique values per column for dropdown filters
   const filterOptions = useMemo(() => {
     const opts: Record<string, Set<string>> = {};
-    for (const col of PAYEE_COLUMNS) opts[col.key] = new Set();
+    for (const col of allPayeeColumns) opts[col.key] = new Set();
     for (const p of payees) {
-      for (const col of PAYEE_COLUMNS) {
+      for (const col of allPayeeColumns) {
         const val = getPayeeTextValue(p, col.key);
-        if (val) opts[col.key].add(val);
+        if (val && val !== "0") opts[col.key].add(val);
       }
     }
     const result: Record<string, string[]> = {};
@@ -227,7 +280,7 @@ const Payees = () => {
       result[key] = Array.from(set).sort();
     }
     return result;
-  }, [payees]);
+  }, [payees, allPayeeColumns, payeeChalikahMatrix]);
 
   const renderPayeeCell = (p: Payee, key: string) => {
     switch (key) {
@@ -266,7 +319,20 @@ const Payees = () => {
       case "zip": return p.zip || "—";
       case "memo": return <span className="text-sm max-w-[300px] whitespace-pre-line block">{p.memo || "—"}</span>;
       case "is_active": return p.is_active ? <Badge variant="default" className="bg-success text-success-foreground">Active</Badge> : <Badge variant="secondary">Inactive</Badge>;
-      default: return "—";
+      case "ch_total": {
+        if (!p.record_id) return <span className="text-muted-foreground">—</span>;
+        const m = payeeChalikahMatrix[p.record_id];
+        const total = m ? Object.values(m).reduce((s, v) => s + v, 0) : 0;
+        return total > 0 ? <span className="font-mono text-xs">{formatCurrency(total)}</span> : <span className="text-muted-foreground">—</span>;
+      }
+      default:
+        if (key.startsWith("ch_")) {
+          const chId = key.slice(3);
+          if (!p.record_id) return <span className="text-muted-foreground">—</span>;
+          const amt = payeeChalikahMatrix[p.record_id]?.[chId] || 0;
+          return amt > 0 ? <span className="font-mono text-xs">{formatCurrency(amt)}</span> : <span className="text-muted-foreground">—</span>;
+        }
+        return "—";
     }
   };
 
@@ -332,7 +398,18 @@ const Payees = () => {
       case "zip": return p.zip || "";
       case "is_active": return p.is_active ? "Active" : "Inactive";
       case "memo": return p.memo || "";
-      default: return "";
+      case "ch_total": {
+        if (!p.record_id) return 0;
+        const m = payeeChalikahMatrix[p.record_id];
+        return m ? Object.values(m).reduce((s, v) => s + v, 0) : 0;
+      }
+      default:
+        if (key.startsWith("ch_")) {
+          const chId = key.slice(3);
+          if (!p.record_id) return 0;
+          return payeeChalikahMatrix[p.record_id]?.[chId] || 0;
+        }
+        return "";
     }
   };
 
