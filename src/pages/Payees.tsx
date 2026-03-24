@@ -319,7 +319,20 @@ const Payees = () => {
       case "zip": return p.zip || "—";
       case "memo": return <span className="text-sm max-w-[300px] whitespace-pre-line block">{p.memo || "—"}</span>;
       case "is_active": return p.is_active ? <Badge variant="default" className="bg-success text-success-foreground">Active</Badge> : <Badge variant="secondary">Inactive</Badge>;
-      default: return "—";
+      case "ch_total": {
+        if (!p.record_id) return <span className="text-muted-foreground">—</span>;
+        const m = payeeChalikahMatrix[p.record_id];
+        const total = m ? Object.values(m).reduce((s, v) => s + v, 0) : 0;
+        return total > 0 ? <span className="font-mono text-xs">{formatCurrency(total)}</span> : <span className="text-muted-foreground">—</span>;
+      }
+      default:
+        if (key.startsWith("ch_")) {
+          const chId = key.slice(3);
+          if (!p.record_id) return <span className="text-muted-foreground">—</span>;
+          const amt = payeeChalikahMatrix[p.record_id]?.[chId] || 0;
+          return amt > 0 ? <span className="font-mono text-xs">{formatCurrency(amt)}</span> : <span className="text-muted-foreground">—</span>;
+        }
+        return "—";
     }
   };
 
