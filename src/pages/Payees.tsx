@@ -268,11 +268,11 @@ const Payees = () => {
   // Compute unique values per column for dropdown filters
   const filterOptions = useMemo(() => {
     const opts: Record<string, Set<string>> = {};
-    for (const col of PAYEE_COLUMNS) opts[col.key] = new Set();
+    for (const col of allPayeeColumns) opts[col.key] = new Set();
     for (const p of payees) {
-      for (const col of PAYEE_COLUMNS) {
+      for (const col of allPayeeColumns) {
         const val = getPayeeTextValue(p, col.key);
-        if (val) opts[col.key].add(val);
+        if (val && val !== "0") opts[col.key].add(val);
       }
     }
     const result: Record<string, string[]> = {};
@@ -280,7 +280,7 @@ const Payees = () => {
       result[key] = Array.from(set).sort();
     }
     return result;
-  }, [payees]);
+  }, [payees, allPayeeColumns, payeeChalikahMatrix]);
 
   const renderPayeeCell = (p: Payee, key: string) => {
     switch (key) {
