@@ -93,11 +93,20 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
     return payees.length * parts.length;
   }, [amount, maxPerCheck, payees.length]);
 
-  // Initialize grid from payees
+  // Initialize grid from payees (sorted by sort_order, then payee_name)
+  const sortedPayees = useMemo(() => {
+    return [...payees].sort((a, b) => {
+      const sa = a.sort_order ?? 0;
+      const sb = b.sort_order ?? 0;
+      if (sa !== sb) return sa - sb;
+      return a.payee_name.localeCompare(b.payee_name);
+    });
+  }, [payees]);
+
   const initGrid = () => {
     if (gridInitialized) return;
     setGridRows(
-      payees.map((p) => ({
+      sortedPayees.map((p) => ({
         payee_name: p.payee_name,
         record_id: p.record_id || "",
         amount: amount || "",
@@ -142,7 +151,7 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
     let checkIndex = 0;
     const checks: CheckInsert[] = [];
 
-    for (const p of payees) {
+    for (const p of sortedPayees) {
       for (const partAmount of amountParts) {
         checks.push({
           payee: p.payee_name,
@@ -298,7 +307,7 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
           {/* Uniform tab */}
           <TabsContent value="uniform" className="space-y-4 pt-2 overflow-y-auto">
             <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto border border-border rounded p-2">
-              {payees.map((p) => (
+              {sortedPayees.map((p) => (
                 <div key={p.id} className="flex justify-between text-xs py-0.5">
                   <span>{p.payee_name}</span>
                   <span className="text-muted-foreground font-mono">{p.record_id || "—"}</span>
