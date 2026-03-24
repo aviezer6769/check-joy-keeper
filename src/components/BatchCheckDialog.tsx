@@ -151,7 +151,7 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
     let checkIndex = 0;
     const checks: CheckInsert[] = [];
 
-    for (const p of payees) {
+    for (const p of sortedPayees) {
       for (const partAmount of amountParts) {
         checks.push({
           payee: p.payee_name,
