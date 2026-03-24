@@ -159,7 +159,9 @@ const Index = () => {
 
   const confirmPrint = () => {
     setPrintDialogOpen(false);
-    setTimeout(() => handlePrint(), 100);
+    setTimeout(() => {
+      document.fonts.ready.then(() => handlePrint());
+    }, 100);
   };
 
   const handleStatusChange = (check: Check, newStatus: CheckStatus) => {
