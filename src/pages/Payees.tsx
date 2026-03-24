@@ -181,7 +181,17 @@ const Payees = () => {
       case "payee_name": return [p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ").toLowerCase() || p.payee_name.toLowerCase();
       case "address": return [p.city, p.state].filter(Boolean).join(", ").toLowerCase();
       case "is_active": return p.is_active ? 1 : 0;
+      case "ch_total": {
+        if (!p.record_id) return 0;
+        const m = payeeChalikahMatrix[p.record_id];
+        return m ? Object.values(m).reduce((s, v) => s + v, 0) : 0;
+      }
       default: {
+        if (key.startsWith("ch_")) {
+          const chId = key.slice(3);
+          if (!p.record_id) return 0;
+          return payeeChalikahMatrix[p.record_id]?.[chId] || 0;
+        }
         const raw = ((p as any)[key] || "").toString();
         const n = parseFloat(raw);
         return isNaN(n) ? raw.toLowerCase() : n;
