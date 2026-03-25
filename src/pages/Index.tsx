@@ -383,11 +383,11 @@ const Index = () => {
             const normalizedPayeeName = (c.payee || "").trim().toLowerCase();
             const normalizedRecord = (c.payee_record_number || "").trim().toLowerCase();
             const matchedPayee =
-              payees.find((p) => {
-                const payeeName = (p.payee_name || "").trim().toLowerCase();
-                const recordId = (p.record_id || "").trim().toLowerCase();
-                return payeeName === normalizedPayeeName || (normalizedRecord && recordId === normalizedRecord);
-              }) || null;
+              (normalizedRecord
+                ? payees.find((p) => (p.record_id || "").trim().toLowerCase() === normalizedRecord)
+                : null) ||
+              payees.find((p) => (p.payee_name || "").trim().toLowerCase() === normalizedPayeeName) ||
+              null;
 
             return (
               <div key={c.id} style={i > 0 ? { pageBreakBefore: "always" } : undefined}>
