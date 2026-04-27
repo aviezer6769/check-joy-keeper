@@ -95,6 +95,7 @@ const Payees = () => {
     const matrix: Record<string, Record<string, number>> = {};
     const chIds = new Set<string>();
     checks.forEach((c) => {
+      if (c.status === "Void") return;
       const rid = c.given_to_record_number || c.payee_record_number;
       if (!rid) return;
       const chId = c.chalikah_id || "__none__";
