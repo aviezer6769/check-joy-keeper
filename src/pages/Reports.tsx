@@ -22,6 +22,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useColumnLayout, type ColumnDef, type FilterMode } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
@@ -41,6 +42,19 @@ const STATIC_REPORT_COLS: ColumnDef[] = [
   { key: "address", label: "Address" },
   { key: "memo", label: "Memo", defaultVisible: false },
 ];
+
+type ChalikahMode = "all" | "last_n" | "specific";
+
+interface DynamicReportConfig {
+  dynamic: true;
+  accountFilter: string;
+  statusFilter: string;
+  dateFrom: string;
+  dateTo: string;
+  chalikahMode: ChalikahMode;
+  chalikahN?: number;
+  chalikahIds?: string[];
+}
 
 const Reports = () => {
   useAuditSource("Reports page");
@@ -64,6 +78,11 @@ const Reports = () => {
   const [selectedNames, setSelectedNames] = useState<Set<string>>(new Set());
   const [renameReport, setRenameReport] = useState<SavedReport | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  // Save-dialog dynamic options
+  const [saveMode, setSaveMode] = useState<"snapshot" | "dynamic">("snapshot");
+  const [chalikahMode, setChalikahMode] = useState<ChalikahMode>("last_n");
+  const [chalikahN, setChalikahN] = useState<number>(2);
+  const [specificChalikahIds, setSpecificChalikahIds] = useState<Set<string>>(new Set());
   // Build payee lookup by record_id and payee_name
   const payeeLookup = useMemo(() => {
     const byRecord: Record<string, { record_id: string; yiddish: string; memo: string; address: string; is_active: boolean; urgent_level: number | null; last_name_yiddish: string; first_name_yiddish: string; middle_name_yiddish: string }> = {};
@@ -175,6 +194,25 @@ const Reports = () => {
 
   const handleSave = () => {
     if (!reportName.trim()) return;
+    if (saveMode === "dynamic") {
+      const cfg: DynamicReportConfig = {
+        dynamic: true,
+        accountFilter, statusFilter, dateFrom, dateTo,
+        chalikahMode,
+        chalikahN: chalikahMode === "last_n" ? chalikahN : undefined,
+        chalikahIds: chalikahMode === "specific" ? Array.from(specificChalikahIds) : undefined,
+      };
+      saveReport.mutate(
+        {
+          name: reportName.trim(),
+          report_type: "payee_chalikah_dynamic",
+          filters: cfg as any,
+          report_data: {},
+        },
+        { onSuccess: () => { setSaveDialogOpen(false); setReportName(""); } }
+      );
+      return;
+    }
     saveReport.mutate(
       {
         name: reportName.trim(),
@@ -184,6 +222,64 @@ const Reports = () => {
       },
       { onSuccess: () => { setSaveDialogOpen(false); setReportName(""); } }
     );
+  };
+
+  // Re-compute a report at view time from saved dynamic config
+  const computeDynamic = (cfg: DynamicReportConfig) => {
+    let result = allChecks;
+    if (cfg.accountFilter && cfg.accountFilter !== "all") {
+      result = result.filter((c) => c.account_id === cfg.accountFilter);
+    }
+    if (cfg.statusFilter === "issued") {
+      result = result.filter((c) => c.status === "Given" || c.status === "Cleared");
+    } else if (cfg.statusFilter === "pending") {
+      result = result.filter((c) => c.status === "Open" || c.status === "Printed");
+    } else if (cfg.statusFilter && cfg.statusFilter !== "all") {
+      result = result.filter((c) => c.status === cfg.statusFilter);
+    }
+    if (cfg.dateFrom) result = result.filter((c) => c.check_date >= cfg.dateFrom);
+    if (cfg.dateTo) result = result.filter((c) => c.check_date <= cfg.dateTo);
+
+    // Resolve which chalikah columns to include
+    let allowedChalikahIds: Set<string> | null = null;
+    if (cfg.chalikahMode === "last_n") {
+      const sorted = [...chalikahList].sort((a, b) =>
+        (b.created_at || "").localeCompare(a.created_at || "")
+      );
+      allowedChalikahIds = new Set(sorted.slice(0, cfg.chalikahN || 2).map((c) => c.id));
+    } else if (cfg.chalikahMode === "specific") {
+      allowedChalikahIds = new Set(cfg.chalikahIds || []);
+    }
+    if (allowedChalikahIds) {
+      result = result.filter((c) => allowedChalikahIds!.has(c.chalikah_id || "__none__"));
+    }
+
+    const map: Record<string, Record<string, number>> = {};
+    const payeeMap: Record<string, any> = {};
+    const chalikahIds = new Set<string>();
+    result.forEach((c) => {
+      const effectiveRecordNumber = c.given_to_record_number || c.payee_record_number;
+      const effectivePayee = c.given_to_payee || c.payee || "(No Payee)";
+      const info = getPayeeInfo(effectivePayee, effectiveRecordNumber);
+      const dedupeKey = (effectiveRecordNumber && info.record_id)
+        ? `__rid__${info.record_id}` : effectivePayee;
+      const chId = c.chalikah_id || "__none__";
+      chalikahIds.add(chId);
+      if (!map[dedupeKey]) {
+        map[dedupeKey] = {};
+        payeeMap[dedupeKey] = { key: dedupeKey, name: effectivePayee, ...info };
+      }
+      map[dedupeKey][chId] = (map[dedupeKey][chId] || 0) + c.amount;
+    });
+    const chalikahNameMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
+    const cols = Array.from(chalikahIds).map((id) => ({
+      id, name: id === "__none__" ? "(No Chalikah)" : chalikahNameMap[id] || id,
+    }));
+    cols.sort((a, b) => a.name.localeCompare(b.name));
+    const rows = Object.values(payeeMap).sort((a: any, b: any) => a.name.localeCompare(b.name));
+    let gt = 0;
+    result.forEach((c) => (gt += c.amount));
+    return { payeeRows: rows, chalikahCols: cols, matrix: map, grandTotal: gt };
   };
 
   const handleExport = (data?: any) => {
@@ -682,7 +778,7 @@ const Reports = () => {
           <DialogHeader>
             <DialogTitle>Save Report</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <Label>Report Name</Label>
             <Input
               value={reportName}
@@ -690,6 +786,69 @@ const Reports = () => {
               placeholder="e.g. Q1 2026 Summary"
               onKeyDown={(e) => e.key === "Enter" && handleSave()}
             />
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <RadioGroup value={saveMode} onValueChange={(v) => setSaveMode(v as any)}>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="snapshot" id="snap" />
+                  <Label htmlFor="snap" className="font-normal cursor-pointer">
+                    Snapshot — freeze current data
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="dynamic" id="dyn" />
+                  <Label htmlFor="dyn" className="font-normal cursor-pointer">
+                    Dynamic — re-runs on current data each time
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+            {saveMode === "dynamic" && (
+              <div className="space-y-2 border-l-2 pl-3">
+                <Label>Chalikah columns</Label>
+                <RadioGroup value={chalikahMode} onValueChange={(v) => setChalikahMode(v as ChalikahMode)}>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="all" id="ch-all" />
+                    <Label htmlFor="ch-all" className="font-normal cursor-pointer">All chalikah</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="last_n" id="ch-last" />
+                    <Label htmlFor="ch-last" className="font-normal cursor-pointer">Last</Label>
+                    <Input
+                      type="number" min={1} value={chalikahN}
+                      onChange={(e) => setChalikahN(Math.max(1, Number(e.target.value) || 1))}
+                      className="w-16 h-7" disabled={chalikahMode !== "last_n"}
+                    />
+                    <span className="text-sm text-muted-foreground">chalikah (newest)</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <RadioGroupItem value="specific" id="ch-spec" className="mt-1" />
+                    <div className="flex-1">
+                      <Label htmlFor="ch-spec" className="font-normal cursor-pointer">Specific chalikah</Label>
+                      {chalikahMode === "specific" && (
+                        <div className="mt-2 max-h-40 overflow-auto border rounded p-2 space-y-1">
+                          {chalikahList.map((c) => (
+                            <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                              <Checkbox
+                                checked={specificChalikahIds.has(c.id)}
+                                onCheckedChange={(checked) => {
+                                  setSpecificChalikahIds((prev) => {
+                                    const next = new Set(prev);
+                                    if (checked) next.add(c.id); else next.delete(c.id);
+                                    return next;
+                                  });
+                                }}
+                              />
+                              {c.name}
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>Cancel</Button>
@@ -702,10 +861,18 @@ const Reports = () => {
       <Dialog open={!!viewingReport} onOpenChange={() => setViewingReport(null)}>
         <DialogContent className="max-w-[90vw] max-h-[85vh] overflow-auto">
           <DialogHeader>
-            <DialogTitle>{viewingReport?.name}</DialogTitle>
+            <DialogTitle>
+              {viewingReport?.name}
+              {viewingReport?.report_type === "payee_chalikah_dynamic" && (
+                <Badge variant="outline" className="ml-2">Dynamic</Badge>
+              )}
+            </DialogTitle>
           </DialogHeader>
           {viewingReport && (() => {
-            const rd = viewingReport.report_data as any;
+            const isDynamic = viewingReport.report_type === "payee_chalikah_dynamic";
+            const rd: any = isDynamic
+              ? computeDynamic(viewingReport.filters as any)
+              : viewingReport.report_data;
             // Saved reports show all columns from stored data
             const savedCols: ColumnDef[] = [
               { key: "sort_order", label: "Sort" },
