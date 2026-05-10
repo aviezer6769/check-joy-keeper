@@ -238,6 +238,109 @@ const Reports = () => {
     );
   };
 
+  // ===== Edit / Update saved report =====
+  const buildOverrides = () => ({
+    visibleKeys: colLayout.layout.visibleKeys,
+    widths: colLayout.widths,
+    sort: colLayout.sort,
+    filters: colLayout.filters,
+    filterModes: colLayout.filterModes,
+    customColumns,
+    customValues,
+  });
+
+  const loadReportForEdit = (r: SavedReport) => {
+    const f: any = r.filters || {};
+    const isDyn = r.report_type === "payee_chalikah_dynamic";
+    setEditingReportId(r.id);
+    setEditingReportName(r.name);
+    setSaveMode(isDyn ? "dynamic" : "snapshot");
+    setAccountFilter(f.accountFilter || "all");
+    setStatusFilter(f.statusFilter || "issued");
+    setDateFrom(f.dateFrom || "");
+    setDateTo(f.dateTo || "");
+    if (isDyn) {
+      setChalikahMode((f.chalikahMode as ChalikahMode) || "all");
+      setChalikahN(f.chalikahN || 2);
+      setSpecificChalikahIds(new Set(f.chalikahIds || []));
+    }
+    const ov = f._overrides || {};
+    setCustomColumns(ov.customColumns || []);
+    setCustomValues(ov.customValues || {});
+    // Apply layout after a tick so allReportColumns recomputes with custom cols
+    setTimeout(() => {
+      colLayout.applyLayout({
+        visibleKeys: ov.visibleKeys,
+        widths: ov.widths,
+        sort: ov.sort,
+        filters: ov.filters || {},
+        filterModes: ov.filterModes || {},
+      });
+    }, 0);
+    setHasRun(true);
+    setSelectedNames(new Set());
+    toast?.success?.("Report loaded for editing");
+  };
+
+  const cancelEdit = () => {
+    setEditingReportId(null);
+    setEditingReportName("");
+    setCustomColumns([]);
+    setCustomValues({});
+  };
+
+  const handleUpdate = () => {
+    if (!editingReportId) return;
+    const isDyn = saveMode === "dynamic";
+    const baseFilters: any = isDyn
+      ? {
+          dynamic: true,
+          accountFilter, statusFilter, dateFrom, dateTo,
+          chalikahMode,
+          chalikahN: chalikahMode === "last_n" ? chalikahN : undefined,
+          chalikahIds: chalikahMode === "specific" ? Array.from(specificChalikahIds) : undefined,
+        }
+      : { accountFilter, statusFilter, dateFrom, dateTo };
+    baseFilters._overrides = buildOverrides();
+    updateReport.mutate(
+      {
+        id: editingReportId,
+        name: editingReportName.trim() || undefined,
+        filters: baseFilters,
+        report_data: isDyn ? {} : buildReportData(),
+      },
+      { onSuccess: () => cancelEdit() }
+    );
+  };
+
+  const addCustomColumn = () => {
+    const label = newColumnName.trim();
+    if (!label) return;
+    const key = `cust_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+    setCustomColumns((prev) => [...prev, { key, label }]);
+    setNewColumnName("");
+    // Make it visible in the layout
+    setTimeout(() => {
+      if (!colLayout.layout.visibleKeys.includes(key)) colLayout.toggleColumn(key);
+    }, 0);
+  };
+
+  const removeCustomColumn = (key: string) => {
+    setCustomColumns((prev) => prev.filter((c) => c.key !== key));
+    setCustomValues((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const setCustomValue = (colKey: string, payeeKey: string, value: string) => {
+    setCustomValues((prev) => ({
+      ...prev,
+      [colKey]: { ...(prev[colKey] || {}), [payeeKey]: value },
+    }));
+  };
+
   // Re-compute a report at view time from saved dynamic config
   const computeDynamic = (cfg: DynamicReportConfig) => {
     let result = allChecks;
