@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useColumnLayout, type ColumnDef, type FilterMode } from "@/hooks/useColumnLayout";
+import { useColumnLayout, type ColumnDef, type FilterMode, type SortState } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 import { useAuditSource } from "@/hooks/useAuditSource";
@@ -447,13 +447,22 @@ const Reports = () => {
   const handleExport = (data?: any, report?: SavedReport | null) => {
     const src = data || buildReportData();
     // Use displayedRows (sorted/filtered) for live view, or saved data's payeeRows
-    const baseRows = data ? ((src.payeeRows || []) as typeof payeeRows) : displayedRows;
+    // Saved custom-column values & overrides for filter/sort
+    const ovEarly: any = (report?.filters as any)?._overrides || {};
+    const baseRows = data
+      ? applySavedLayout(
+          (src.payeeRows || []) as typeof payeeRows,
+          src.matrix || {},
+          ovEarly,
+          ovEarly.customValues || {}
+        )
+      : displayedRows;
     // If there's a selection, export only selected; otherwise export all displayed
     const exportPayees = selectedNames.size > 0
       ? baseRows.filter((pr) => selectedNames.has(pr.key))
       : baseRows;
     // Saved custom-column values come from overrides (or current state for live)
-    const ov: any = (report?.filters as any)?._overrides || {};
+    const ov: any = ovEarly;
     const savedCustomValues: Record<string, Record<string, string>> = data
       ? (ov.customValues || {})
       : customValues;
@@ -521,9 +530,10 @@ const Reports = () => {
   const getRowTextValue = (
     pr: typeof payeeRows[number],
     colKey: string,
-    matrixData: Record<string, Record<string, number>>
+    matrixData: Record<string, Record<string, number>>,
+    cvOverride?: Record<string, Record<string, string>>
   ): string => {
-    if (colKey.startsWith("cust_")) return customValues[colKey]?.[pr.key] || "";
+    if (colKey.startsWith("cust_")) return (cvOverride || customValues)[colKey]?.[pr.key] || "";
     if (colKey === "sort_order") return "";
     if (colKey === "record_id") return pr.record_id || "";
     if (colKey === "urgent_level") return pr.urgent_level == null ? "?" : String(pr.urgent_level);
@@ -545,9 +555,10 @@ const Reports = () => {
   const getRowSortValue = (
     pr: typeof payeeRows[number],
     colKey: string,
-    matrixData: Record<string, Record<string, number>>
+    matrixData: Record<string, Record<string, number>>,
+    cvOverride?: Record<string, Record<string, string>>
   ): string | number => {
-    if (colKey.startsWith("cust_")) return (customValues[colKey]?.[pr.key] || "").toLowerCase();
+    if (colKey.startsWith("cust_")) return ((cvOverride || customValues)[colKey]?.[pr.key] || "").toLowerCase();
     if (colKey === "record_id") {
       const n = parseFloat(pr.record_id || "");
       return isNaN(n) ? (pr.record_id || "").toLowerCase() : n;
@@ -564,6 +575,68 @@ const Reports = () => {
       return matrixData[pr.key]?.[chId] || 0;
     }
     return "";
+  };
+
+  // Apply saved overrides (filters, filterModes, filterRules+rulesLogic, sort) to rows.
+  // Used by saved-report previews, full-view, and exports so they match what the user saved.
+  const applySavedLayout = <T extends typeof payeeRows[number]>(
+    rows: T[],
+    matrixData: Record<string, Record<string, number>>,
+    ov: any,
+    cvOverride?: Record<string, Record<string, string>>
+  ): T[] => {
+    if (!ov) return rows;
+    const filters: Record<string, string> = ov.filters || {};
+    const filterModes: Record<string, FilterMode> = ov.filterModes || {};
+    const rules: FilterRule[] = Array.isArray(ov.filterRules) ? ov.filterRules : [];
+    const logic: "and" | "or" = ov.rulesLogic === "or" ? "or" : "and";
+    const sort: SortState | null = ov.sort || null;
+
+    const matchRule = (pr: T, key: string, mode: FilterMode, val: string) => {
+      if (!val) return true;
+      const text = getRowTextValue(pr, key, matrixData, cvOverride);
+      if (val === "__blank__") return !text || text.trim() === "" || text === "0";
+      const tl = text.toLowerCase();
+      const vl = val.toLowerCase();
+      const numT = parseFloat(text);
+      const numV = parseFloat(val);
+      switch (mode) {
+        case "equals": return tl === vl;
+        case "not": return tl !== vl;
+        case "gt": return !isNaN(numT) && !isNaN(numV) && numT > numV;
+        case "lt": return !isNaN(numT) && !isNaN(numV) && numT < numV;
+        case "gte": return !isNaN(numT) && !isNaN(numV) && numT >= numV;
+        case "lte": return !isNaN(numT) && !isNaN(numV) && numT <= numV;
+        case "contains":
+        default: return tl.includes(vl);
+      }
+    };
+
+    let result = [...rows];
+    const activeFilters = Object.entries(filters).filter(([, v]) => v && v.length > 0);
+    if (activeFilters.length > 0) {
+      result = result.filter((pr) =>
+        activeFilters.every(([k, v]) => matchRule(pr, k, filterModes[k] || "contains", v))
+      );
+    }
+    const activeRules = rules.filter((r) => r.key && r.value && r.value.length > 0);
+    if (activeRules.length > 0) {
+      result = result.filter((pr) => {
+        const checks = activeRules.map((r) => matchRule(pr, r.key, r.mode, r.value));
+        return logic === "or" ? checks.some(Boolean) : checks.every(Boolean);
+      });
+    }
+    if (sort) {
+      const { key, dir } = sort;
+      result.sort((a, b) => {
+        const va = getRowSortValue(a, key, matrixData, cvOverride);
+        const vb = getRowSortValue(b, key, matrixData, cvOverride);
+        if (va < vb) return dir === "asc" ? -1 : 1;
+        if (va > vb) return dir === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return result;
   };
 
   // Apply column filters + sorting to payeeRows
@@ -1421,14 +1494,31 @@ const Reports = () => {
               : viewingReport.report_data;
             // Saved reports honor the saved column layout (visibleKeys + custom cols)
             const savedCols = colsForSavedReport(viewingReport, rd);
+            const ovV: any = (viewingReport.filters as any)?._overrides || {};
+            const savedCv = ovV.customValues || {};
+            const filteredRows = applySavedLayout(
+              (rd.payeeRows || []) as typeof payeeRows,
+              rd.matrix || {},
+              ovV,
+              savedCv
+            );
+            const filteredTotal = filteredRows.reduce<number>(
+              (s, pr) =>
+                s +
+                Object.values((rd.matrix?.[pr.key] || {}) as Record<string, number>).reduce<number>(
+                  (ss, v) => ss + (v as number),
+                  0
+                ),
+              0
+            );
             return renderMatrix(
-              rd.payeeRows || [],
+              filteredRows,
               rd.chalikahCols || [],
               rd.matrix || {},
-              rd.grandTotal || 0,
+              filteredTotal,
               savedCols,
               true,
-              ((viewingReport.filters as any)?._overrides?.customValues) || {}
+              savedCv
             );
           })()}
         </DialogContent>
@@ -1451,10 +1541,17 @@ const Reports = () => {
               ? computeDynamic(fullViewReport.filters as any)
               : fullViewReport.report_data;
             const matrixData: Record<string, Record<string, number>> = rd.matrix || {};
-            const allRows: any[] = rd.payeeRows || [];
             const savedCols = colsForSavedReport(fullViewReport, rd);
             const savedCustomValues: Record<string, Record<string, string>> =
               ((fullViewReport.filters as any)?._overrides?.customValues) || {};
+            const ovF: any = (fullViewReport.filters as any)?._overrides || {};
+            // Apply saved filters/sort first, then in-dialog search
+            const allRows = applySavedLayout(
+              (rd.payeeRows || []) as typeof payeeRows,
+              matrixData,
+              ovF,
+              savedCustomValues
+            );
             // Search filter only — layout/sort/columns come from saved overrides
             const q = fullViewSearch.trim().toLowerCase();
             const rows = q
