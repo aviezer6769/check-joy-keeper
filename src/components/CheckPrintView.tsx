@@ -8,6 +8,10 @@ interface CheckPrintViewProps {
   account?: Account | null;
   payee?: Payee | null;
   showSignature?: boolean;
+  chalikahName?: string | null;
+  chalikahPosition?: number;
+  chalikahCount?: number;
+  chalikahTotal?: number;
 }
 
 const PAGE = {
@@ -215,7 +219,7 @@ function StubRightMeta({
   );
 }
 
-export function CheckPrintView({ check, account, payee, showSignature = true }: CheckPrintViewProps) {
+export function CheckPrintView({ check, account, payee, showSignature = true, chalikahName, chalikahPosition, chalikahCount, chalikahTotal }: CheckPrintViewProps) {
   const payeeName = (check.payee.startsWith("Payee #") || check.payee === "Blank") ? "" : check.payee;
   const payerDisplayName = account?.check_payer_name || account?.payer_name || account?.account_name || "CLYKT";
   const stubPayerName = account?.stub_payer_name || account?.payer_name || account?.account_name;
