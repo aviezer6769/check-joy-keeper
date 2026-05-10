@@ -305,6 +305,7 @@ const Reports = () => {
       {
         id: editingReportId,
         name: editingReportName.trim() || undefined,
+        report_type: isDyn ? "payee_chalikah_dynamic" : "payee_chalikah",
         filters: baseFilters,
         report_data: isDyn ? {} : buildReportData(),
       },
