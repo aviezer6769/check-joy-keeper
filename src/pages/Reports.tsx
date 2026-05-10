@@ -1055,7 +1055,7 @@ const Reports = () => {
                               return (
                                 <div key={c.key} className="flex items-center gap-1">
                                   <span className="text-xs w-32 truncate" title={c.label}>
-                                    {c.label}{!visible && <span className="text-muted-foreground"> (hidden)</span>}
+                                    {colLabel(c)}{!visible && <span className="text-muted-foreground"> (hidden)</span>}
                                   </span>
                                   <Select
                                     value={mode}
