@@ -9,8 +9,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Plus, Pencil, Trash2, Check, X } from "lucide-react";
+import { useAuditSource } from "@/hooks/useAuditSource";
 
 const Chalikah = () => {
+  useAuditSource("Chalikah page");
   const { data: items = [], isLoading } = useChalikah();
   const addChalikah = useAddChalikah();
   const updateChalikah = useUpdateChalikah();
