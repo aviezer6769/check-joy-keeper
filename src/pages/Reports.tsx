@@ -416,7 +416,35 @@ const Reports = () => {
     return { payeeRows: rows, chalikahCols: cols, matrix: map, grandTotal: gt };
   };
 
-  const handleExport = (data?: any) => {
+  // Build the visible columns for a SAVED report, honoring _overrides if present
+  const colsForSavedReport = (report: SavedReport | null | undefined, rd: any): ColumnDef[] => {
+    const chCols = ((rd?.chalikahCols || []) as Array<{ id: string; name: string }>)
+      .map((c) => ({ key: `ch_${c.id}`, label: c.name }));
+    const ov: any = (report?.filters as any)?._overrides || {};
+    const savedCustom: Array<{ key: string; label: string }> = ov.customColumns || [];
+    const pool: ColumnDef[] = [
+      ...STATIC_REPORT_COLS,
+      ...chCols,
+      { key: "total", label: "Total" },
+      ...savedCustom.map((c) => ({ key: c.key, label: c.label })),
+    ];
+    const map = new Map(pool.map((c) => [c.key, c]));
+    if (Array.isArray(ov.visibleKeys) && ov.visibleKeys.length > 0) {
+      return ov.visibleKeys.map((k: string) => map.get(k)).filter(Boolean) as ColumnDef[];
+    }
+    // Default fallback (legacy reports without overrides)
+    return [
+      { key: "record_id", label: "Record ID" },
+      { key: "yiddish_name", label: "Yiddish Name" },
+      { key: "payee_name", label: "Payee" },
+      { key: "address", label: "Address" },
+      { key: "memo", label: "Memo" },
+      ...chCols,
+      { key: "total", label: "Total" },
+    ];
+  };
+
+  const handleExport = (data?: any, report?: SavedReport | null) => {
     const src = data || buildReportData();
     // Use displayedRows (sorted/filtered) for live view, or saved data's payeeRows
     const baseRows = data ? ((src.payeeRows || []) as typeof payeeRows) : displayedRows;
@@ -424,22 +452,22 @@ const Reports = () => {
     const exportPayees = selectedNames.size > 0
       ? baseRows.filter((pr) => selectedNames.has(pr.key))
       : baseRows;
-    // For saved data, use that data's columns; for live, use the live layout
+    // Saved custom-column values come from overrides (or current state for live)
+    const ov: any = (report?.filters as any)?._overrides || {};
+    const savedCustomValues: Record<string, Record<string, string>> = data
+      ? (ov.customValues || {})
+      : customValues;
+    // For saved data, derive columns from saved overrides; for live, use the live layout
     const exportCols: ColumnDef[] = data
-      ? [
-          { key: "record_id", label: "Record ID" },
-          { key: "yiddish_name", label: "Yiddish Name" },
-          { key: "payee_name", label: "Payee" },
-          { key: "address", label: "Address" },
-          { key: "memo", label: "Memo" },
-          ...((src.chalikahCols || []) as Array<{id:string;name:string}>).map((c) => ({ key: `ch_${c.id}`, label: c.name })),
-          { key: "total", label: "Total" },
-        ]
+      ? colsForSavedReport(report, src)
       : colLayout.visibleColumns;
     const rows = exportPayees.map((pr) => {
       const row: Record<string, any> = {};
       exportCols.forEach((col) => {
-        if (col.key === "record_id") row["Record ID"] = pr.record_id;
+        if (col.key === "sort_order") {
+          row["Sort"] = `${pr.is_active ? "✓" : "✗"}/${pr.urgent_level == null ? "?" : pr.urgent_level}`;
+        }
+        else if (col.key === "record_id") row["Record ID"] = pr.record_id;
         else if (col.key === "urgent_level") row["Urgent"] = pr.urgent_level == null ? "?" : pr.urgent_level;
         else if (col.key === "is_active") row["Active"] = pr.is_active ? "Active" : "Inactive";
         else if (col.key === "yiddish_name") row["Yiddish Name"] = pr.yiddish;
@@ -450,6 +478,9 @@ const Reports = () => {
         else if (col.key.startsWith("ch_")) {
           const chId = col.key.slice(3);
           row[col.label] = src.matrix[pr.key]?.[chId] || 0;
+        }
+        else if (col.key.startsWith("cust_")) {
+          row[col.label] = savedCustomValues[col.key]?.[pr.key] || "";
         }
       });
       return row;
@@ -472,6 +503,10 @@ const Reports = () => {
         totalsRow[col.label] = exportPayees.reduce(
           (s: number, pr: any) => s + (src.matrix[pr.key]?.[chId] || 0), 0
         );
+      } else if (col.key.startsWith("cust_")) {
+        totalsRow[col.label] = "";
+      } else if (col.key === "sort_order") {
+        totalsRow["Sort"] = "";
       }
     });
     rows.push(totalsRow);
@@ -633,9 +668,11 @@ const Reports = () => {
     matrixData: Record<string, Record<string, number>>,
     total: number,
     visibleCols?: ColumnDef[],
-    isStatic?: boolean
+    isStatic?: boolean,
+    customValuesOverride?: Record<string, Record<string, string>>
   ) => {
     const visCols = visibleCols || colLayout.visibleColumns;
+    const cvSource = customValuesOverride || customValues;
 
     return (
       <div className="overflow-auto border rounded-lg">
@@ -754,7 +791,7 @@ const Reports = () => {
                       );
                     }
                     if (col.key.startsWith("cust_")) {
-                      const val = customValues[col.key]?.[pr.key] || "";
+                      const val = cvSource[col.key]?.[pr.key] || "";
                       if (isStatic) {
                         return <TableCell key={col.key}>{val || "—"}</TableCell>;
                       }
@@ -1247,7 +1284,7 @@ const Reports = () => {
                               const data = r.report_type === "payee_chalikah_dynamic"
                                 ? computeDynamic(r.filters as any)
                                 : r.report_data;
-                              handleExport(data as any);
+                              handleExport(data as any, r);
                             }}>
                               <Download className="h-3 w-3" />
                             </Button>
@@ -1382,23 +1419,16 @@ const Reports = () => {
             const rd: any = isDynamic
               ? computeDynamic(viewingReport.filters as any)
               : viewingReport.report_data;
-            // Saved reports show all columns from stored data
-            const savedCols: ColumnDef[] = [
-              { key: "sort_order", label: "Sort" },
-              { key: "record_id", label: "Record ID" },
-              { key: "yiddish_name", label: "Yiddish Name" },
-              { key: "payee_name", label: "Payee" },
-              { key: "memo", label: "Memo" },
-              ...(rd.chalikahCols || []).map((c: any) => ({ key: `ch_${c.id}`, label: c.name })),
-              { key: "total", label: "Total" },
-            ];
+            // Saved reports honor the saved column layout (visibleKeys + custom cols)
+            const savedCols = colsForSavedReport(viewingReport, rd);
             return renderMatrix(
               rd.payeeRows || [],
               rd.chalikahCols || [],
               rd.matrix || {},
               rd.grandTotal || 0,
               savedCols,
-              true
+              true,
+              ((viewingReport.filters as any)?._overrides?.customValues) || {}
             );
           })()}
         </DialogContent>
@@ -1497,7 +1527,7 @@ const Reports = () => {
                   <Button variant="outline" size="sm" onClick={() => setFullViewSort(null)} disabled={!fullViewSort}>
                     Clear sort
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleExport(rd)}>
+                  <Button variant="outline" size="sm" onClick={() => handleExport(rd, fullViewReport)}>
                     <Download className="h-4 w-4 mr-2" /> Download
                   </Button>
                 </div>
