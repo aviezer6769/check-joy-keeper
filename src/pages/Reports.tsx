@@ -1417,16 +1417,8 @@ const Reports = () => {
             const rd: any = isDynamic
               ? computeDynamic(viewingReport.filters as any)
               : viewingReport.report_data;
-            // Saved reports show all columns from stored data
-            const savedCols: ColumnDef[] = [
-              { key: "sort_order", label: "Sort" },
-              { key: "record_id", label: "Record ID" },
-              { key: "yiddish_name", label: "Yiddish Name" },
-              { key: "payee_name", label: "Payee" },
-              { key: "memo", label: "Memo" },
-              ...(rd.chalikahCols || []).map((c: any) => ({ key: `ch_${c.id}`, label: c.name })),
-              { key: "total", label: "Total" },
-            ];
+            // Saved reports honor the saved column layout (visibleKeys + custom cols)
+            const savedCols = colsForSavedReport(viewingReport, rd);
             return renderMatrix(
               rd.payeeRows || [],
               rd.chalikahCols || [],
