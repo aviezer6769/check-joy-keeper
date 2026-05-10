@@ -1494,14 +1494,26 @@ const Reports = () => {
               : viewingReport.report_data;
             // Saved reports honor the saved column layout (visibleKeys + custom cols)
             const savedCols = colsForSavedReport(viewingReport, rd);
+            const ovV: any = (viewingReport.filters as any)?._overrides || {};
+            const savedCv = ovV.customValues || {};
+            const filteredRows = applySavedLayout(
+              (rd.payeeRows || []) as typeof payeeRows,
+              rd.matrix || {},
+              ovV,
+              savedCv
+            );
+            const filteredTotal = filteredRows.reduce(
+              (s, pr) => s + Object.values(rd.matrix?.[pr.key] || {}).reduce((ss: number, v: any) => ss + v, 0),
+              0
+            );
             return renderMatrix(
-              rd.payeeRows || [],
+              filteredRows,
               rd.chalikahCols || [],
               rd.matrix || {},
-              rd.grandTotal || 0,
+              filteredTotal,
               savedCols,
               true,
-              ((viewingReport.filters as any)?._overrides?.customValues) || {}
+              savedCv
             );
           })()}
         </DialogContent>
