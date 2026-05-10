@@ -255,6 +255,13 @@ const Reports = () => {
     rulesLogic,
   });
 
+  // Helper to label columns with type indicators
+  const colLabel = (c: ColumnDef) => {
+    if (c.key.startsWith("ch_")) return `${c.label}  (Chalikah)`;
+    if (c.key.startsWith("cust_")) return `${c.label}  (Custom)`;
+    return c.label;
+  };
+
   const loadReportForEdit = (r: SavedReport) => {
     const f: any = r.filters || {};
     const isDyn = r.report_type === "payee_chalikah_dynamic";
