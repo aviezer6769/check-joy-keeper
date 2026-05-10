@@ -405,6 +405,27 @@ export function CheckPrintView({ check, account, payee, showSignature = true, ch
 
           <PayeeBlock payee={payee} topOffsetIn={STUB_2.payeeTop} leftOffsetIn={0.48} />
 
+          {(chalikahPosition && chalikahCount) || chalikahTotal ? (
+            <div
+              className="absolute leading-tight"
+              style={{
+                left: inches(0.48),
+                bottom: inches(0.1),
+                fontSize: "10pt",
+              }}
+            >
+              {chalikahName && (
+                <p className="font-semibold">Chalikah: {chalikahName}</p>
+              )}
+              {chalikahPosition && chalikahCount ? (
+                <p>Check {chalikahPosition} of {chalikahCount}</p>
+              ) : null}
+              {chalikahTotal != null && (
+                <p>Chalikah Total Printed: {formatCurrency(chalikahTotal)}</p>
+              )}
+            </div>
+          ) : null}
+
           {check.stub_memo && (
             <div
               className="absolute border border-muted-foreground/40 rounded-sm px-2 py-1 overflow-hidden"
