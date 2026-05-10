@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
+import { formatPhone } from "@/lib/payee-utils";
 
 const STATIC_PAYEE_COLUMNS: ColumnDef[] = [
   { key: "record_id", label: "Record ID" },
@@ -319,7 +320,7 @@ const Payees = () => {
       case "city": return p.city || "—";
       case "state": return p.state || "—";
       case "zip": return p.zip || "—";
-      case "phone": return p.phone || "—";
+      case "phone": return p.phone ? formatPhone(p.phone) : "—";
       case "memo": return <span className="text-sm max-w-[300px] whitespace-pre-line block">{p.memo || "—"}</span>;
       case "is_active": return p.is_active ? <Badge variant="default" className="bg-success text-success-foreground">Active</Badge> : <Badge variant="secondary">Inactive</Badge>;
       case "ch_total": {

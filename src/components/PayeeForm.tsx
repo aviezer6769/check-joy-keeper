@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useAddPayee, usePayees, type PayeeInsert } from "@/hooks/usePayees";
 import { Plus } from "lucide-react";
 import { buildPayeeName } from "@/lib/payee-utils";
+import { formatPhone } from "@/lib/payee-utils";
 import { FieldSuggestInput } from "@/components/FieldSuggestInput";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -90,9 +91,18 @@ export function PayeeForm() {
 
   const handleChange = (key: keyof PayeeInsert, value: string) => {
     setForm((prev) => {
+      let nextValue: any = value;
+      if (key === "phone") {
+        nextValue = formatPhone(value) || null;
+      }
       const updated = {
         ...prev,
-        [key]: key === "sort_order" || key === "urgent_level" ? Number(value) || 0 : value || null,
+        [key]:
+          key === "sort_order" || key === "urgent_level"
+            ? Number(value) || 0
+            : key === "phone"
+            ? nextValue
+            : value || null,
       };
       // Auto-fill city, state, zip when street_name matches an existing payee
       if (key === "street_name" && value) {

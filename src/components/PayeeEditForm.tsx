@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUpdatePayee, useDeletePayee, usePayees, type Payee } from "@/hooks/usePayees";
 import { Trash2 } from "lucide-react";
-import { buildPayeeName } from "@/lib/payee-utils";
+import { buildPayeeName, formatPhone } from "@/lib/payee-utils";
 import { FieldSuggestInput } from "@/components/FieldSuggestInput";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -67,7 +67,12 @@ export function PayeeEditForm({ payee, open, onOpenChange }: PayeeEditFormProps)
     setForm((prev) => {
       const updated = {
         ...prev,
-        [key]: key === "sort_order" || key === "urgent_level" ? Number(value) || 0 : value || null,
+        [key]:
+          key === "sort_order" || key === "urgent_level"
+            ? Number(value) || 0
+            : key === "phone"
+            ? formatPhone(value) || null
+            : value || null,
       };
       if (key === "street_name" && value) {
         const match = allPayees.find(
