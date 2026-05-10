@@ -447,13 +447,22 @@ const Reports = () => {
   const handleExport = (data?: any, report?: SavedReport | null) => {
     const src = data || buildReportData();
     // Use displayedRows (sorted/filtered) for live view, or saved data's payeeRows
-    const baseRows = data ? ((src.payeeRows || []) as typeof payeeRows) : displayedRows;
+    // Saved custom-column values & overrides for filter/sort
+    const ovEarly: any = (report?.filters as any)?._overrides || {};
+    const baseRows = data
+      ? applySavedLayout(
+          (src.payeeRows || []) as typeof payeeRows,
+          src.matrix || {},
+          ovEarly,
+          ovEarly.customValues || {}
+        )
+      : displayedRows;
     // If there's a selection, export only selected; otherwise export all displayed
     const exportPayees = selectedNames.size > 0
       ? baseRows.filter((pr) => selectedNames.has(pr.key))
       : baseRows;
     // Saved custom-column values come from overrides (or current state for live)
-    const ov: any = (report?.filters as any)?._overrides || {};
+    const ov: any = ovEarly;
     const savedCustomValues: Record<string, Record<string, string>> = data
       ? (ov.customValues || {})
       : customValues;
