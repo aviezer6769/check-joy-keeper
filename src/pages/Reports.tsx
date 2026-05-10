@@ -792,7 +792,7 @@ const Reports = () => {
             <Link to="/">
               <Button variant="outline">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Checks
+                Home
               </Button>
             </Link>
           </div>
