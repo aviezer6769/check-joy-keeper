@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers, X, FileCheck } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers, X, FileCheck, History } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { PayeeForm } from "@/components/PayeeForm";
@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
+import { HistoryDialog } from "@/components/HistoryDialog";
 import { useAuditSource } from "@/hooks/useAuditSource";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
@@ -75,6 +76,7 @@ const Payees = () => {
   const [search, setSearch] = useState("");
   const [expandedPayee, setExpandedPayee] = useState<string | null>(null);
   const [editingPayee, setEditingPayee] = useState<Payee | null>(null);
+  const [historyPayee, setHistoryPayee] = useState<Payee | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [batchCheckOpen, setBatchCheckOpen] = useState(false);
@@ -605,6 +607,15 @@ const Payees = () => {
                             onClick={() => setEditingPayee(p)}
                           >
                             <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => setHistoryPayee(p)}
+                            title="History"
+                          >
+                            <History className="h-3 w-3" />
                           </Button>
                         </TableCell>
                         {colLayout.visibleColumns.map((col) => {
