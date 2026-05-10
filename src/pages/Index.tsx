@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Index = () => {
+  useAuditSource("Checks page");
   const { data: accounts = [] } = useAccounts();
   const [activeAccountId, setActiveAccountId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
