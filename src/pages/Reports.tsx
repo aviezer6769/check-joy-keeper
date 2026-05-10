@@ -1450,12 +1450,14 @@ const Reports = () => {
             const rd: any = isDyn
               ? computeDynamic(fullViewReport.filters as any)
               : fullViewReport.report_data;
-            const cols: Array<{ id: string; name: string }> = rd.chalikahCols || [];
             const matrixData: Record<string, Record<string, number>> = rd.matrix || {};
             const allRows: any[] = rd.payeeRows || [];
-            // Search
+            const savedCols = colsForSavedReport(fullViewReport, rd);
+            const savedCustomValues: Record<string, Record<string, string>> =
+              ((fullViewReport.filters as any)?._overrides?.customValues) || {};
+            // Search filter only — layout/sort/columns come from saved overrides
             const q = fullViewSearch.trim().toLowerCase();
-            let rows = q
+            const rows = q
               ? allRows.filter((pr) =>
                   (pr.name || "").toLowerCase().includes(q) ||
                   (pr.yiddish || "").toLowerCase().includes(q) ||
@@ -1463,52 +1465,12 @@ const Reports = () => {
                   (pr.address || "").toLowerCase().includes(q) ||
                   (pr.memo || "").toLowerCase().includes(q)
                 )
-              : [...allRows];
-            // Sort
-            if (fullViewSort) {
-              const { key, dir } = fullViewSort;
-              const mul = dir === "asc" ? 1 : -1;
-              rows.sort((a, b) => {
-                let va: any, vb: any;
-                if (key === "record_id") { va = a.record_id || ""; vb = b.record_id || ""; }
-                else if (key === "yiddish_name") { va = a.yiddish || ""; vb = b.yiddish || ""; }
-                else if (key === "payee_name") { va = a.name || ""; vb = b.name || ""; }
-                else if (key === "address") { va = a.address || ""; vb = b.address || ""; }
-                else if (key === "memo") { va = a.memo || ""; vb = b.memo || ""; }
-                else if (key === "total") {
-                  va = Object.values(matrixData[a.key] || {}).reduce((s: number, v: any) => s + v, 0);
-                  vb = Object.values(matrixData[b.key] || {}).reduce((s: number, v: any) => s + v, 0);
-                } else if (key.startsWith("ch_")) {
-                  const id = key.slice(3);
-                  va = matrixData[a.key]?.[id] || 0;
-                  vb = matrixData[b.key]?.[id] || 0;
-                } else { va = 0; vb = 0; }
-                if (typeof va === "string") return va.localeCompare(vb) * mul;
-                return (va - vb) * mul;
-              });
-            }
-            const total = rows.reduce((s, pr) =>
-              s + Object.values(matrixData[pr.key] || {}).reduce((ss: number, v: any) => ss + v, 0), 0);
-            const toggleSort = (key: string) => {
-              setFullViewSort((cur) => {
-                if (!cur || cur.key !== key) return { key, dir: "asc" };
-                if (cur.dir === "asc") return { key, dir: "desc" };
-                return null;
-              });
-            };
-            const SortIcon = ({ k }: { k: string }) => {
-              if (fullViewSort?.key !== k) return <ArrowUpDown className="h-3 w-3 inline ml-1 opacity-40" />;
-              return fullViewSort.dir === "asc"
-                ? <ArrowUp className="h-3 w-3 inline ml-1" />
-                : <ArrowDown className="h-3 w-3 inline ml-1" />;
-            };
-            const baseCols = [
-              { key: "record_id", label: "Record ID" },
-              { key: "yiddish_name", label: "Yiddish Name", rtl: true },
-              { key: "payee_name", label: "Payee" },
-              { key: "address", label: "Address" },
-              { key: "memo", label: "Memo" },
-            ];
+              : allRows;
+            const total = rows.reduce(
+              (s, pr) =>
+                s + Object.values(matrixData[pr.key] || {}).reduce((ss: number, v: any) => ss + v, 0),
+              0
+            );
             return (
               <>
                 <div className="flex items-center gap-2 pb-2">
@@ -1524,77 +1486,20 @@ const Reports = () => {
                   <div className="text-sm text-muted-foreground">
                     {rows.length} of {allRows.length} payees
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setFullViewSort(null)} disabled={!fullViewSort}>
-                    Clear sort
-                  </Button>
                   <Button variant="outline" size="sm" onClick={() => handleExport(rd, fullViewReport)}>
                     <Download className="h-4 w-4 mr-2" /> Download
                   </Button>
                 </div>
-                <div className="flex-1 overflow-auto border rounded-lg">
-                  <Table>
-                    <TableHeader className="sticky top-0 bg-muted z-10">
-                      <TableRow>
-                        {baseCols.map((c) => (
-                          <TableHead
-                            key={c.key}
-                            onClick={() => toggleSort(c.key)}
-                            className="cursor-pointer select-none min-w-[120px]"
-                            style={c.rtl ? { direction: "rtl" } : undefined}
-                          >
-                            {c.label}<SortIcon k={c.key} />
-                          </TableHead>
-                        ))}
-                        {cols.map((ch) => (
-                          <TableHead
-                            key={ch.id}
-                            onClick={() => toggleSort(`ch_${ch.id}`)}
-                            className="cursor-pointer select-none text-right min-w-[120px]"
-                          >
-                            {ch.name}<SortIcon k={`ch_${ch.id}`} />
-                          </TableHead>
-                        ))}
-                        <TableHead
-                          onClick={() => toggleSort("total")}
-                          className="cursor-pointer select-none text-right min-w-[120px]"
-                        >
-                          Total<SortIcon k="total" />
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {rows.map((pr) => {
-                        const rowTotal = Object.values(matrixData[pr.key] || {}).reduce((s: number, v: any) => s + v, 0);
-                        return (
-                          <TableRow key={pr.key}>
-                            <TableCell>{pr.record_id || "—"}</TableCell>
-                            <TableCell dir="rtl">{pr.yiddish || "—"}</TableCell>
-                            <TableCell className="font-medium">{pr.name}</TableCell>
-                            <TableCell>{pr.address || "—"}</TableCell>
-                            <TableCell className="text-sm max-w-[300px] whitespace-pre-line">{pr.memo || "—"}</TableCell>
-                            {cols.map((ch) => (
-                              <TableCell key={ch.id} className="text-right tabular-nums">
-                                {matrixData[pr.key]?.[ch.id] ? fmt(matrixData[pr.key][ch.id]) : "—"}
-                              </TableCell>
-                            ))}
-                            <TableCell className="text-right font-bold tabular-nums">{fmt(rowTotal)}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                      <TableRow className="bg-muted/50 font-bold sticky bottom-0">
-                        <TableCell />
-                        <TableCell />
-                        <TableCell>TOTAL</TableCell>
-                        <TableCell />
-                        <TableCell />
-                        {cols.map((ch) => {
-                          const colTotal = rows.reduce((s, pr) => s + (matrixData[pr.key]?.[ch.id] || 0), 0);
-                          return <TableCell key={ch.id} className="text-right tabular-nums">{fmt(colTotal)}</TableCell>;
-                        })}
-                        <TableCell className="text-right tabular-nums">{fmt(total)}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                <div className="flex-1 overflow-auto">
+                  {renderMatrix(
+                    rows,
+                    rd.chalikahCols || [],
+                    matrixData,
+                    total,
+                    savedCols,
+                    true,
+                    savedCustomValues
+                  )}
                 </div>
               </>
             );
