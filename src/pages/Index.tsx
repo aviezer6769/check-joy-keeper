@@ -394,8 +394,15 @@ const Index = () => {
       <div className="hidden">
         <div ref={printRef}>
           {(() => {
-            // Group by chalikah_id for position + total
-            const groupKey = (c: Check) => c.chalikah_id || "__none__";
+            // Group by payee + chalikah for position + total
+            const groupKey = (c: Check) => {
+              const payeeKey =
+                (c.payee_record_number || "").trim().toLowerCase() ||
+                (c.payee || "").trim().toLowerCase() ||
+                "__nopayee__";
+              const chalikahKey = c.chalikah_id || "__none__";
+              return `${payeeKey}::${chalikahKey}`;
+            };
             const groupTotals: Record<string, number> = {};
             const groupCounts: Record<string, number> = {};
             const groupSeen: Record<string, number> = {};
