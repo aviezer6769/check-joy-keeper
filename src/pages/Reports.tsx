@@ -1129,7 +1129,7 @@ const Reports = () => {
                                   {allReportColumns
                                     .filter((c) => c.key !== "sort_order")
                                     .map((c) => (
-                                      <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                                      <SelectItem key={c.key} value={c.key}>{colLabel(c)}</SelectItem>
                                     ))}
                                 </SelectContent>
                               </Select>
