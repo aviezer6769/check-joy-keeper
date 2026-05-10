@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logAudit } from "@/lib/audit";
 
 export interface Account {
   id: string;
@@ -45,8 +46,10 @@ export function useUpdateAccount() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Account> & { id: string }) => {
+      const { data: before } = await supabase.from("accounts").select("*").eq("id", id).single();
       const { data, error } = await supabase.from("accounts").update(updates).eq("id", id).select().single();
       if (error) throw error;
+      await logAudit({ table: "accounts", action: "update", recordId: id, before, after: data });
       return data;
     },
     onSuccess: () => {

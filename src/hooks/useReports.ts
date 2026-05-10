@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logAudit } from "@/lib/audit";
 
 export interface SavedReport {
   id: string;
@@ -41,6 +42,7 @@ export function useSaveReport() {
         .select()
         .single();
       if (error) throw error;
+      await logAudit({ table: "saved_reports", action: "insert", recordId: data.id, after: data, summary: data.name });
       return data;
     },
     onSuccess: () => {
@@ -55,6 +57,7 @@ export function useUpdateReport() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { data: before } = await supabase.from("saved_reports").select("*").eq("id", id).single();
       const { data, error } = await supabase
         .from("saved_reports")
         .update({ name })
@@ -62,6 +65,7 @@ export function useUpdateReport() {
         .select()
         .single();
       if (error) throw error;
+      await logAudit({ table: "saved_reports", action: "update", recordId: id, before, after: data });
       return data;
     },
     onSuccess: () => {
@@ -76,8 +80,10 @@ export function useDeleteReport() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
+      const { data: before } = await supabase.from("saved_reports").select("*").eq("id", id).single();
       const { error } = await supabase.from("saved_reports").delete().eq("id", id);
       if (error) throw error;
+      await logAudit({ table: "saved_reports", action: "delete", recordId: id, before });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["saved_reports"] });

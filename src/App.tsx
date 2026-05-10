@@ -9,6 +9,7 @@ import Chalikah from "./pages/Chalikah";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
+import AuditLog from "./pages/AuditLog";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/chalikah" element={<Chalikah />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/audit" element={<AuditLog />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

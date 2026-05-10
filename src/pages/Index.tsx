@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Search, Users, Pencil, Trash2, List, Download, BarChart3, FileText, Printer } from "lucide-react";
+import { Plus, Search, Users, Pencil, Trash2, List, Download, BarChart3, FileText, Printer, History } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useChecks, useAddCheck, useUpdateCheck, useDeleteCheck, type Check, type CheckInsert, type CheckStatus } from "@/hooks/useChecks";
 import { useAccounts } from "@/hooks/useAccounts";
+import { useAuditSource } from "@/hooks/useAuditSource";
 import { CheckForm } from "@/components/CheckForm";
 import { ChecksTable, CHECK_COLUMNS } from "@/components/ChecksTable";
 import { CheckPrintView } from "@/components/CheckPrintView";
@@ -33,6 +34,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Index = () => {
+  useAuditSource("Checks page");
   const { data: accounts = [] } = useAccounts();
   const [activeAccountId, setActiveAccountId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -239,6 +241,12 @@ const Index = () => {
                 <Button variant="outline">
                   <FileText className="h-4 w-4 mr-2" />
                   Reports
+                </Button>
+              </Link>
+              <Link to="/audit">
+                <Button variant="outline">
+                  <History className="h-4 w-4 mr-2" />
+                  Audit Log
                 </Button>
               </Link>
               <Button variant="outline" onClick={handleExportChecks}>

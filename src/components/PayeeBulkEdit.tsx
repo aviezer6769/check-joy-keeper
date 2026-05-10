@@ -132,12 +132,26 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
 
     setSaving(true);
     const ids = payees.map((p) => p.id);
+    const { data: beforeRows } = await supabase.from("payees").select("*").in("id", ids);
     const { error } = await supabase.from("payees").update(updates).in("id", ids);
     setSaving(false);
 
     if (error) {
       toast.error("Bulk update failed: " + error.message);
     } else {
+      const { data: afterRows } = await supabase.from("payees").select("*").in("id", ids);
+      const { logAuditBatch } = await import("@/lib/audit");
+      const beforeMap = new Map((beforeRows || []).map((r: any) => [r.id, r]));
+      await logAuditBatch(
+        (afterRows || []).map((after: any) => ({
+          table: "payees" as const,
+          action: "update" as const,
+          recordId: after.id,
+          before: beforeMap.get(after.id),
+          after,
+        })),
+        "Payees bulk edit (apply-all)",
+      );
       toast.success(`Updated ${payees.length} payee(s)`);
       qc.invalidateQueries({ queryKey: ["payees"] });
       onDone();
@@ -162,6 +176,9 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
   const handleGridSave = async () => {
     setSaving(true);
     // Build individual updates for changed rows
+    const ids = gridRows.map((r) => r.id);
+    const { data: beforeRows } = await supabase.from("payees").select("*").in("id", ids);
+    const beforeMap = new Map((beforeRows || []).map((r: any) => [r.id, r]));
     const promises = gridRows.map((row) => {
       const { id, created_at, updated_at, ...rest } = row;
       // Convert number fields
@@ -184,6 +201,18 @@ export function PayeeBulkEdit({ payees, open, onOpenChange, onDone }: PayeeBulkE
     if (errors.length > 0) {
       toast.error(`${errors.length} row(s) failed to update`);
     } else {
+      const { data: afterRows } = await supabase.from("payees").select("*").in("id", ids);
+      const { logAuditBatch } = await import("@/lib/audit");
+      await logAuditBatch(
+        (afterRows || []).map((after: any) => ({
+          table: "payees" as const,
+          action: "update" as const,
+          recordId: after.id,
+          before: beforeMap.get(after.id),
+          after,
+        })),
+        "Payees bulk edit (grid)",
+      );
       toast.success(`Updated ${gridRows.length} payee(s)`);
       qc.invalidateQueries({ queryKey: ["payees"] });
       onDone();

@@ -2,13 +2,14 @@ import { useMemo, useState, useCallback, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Trash2, Printer, X } from "lucide-react";
+import { Pencil, Trash2, Printer, X, History } from "lucide-react";
 import { type Check, type CheckStatus } from "@/hooks/useChecks";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useChalikah } from "@/hooks/useChalikah";
 import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
+import { HistoryDialog } from "@/components/HistoryDialog";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
@@ -100,6 +101,7 @@ function getSortValue(check: Check, key: string, chalikahMap: Record<string, str
 export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange, selectedIds, onToggleSelect, onToggleAll, onFilteredChecksChange }: ChecksTableProps) {
   const { data: chalikahList = [] } = useChalikah();
   const chalikahMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
+  const [historyCheck, setHistoryCheck] = useState<Check | null>(null);
   
   const [showFilters, setShowFilters] = useState(() => localStorage.getItem("checks-show-filters") === "true");
   const toggleFilters = () => {
@@ -305,6 +307,9 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
                     <Button variant="ghost" size="icon" onClick={() => onPrint(check)} title="Print">
                       <Printer className="h-4 w-4" />
                     </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setHistoryCheck(check)} title="History">
+                      <History className="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => onEdit(check)} title="Edit">
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -326,6 +331,13 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
           </TableBody>
         </Table>
       </div>
+      <HistoryDialog
+        table="checks"
+        recordId={historyCheck?.id ?? null}
+        open={!!historyCheck}
+        onOpenChange={(v) => !v && setHistoryCheck(null)}
+        title={historyCheck ? `${historyCheck.payee} #${historyCheck.check_number || ""}` : ""}
+      />
     </div>
   );
 }

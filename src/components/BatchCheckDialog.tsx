@@ -184,12 +184,22 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
       }
     }
 
-    const { error } = await supabase.from("checks").insert(checks);
+    const { data: inserted, error } = await supabase.from("checks").insert(checks).select();
     setSubmitting(false);
 
     if (error) {
       toast.error("Failed to create checks: " + error.message);
     } else {
+      const { logAuditBatch } = await import("@/lib/audit");
+      await logAuditBatch(
+        (inserted || []).map((row: any) => ({
+          table: "checks" as const,
+          action: "insert" as const,
+          recordId: row.id,
+          after: row,
+        })),
+        "Batch check create",
+      );
       toast.success(`Created ${checks.length} check(s)`);
       qc.invalidateQueries({ queryKey: ["checks"] });
       onOpenChange(false);
@@ -240,12 +250,22 @@ export function BatchCheckDialog({ open, onOpenChange, payees, onDone }: BatchCh
       }
     }
 
-    const { error } = await supabase.from("checks").insert(checks);
+    const { data: inserted, error } = await supabase.from("checks").insert(checks).select();
     setSubmitting(false);
 
     if (error) {
       toast.error("Failed to create checks: " + error.message);
     } else {
+      const { logAuditBatch } = await import("@/lib/audit");
+      await logAuditBatch(
+        (inserted || []).map((row: any) => ({
+          table: "checks" as const,
+          action: "insert" as const,
+          recordId: row.id,
+          after: row,
+        })),
+        "Batch check create (grid)",
+      );
       toast.success(`Created ${checks.length} check(s)`);
       qc.invalidateQueries({ queryKey: ["checks"] });
       onOpenChange(false);

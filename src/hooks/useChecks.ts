@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logAudit } from "@/lib/audit";
 
 export const CHECK_STATUSES = ["Open", "Printed", "Given", "Cleared", "Void"] as const;
 export type CheckStatus = typeof CHECK_STATUSES[number];
@@ -59,6 +60,7 @@ export function useAddCheck() {
     mutationFn: async (check: CheckInsert) => {
       const { data, error } = await supabase.from("checks").insert(check).select().single();
       if (error) throw error;
+      await logAudit({ table: "checks", action: "insert", recordId: data.id, after: data });
       return data;
     },
     onSuccess: () => {
@@ -73,8 +75,10 @@ export function useUpdateCheck() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...check }: Partial<Check> & { id: string }) => {
+      const { data: before } = await supabase.from("checks").select("*").eq("id", id).single();
       const { data, error } = await supabase.from("checks").update(check).eq("id", id).select().single();
       if (error) throw error;
+      await logAudit({ table: "checks", action: "update", recordId: id, before, after: data });
       return data;
     },
     onSuccess: () => {
@@ -89,8 +93,10 @@ export function useDeleteCheck() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
+      const { data: before } = await supabase.from("checks").select("*").eq("id", id).single();
       const { error } = await supabase.from("checks").delete().eq("id", id);
       if (error) throw error;
+      await logAudit({ table: "checks", action: "delete", recordId: id, before });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["checks"] });

@@ -71,6 +71,39 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          changes: Json
+          created_at: string
+          id: string
+          record_id: string | null
+          source: string | null
+          summary: string | null
+          table_name: string
+        }
+        Insert: {
+          action: string
+          changes?: Json
+          created_at?: string
+          id?: string
+          record_id?: string | null
+          source?: string | null
+          summary?: string | null
+          table_name: string
+        }
+        Update: {
+          action?: string
+          changes?: Json
+          created_at?: string
+          id?: string
+          record_id?: string | null
+          source?: string | null
+          summary?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
       chalikah: {
         Row: {
           created_at: string

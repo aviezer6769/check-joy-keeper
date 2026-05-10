@@ -158,11 +158,21 @@ export function PayeeBulkImport() {
       return;
     }
     setImporting(true);
-    const { error } = await supabase.from("payees").insert(payees);
+    const { data: inserted, error } = await supabase.from("payees").insert(payees).select();
     setImporting(false);
     if (error) {
       toast.error("Import failed: " + error.message);
     } else {
+      const { logAuditBatch } = await import("@/lib/audit");
+      await logAuditBatch(
+        (inserted || []).map((row: any) => ({
+          table: "payees" as const,
+          action: "insert" as const,
+          recordId: row.id,
+          after: row,
+        })),
+        "Payees bulk import",
+      );
       toast.success(`${payees.length} payee(s) imported`);
       qc.invalidateQueries({ queryKey: ["payees"] });
       onDone();

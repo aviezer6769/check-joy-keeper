@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers, X, FileCheck } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, ChevronRight, Pencil, Trash2, Download, Layers, X, FileCheck, History } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { PayeeForm } from "@/components/PayeeForm";
@@ -21,6 +21,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
+import { HistoryDialog } from "@/components/HistoryDialog";
+import { useAuditSource } from "@/hooks/useAuditSource";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 import { formatPhone } from "@/lib/payee-utils";
@@ -66,6 +68,7 @@ function formatDate(date: string) {
 }
 
 const Payees = () => {
+  useAuditSource("Payees page");
   const { data: payees = [], isLoading } = usePayees();
   const { data: checks = [] } = useChecks();
   const { data: accounts = [] } = useAccounts();
@@ -73,6 +76,7 @@ const Payees = () => {
   const [search, setSearch] = useState("");
   const [expandedPayee, setExpandedPayee] = useState<string | null>(null);
   const [editingPayee, setEditingPayee] = useState<Payee | null>(null);
+  const [historyPayee, setHistoryPayee] = useState<Payee | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [batchCheckOpen, setBatchCheckOpen] = useState(false);
@@ -365,11 +369,22 @@ const Payees = () => {
     if (!confirm(`Delete ${selectedIds.size} payee(s)? This cannot be undone.`)) return;
     setBulkDeleting(true);
     const ids = Array.from(selectedIds);
+    const { data: beforeRows } = await supabase.from("payees").select("*").in("id", ids);
     const { error } = await supabase.from("payees").delete().in("id", ids);
     setBulkDeleting(false);
     if (error) {
       toast.error("Bulk delete failed: " + error.message);
     } else {
+      const { logAuditBatch } = await import("@/lib/audit");
+      await logAuditBatch(
+        (beforeRows || []).map((row: any) => ({
+          table: "payees" as const,
+          action: "delete" as const,
+          recordId: row.id,
+          before: row,
+        })),
+        "Payees bulk delete",
+      );
       toast.success(`Deleted ${ids.length} payee(s)`);
       setSelectedIds(new Set());
       qc.invalidateQueries({ queryKey: ["payees"] });
@@ -593,6 +608,15 @@ const Payees = () => {
                           >
                             <Pencil className="h-3 w-3" />
                           </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => setHistoryPayee(p)}
+                            title="History"
+                          >
+                            <History className="h-3 w-3" />
+                          </Button>
                         </TableCell>
                         {colLayout.visibleColumns.map((col) => {
                           const w = colLayout.widths[col.key];
@@ -785,6 +809,14 @@ const Payees = () => {
           onOpenChange={(open) => !open && setEditingPayee(null)}
         />
       )}
+
+      <HistoryDialog
+        table="payees"
+        recordId={historyPayee?.id ?? null}
+        open={!!historyPayee}
+        onOpenChange={(v) => !v && setHistoryPayee(null)}
+        title={historyPayee?.payee_name}
+      />
 
       <PayeeBulkEdit
         payees={selectedPayees}

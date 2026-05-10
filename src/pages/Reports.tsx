@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { useColumnLayout, type ColumnDef, type FilterMode } from "@/hooks/useColumnLayout";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
+import { useAuditSource } from "@/hooks/useAuditSource";
 import * as XLSX from "xlsx";
 
 const fmt = (n: number) =>
@@ -42,6 +43,7 @@ const STATIC_REPORT_COLS: ColumnDef[] = [
 ];
 
 const Reports = () => {
+  useAuditSource("Reports page");
   const { data: allChecks = [], isLoading: checksLoading } = useChecks(undefined, undefined);
   const { data: chalikahList = [] } = useChalikah();
   const { data: accounts = [] } = useAccounts();
