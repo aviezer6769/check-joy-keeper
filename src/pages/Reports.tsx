@@ -1527,7 +1527,7 @@ const Reports = () => {
                   <Button variant="outline" size="sm" onClick={() => setFullViewSort(null)} disabled={!fullViewSort}>
                     Clear sort
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleExport(rd)}>
+                  <Button variant="outline" size="sm" onClick={() => handleExport(rd, fullViewReport)}>
                     <Download className="h-4 w-4 mr-2" /> Download
                   </Button>
                 </div>
