@@ -56,11 +56,15 @@ export function useSaveReport() {
 export function useUpdateReport() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+    mutationFn: async ({ id, name, filters, report_data }: { id: string; name?: string; filters?: Record<string, any>; report_data?: Record<string, any> }) => {
       const { data: before } = await supabase.from("saved_reports").select("*").eq("id", id).single();
+      const patch: Record<string, any> = {};
+      if (name !== undefined) patch.name = name;
+      if (filters !== undefined) patch.filters = filters;
+      if (report_data !== undefined) patch.report_data = report_data;
       const { data, error } = await supabase
         .from("saved_reports")
-        .update({ name })
+        .update(patch)
         .eq("id", id)
         .select()
         .single();
@@ -70,9 +74,9 @@ export function useUpdateReport() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["saved_reports"] });
-      toast.success("Report renamed");
+      toast.success("Report updated");
     },
-    onError: (e) => toast.error("Failed to rename: " + e.message),
+    onError: (e) => toast.error("Failed to update: " + e.message),
   });
 }
 

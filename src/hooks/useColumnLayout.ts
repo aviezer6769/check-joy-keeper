@@ -172,6 +172,36 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
     setFilterModes({});
   }, [defaultLayout, setLayout]);
 
+  const applyLayout = useCallback(
+    (next: {
+      visibleKeys?: string[];
+      widths?: Record<string, number>;
+      sort?: SortState | null;
+      filters?: Record<string, string>;
+      filterModes?: Record<string, FilterMode>;
+    }) => {
+      setLayout({
+        visibleKeys: next.visibleKeys ?? layout.visibleKeys,
+        widths: next.widths ?? layout.widths ?? {},
+        sort: next.sort !== undefined ? next.sort : (layout.sort ?? null),
+      });
+      if (next.filters !== undefined) setFilters(next.filters);
+      if (next.filterModes !== undefined) setFilterModes(next.filterModes);
+    },
+    [layout, setLayout]
+  );
+
+  const exportLayout = useCallback(
+    () => ({
+      visibleKeys: layout.visibleKeys,
+      widths: layout.widths || {},
+      sort: layout.sort ?? null,
+      filters,
+      filterModes,
+    }),
+    [layout, filters, filterModes]
+  );
+
   return {
     layout,
     visibleColumns,
@@ -190,5 +220,7 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
     setFilter,
     setFilterMode,
     clearFilters,
+    applyLayout,
+    exportLayout,
   };
 }

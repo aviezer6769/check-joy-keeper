@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Save, Download, Trash2, FileText, Eye, Filter, Pencil, ChevronDown, Maximize2, ArrowUpDown, ArrowUp, ArrowDown, Search } from "lucide-react";
+import { ArrowLeft, Save, Download, Trash2, FileText, Eye, Filter, Pencil, ChevronDown, Maximize2, ArrowUpDown, ArrowUp, ArrowDown, Search, Edit3, Plus, X, SlidersHorizontal } from "lucide-react";
 import { useChecks, type Check } from "@/hooks/useChecks";
 import { useChalikah } from "@/hooks/useChalikah";
 import { useAccounts } from "@/hooks/useAccounts";
@@ -27,6 +27,7 @@ import { useColumnLayout, type ColumnDef, type FilterMode } from "@/hooks/useCol
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 import { useAuditSource } from "@/hooks/useAuditSource";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import * as XLSX from "xlsx";
 
 const fmt = (n: number) =>
@@ -82,6 +83,14 @@ const Reports = () => {
   const [fullViewReport, setFullViewReport] = useState<SavedReport | null>(null);
   const [fullViewSearch, setFullViewSearch] = useState("");
   const [fullViewSort, setFullViewSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
+  // Editing existing report
+  const [editingReportId, setEditingReportId] = useState<string | null>(null);
+  const [editingReportName, setEditingReportName] = useState<string>("");
+  // Custom note columns (per saved report)
+  const [customColumns, setCustomColumns] = useState<Array<{ key: string; label: string }>>([]);
+  const [customValues, setCustomValues] = useState<Record<string, Record<string, string>>>({});
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [newColumnName, setNewColumnName] = useState("");
   // Save-dialog dynamic options
   const [saveMode, setSaveMode] = useState<"snapshot" | "dynamic">("snapshot");
   const [chalikahMode, setChalikahMode] = useState<ChalikahMode>("last_n");
@@ -182,7 +191,8 @@ const Reports = () => {
     ...STATIC_REPORT_COLS,
     ...chalikahCols.map((col) => ({ key: `ch_${col.id}`, label: col.name })),
     { key: "total", label: "Total" },
-  ], [chalikahCols]);
+    ...customColumns.map((c) => ({ key: c.key, label: c.label })),
+  ], [chalikahCols, customColumns]);
 
   const colLayout = useColumnLayout("reports", allReportColumns);
 
@@ -210,7 +220,7 @@ const Reports = () => {
         {
           name: reportName.trim(),
           report_type: "payee_chalikah_dynamic",
-          filters: cfg as any,
+          filters: { ...(cfg as any), _overrides: buildOverrides() },
           report_data: {},
         },
         { onSuccess: () => { setSaveDialogOpen(false); setReportName(""); } }
@@ -221,11 +231,113 @@ const Reports = () => {
       {
         name: reportName.trim(),
         report_type: "payee_chalikah",
-        filters: currentFilters,
+        filters: { ...currentFilters, _overrides: buildOverrides() },
         report_data: buildReportData(),
       },
       { onSuccess: () => { setSaveDialogOpen(false); setReportName(""); } }
     );
+  };
+
+  // ===== Edit / Update saved report =====
+  const buildOverrides = () => ({
+    visibleKeys: colLayout.layout.visibleKeys,
+    widths: colLayout.widths,
+    sort: colLayout.sort,
+    filters: colLayout.filters,
+    filterModes: colLayout.filterModes,
+    customColumns,
+    customValues,
+  });
+
+  const loadReportForEdit = (r: SavedReport) => {
+    const f: any = r.filters || {};
+    const isDyn = r.report_type === "payee_chalikah_dynamic";
+    setEditingReportId(r.id);
+    setEditingReportName(r.name);
+    setSaveMode(isDyn ? "dynamic" : "snapshot");
+    setAccountFilter(f.accountFilter || "all");
+    setStatusFilter(f.statusFilter || "issued");
+    setDateFrom(f.dateFrom || "");
+    setDateTo(f.dateTo || "");
+    if (isDyn) {
+      setChalikahMode((f.chalikahMode as ChalikahMode) || "all");
+      setChalikahN(f.chalikahN || 2);
+      setSpecificChalikahIds(new Set(f.chalikahIds || []));
+    }
+    const ov = f._overrides || {};
+    setCustomColumns(ov.customColumns || []);
+    setCustomValues(ov.customValues || {});
+    // Apply layout after a tick so allReportColumns recomputes with custom cols
+    setTimeout(() => {
+      colLayout.applyLayout({
+        visibleKeys: ov.visibleKeys,
+        widths: ov.widths,
+        sort: ov.sort,
+        filters: ov.filters || {},
+        filterModes: ov.filterModes || {},
+      });
+    }, 0);
+    setHasRun(true);
+    setSelectedNames(new Set());
+  };
+
+  const cancelEdit = () => {
+    setEditingReportId(null);
+    setEditingReportName("");
+    setCustomColumns([]);
+    setCustomValues({});
+  };
+
+  const handleUpdate = () => {
+    if (!editingReportId) return;
+    const isDyn = saveMode === "dynamic";
+    const baseFilters: any = isDyn
+      ? {
+          dynamic: true,
+          accountFilter, statusFilter, dateFrom, dateTo,
+          chalikahMode,
+          chalikahN: chalikahMode === "last_n" ? chalikahN : undefined,
+          chalikahIds: chalikahMode === "specific" ? Array.from(specificChalikahIds) : undefined,
+        }
+      : { accountFilter, statusFilter, dateFrom, dateTo };
+    baseFilters._overrides = buildOverrides();
+    updateReport.mutate(
+      {
+        id: editingReportId,
+        name: editingReportName.trim() || undefined,
+        filters: baseFilters,
+        report_data: isDyn ? {} : buildReportData(),
+      },
+      { onSuccess: () => cancelEdit() }
+    );
+  };
+
+  const addCustomColumn = () => {
+    const label = newColumnName.trim();
+    if (!label) return;
+    const key = `cust_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+    setCustomColumns((prev) => [...prev, { key, label }]);
+    setNewColumnName("");
+    // Make it visible in the layout
+    setTimeout(() => {
+      if (!colLayout.layout.visibleKeys.includes(key)) colLayout.toggleColumn(key);
+    }, 0);
+  };
+
+  const removeCustomColumn = (key: string) => {
+    setCustomColumns((prev) => prev.filter((c) => c.key !== key));
+    setCustomValues((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const setCustomValue = (colKey: string, payeeKey: string, value: string) => {
+    setCustomValues((prev) => ({
+      ...prev,
+      [colKey]: { ...(prev[colKey] || {}), [payeeKey]: value },
+    }));
   };
 
   // Re-compute a report at view time from saved dynamic config
@@ -358,6 +470,7 @@ const Reports = () => {
     colKey: string,
     matrixData: Record<string, Record<string, number>>
   ): string => {
+    if (colKey.startsWith("cust_")) return customValues[colKey]?.[pr.key] || "";
     if (colKey === "sort_order") return "";
     if (colKey === "record_id") return pr.record_id || "";
     if (colKey === "urgent_level") return pr.urgent_level == null ? "?" : String(pr.urgent_level);
@@ -381,6 +494,7 @@ const Reports = () => {
     colKey: string,
     matrixData: Record<string, Record<string, number>>
   ): string | number => {
+    if (colKey.startsWith("cust_")) return (customValues[colKey]?.[pr.key] || "").toLowerCase();
     if (colKey === "record_id") {
       const n = parseFloat(pr.record_id || "");
       return isNaN(n) ? (pr.record_id || "").toLowerCase() : n;
@@ -611,6 +725,22 @@ const Reports = () => {
                         </TableCell>
                       );
                     }
+                    if (col.key.startsWith("cust_")) {
+                      const val = customValues[col.key]?.[pr.key] || "";
+                      if (isStatic) {
+                        return <TableCell key={col.key}>{val || "—"}</TableCell>;
+                      }
+                      return (
+                        <TableCell key={col.key} className="bg-background p-1">
+                          <Input
+                            value={val}
+                            onChange={(e) => setCustomValue(col.key, pr.key, e.target.value)}
+                            className="h-8 text-sm"
+                            placeholder="—"
+                          />
+                        </TableCell>
+                      );
+                    }
                     return <TableCell key={col.key}>—</TableCell>;
                   })}
                 </TableRow>
@@ -636,6 +766,9 @@ const Reports = () => {
                   const chId = col.key.slice(3);
                   const colTotal = rows.reduce((s, pr) => s + (matrixData[pr.key]?.[chId] || 0), 0);
                   return <TableCell key={col.key} className="text-right tabular-nums">{fmt(colTotal)}</TableCell>;
+                }
+                if (col.key.startsWith("cust_")) {
+                  return <TableCell key={col.key} className="bg-muted/50" />;
                 }
                 return <TableCell key={col.key} />;
               })}
@@ -666,6 +799,27 @@ const Reports = () => {
       </header>
 
       <main className="container py-6 space-y-6">
+        {editingReportId && (
+          <Card className="border-primary">
+            <CardContent className="pt-4 pb-4 flex items-center gap-3 flex-wrap">
+              <Edit3 className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Editing report:</span>
+              <Input
+                value={editingReportName}
+                onChange={(e) => setEditingReportName(e.target.value)}
+                className="w-[260px] h-8"
+                placeholder="Report name"
+              />
+              <div className="flex gap-2 ml-auto">
+                <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
+                <Button size="sm" onClick={handleUpdate} disabled={updateReport.isPending}>
+                  <Save className="h-4 w-4 mr-2" /> Update Report
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Filters */}
         <Card>
           <CardHeader>
@@ -718,6 +872,131 @@ const Reports = () => {
                   <Filter className="h-4 w-4 mr-2" />
                   Column Filters
                 </Button>
+                <Popover open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <SlidersHorizontal className="h-4 w-4 mr-2" />
+                      Advanced
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[420px] max-h-[70vh] overflow-auto" align="end">
+                    <div className="space-y-4">
+                      {/* Custom columns */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Custom Note Columns</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={newColumnName}
+                            onChange={(e) => setNewColumnName(e.target.value)}
+                            placeholder="New column name"
+                            className="h-8"
+                            onKeyDown={(e) => { if (e.key === "Enter") addCustomColumn(); }}
+                          />
+                          <Button size="sm" onClick={addCustomColumn} disabled={!newColumnName.trim()}>
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {customColumns.length > 0 && (
+                          <div className="space-y-1">
+                            {customColumns.map((c) => (
+                              <div key={c.key} className="flex items-center gap-2 text-sm">
+                                <span className="flex-1 truncate">{c.label}</span>
+                                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeCustomColumn(c.key)}>
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Sort by any column */}
+                      <div className="space-y-2 border-t pt-3">
+                        <Label className="text-sm font-semibold">Sort (any column)</Label>
+                        <div className="flex gap-2">
+                          <Select
+                            value={colLayout.sort?.key || "__none__"}
+                            onValueChange={(v) => {
+                              if (v === "__none__") colLayout.applyLayout({ sort: null });
+                              else colLayout.applyLayout({ sort: { key: v, dir: colLayout.sort?.dir || "asc" } });
+                            }}
+                          >
+                            <SelectTrigger className="h-8 flex-1"><SelectValue placeholder="No sort" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__">No sort</SelectItem>
+                              {allReportColumns.map((c) => (
+                                <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={colLayout.sort?.dir || "asc"}
+                            onValueChange={(v) => {
+                              if (colLayout.sort) colLayout.applyLayout({ sort: { key: colLayout.sort.key, dir: v as any } });
+                            }}
+                            disabled={!colLayout.sort}
+                          >
+                            <SelectTrigger className="h-8 w-[110px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="asc">Asc</SelectItem>
+                              <SelectItem value="desc">Desc</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Filter by hidden / any columns */}
+                      <div className="space-y-2 border-t pt-3">
+                        <Label className="text-sm font-semibold">Filters (incl. hidden columns)</Label>
+                        <div className="space-y-2 max-h-[260px] overflow-auto">
+                          {allReportColumns
+                            .filter((c) => c.key !== "sort_order")
+                            .map((c) => {
+                              const val = colLayout.filters[c.key] || "";
+                              const mode = colLayout.filterModes[c.key] || "contains";
+                              const visible = colLayout.visibleColumns.some((v) => v.key === c.key);
+                              return (
+                                <div key={c.key} className="flex items-center gap-1">
+                                  <span className="text-xs w-32 truncate" title={c.label}>
+                                    {c.label}{!visible && <span className="text-muted-foreground"> (hidden)</span>}
+                                  </span>
+                                  <Select
+                                    value={mode}
+                                    onValueChange={(v) => colLayout.setFilterMode(c.key, v as FilterMode)}
+                                  >
+                                    <SelectTrigger className="h-7 w-[88px] text-xs"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="contains">contains</SelectItem>
+                                      <SelectItem value="equals">equals</SelectItem>
+                                      <SelectItem value="not">not</SelectItem>
+                                      <SelectItem value="gt">&gt;</SelectItem>
+                                      <SelectItem value="lt">&lt;</SelectItem>
+                                      <SelectItem value="gte">≥</SelectItem>
+                                      <SelectItem value="lte">≤</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Input
+                                    value={val}
+                                    onChange={(e) => colLayout.setFilter(c.key, e.target.value)}
+                                    placeholder="value"
+                                    className="h-7 text-xs flex-1"
+                                  />
+                                  {val && (
+                                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => colLayout.setFilter(c.key, "")}>
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              );
+                            })}
+                        </div>
+                        <Button size="sm" variant="outline" className="w-full" onClick={colLayout.clearFilters}>
+                          Clear all filters
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 <Button onClick={() => setHasRun(true)}>
                   Run Report
                 </Button>
@@ -735,10 +1014,16 @@ const Reports = () => {
                   <Download className="h-4 w-4 mr-2" />
                   {selectedNames.size > 0 ? `Export ${selectedNames.size} Selected` : "Export"}
                 </Button>
-                <Button onClick={() => setSaveDialogOpen(true)}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Report
-                </Button>
+                {editingReportId ? (
+                  <Button onClick={handleUpdate} disabled={updateReport.isPending}>
+                    <Save className="h-4 w-4 mr-2" /> Update Report
+                  </Button>
+                ) : (
+                  <Button onClick={() => setSaveDialogOpen(true)}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Report
+                  </Button>
+                )}
                 {savedReports.length > 0 && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -759,6 +1044,9 @@ const Reports = () => {
                             <span className="text-xs text-muted-foreground ml-2">{new Date(r.created_at).toLocaleDateString()}</span>
                           </button>
                           <div className="flex gap-0.5 shrink-0">
+                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Edit in main view" onClick={() => loadReportForEdit(r)}>
+                              <Edit3 className="h-3 w-3" />
+                            </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRenameReport(r); setRenameValue(r.name); }}>
                               <Pencil className="h-3 w-3" />
                             </Button>
