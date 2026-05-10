@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logAudit } from "@/lib/audit";
 
 export interface Payee {
   id: string;
@@ -62,6 +63,7 @@ export function useAddPayee() {
     mutationFn: async (payee: PayeeInsert) => {
       const { data, error } = await supabase.from("payees").insert(payee).select().single();
       if (error) throw error;
+      await logAudit({ table: "payees", action: "insert", recordId: data.id, after: data });
       return data;
     },
     onSuccess: () => {
@@ -76,8 +78,10 @@ export function useUpdatePayee() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...payee }: Partial<Payee> & { id: string }) => {
+      const { data: before } = await supabase.from("payees").select("*").eq("id", id).single();
       const { data, error } = await supabase.from("payees").update(payee).eq("id", id).select().single();
       if (error) throw error;
+      await logAudit({ table: "payees", action: "update", recordId: id, before, after: data });
       return data;
     },
     onSuccess: () => {
@@ -92,8 +96,10 @@ export function useDeletePayee() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
+      const { data: before } = await supabase.from("payees").select("*").eq("id", id).single();
       const { error } = await supabase.from("payees").delete().eq("id", id);
       if (error) throw error;
+      await logAudit({ table: "payees", action: "delete", recordId: id, before });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["payees"] });
