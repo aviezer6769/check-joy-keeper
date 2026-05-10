@@ -407,11 +407,13 @@ export function CheckPrintView({ check, account, payee, showSignature = true, ch
 
           {(chalikahPosition && chalikahCount) || chalikahTotal ? (
             <div
-              className="absolute leading-tight"
+              className="absolute leading-tight text-right"
               style={{
-                left: inches(0.48),
-                bottom: inches(0.1),
+                top: inches(0.95),
+                right: 0,
+                width: inches(3.2),
                 fontSize: "10pt",
+                boxSizing: "border-box",
               }}
             >
               {chalikahName && (
@@ -431,7 +433,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true, ch
               className="absolute border border-muted-foreground/40 rounded-sm px-2 py-1 overflow-hidden"
               style={{
                 fontSize: "10pt",
-                top: inches(STUB_2.payeeTop),
+                top: inches(STUB_2.payeeTop + 0.7),
                 right: 0,
                 width: inches(3.2),
                 boxSizing: "border-box",
