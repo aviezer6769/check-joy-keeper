@@ -56,12 +56,13 @@ export function useSaveReport() {
 export function useUpdateReport() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, name, filters, report_data }: { id: string; name?: string; filters?: Record<string, any>; report_data?: Record<string, any> }) => {
+    mutationFn: async ({ id, name, filters, report_data, report_type }: { id: string; name?: string; filters?: Record<string, any>; report_data?: Record<string, any>; report_type?: string }) => {
       const { data: before } = await supabase.from("saved_reports").select("*").eq("id", id).single();
       const patch: Record<string, any> = {};
       if (name !== undefined) patch.name = name;
       if (filters !== undefined) patch.filters = filters;
       if (report_data !== undefined) patch.report_data = report_data;
+      if (report_type !== undefined) patch.report_type = report_type;
       const { data, error } = await supabase
         .from("saved_reports")
         .update(patch)

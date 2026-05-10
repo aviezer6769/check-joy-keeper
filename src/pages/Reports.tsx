@@ -305,6 +305,7 @@ const Reports = () => {
       {
         id: editingReportId,
         name: editingReportName.trim() || undefined,
+        report_type: isDyn ? "payee_chalikah_dynamic" : "payee_chalikah",
         filters: baseFilters,
         report_data: isDyn ? {} : buildReportData(),
       },
@@ -801,21 +802,90 @@ const Reports = () => {
       <main className="container py-6 space-y-6">
         {editingReportId && (
           <Card className="border-primary">
-            <CardContent className="pt-4 pb-4 flex items-center gap-3 flex-wrap">
-              <Edit3 className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Editing report:</span>
-              <Input
-                value={editingReportName}
-                onChange={(e) => setEditingReportName(e.target.value)}
-                className="w-[260px] h-8"
-                placeholder="Report name"
-              />
-              <div className="flex gap-2 ml-auto">
-                <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
-                <Button size="sm" onClick={handleUpdate} disabled={updateReport.isPending}>
-                  <Save className="h-4 w-4 mr-2" /> Update Report
-                </Button>
+            <CardContent className="pt-4 pb-4 space-y-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <Edit3 className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Editing report:</span>
+                <Input
+                  value={editingReportName}
+                  onChange={(e) => setEditingReportName(e.target.value)}
+                  className="w-[260px] h-8"
+                  placeholder="Report name"
+                />
+                <div className="flex gap-2 ml-auto">
+                  <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
+                  <Button size="sm" onClick={handleUpdate} disabled={updateReport.isPending}>
+                    <Save className="h-4 w-4 mr-2" /> Update Report
+                  </Button>
+                </div>
               </div>
+              <div className="space-y-2 border-t pt-3">
+                <Label className="text-sm font-semibold">Report Type</Label>
+                <RadioGroup
+                  value={saveMode}
+                  onValueChange={(v) => setSaveMode(v as any)}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="snapshot" id="edit-snap" />
+                    <Label htmlFor="edit-snap" className="font-normal cursor-pointer">
+                      Snapshot — freeze current data
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="dynamic" id="edit-dyn" />
+                    <Label htmlFor="edit-dyn" className="font-normal cursor-pointer">
+                      Dynamic — re-runs on current data each time
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              {saveMode === "dynamic" && (
+                <div className="space-y-2 border-l-2 pl-3">
+                  <Label className="text-sm font-semibold">Chalikah columns</Label>
+                  <RadioGroup value={chalikahMode} onValueChange={(v) => setChalikahMode(v as ChalikahMode)}>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="all" id="edit-ch-all" />
+                      <Label htmlFor="edit-ch-all" className="font-normal cursor-pointer">All chalikah</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="last_n" id="edit-ch-last" />
+                      <Label htmlFor="edit-ch-last" className="font-normal cursor-pointer">Last</Label>
+                      <Input
+                        type="number" min={1} value={chalikahN}
+                        onChange={(e) => setChalikahN(Math.max(1, Number(e.target.value) || 1))}
+                        className="w-16 h-7" disabled={chalikahMode !== "last_n"}
+                      />
+                      <span className="text-sm text-muted-foreground">chalikah (newest)</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <RadioGroupItem value="specific" id="edit-ch-spec" className="mt-1" />
+                      <div className="flex-1">
+                        <Label htmlFor="edit-ch-spec" className="font-normal cursor-pointer">Specific chalikah</Label>
+                        {chalikahMode === "specific" && (
+                          <div className="mt-2 max-h-40 overflow-auto border rounded p-2 space-y-1">
+                            {chalikahList.map((c) => (
+                              <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                                <Checkbox
+                                  checked={specificChalikahIds.has(c.id)}
+                                  onCheckedChange={(checked) => {
+                                    setSpecificChalikahIds((prev) => {
+                                      const next = new Set(prev);
+                                      if (checked) next.add(c.id); else next.delete(c.id);
+                                      return next;
+                                    });
+                                  }}
+                                />
+                                {c.name}
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
