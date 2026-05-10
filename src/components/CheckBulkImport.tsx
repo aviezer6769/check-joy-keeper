@@ -194,11 +194,21 @@ export function CheckBulkImport({ accountId, existingChecks = [] }: CheckBulkImp
       return;
     }
     setImporting(true);
-    const { error } = await supabase.from("checks").insert(checks);
+    const { data: inserted, error } = await supabase.from("checks").insert(checks).select();
     setImporting(false);
     if (error) {
       toast.error("Import failed: " + error.message);
     } else {
+      const { logAuditBatch } = await import("@/lib/audit");
+      await logAuditBatch(
+        (inserted || []).map((row: any) => ({
+          table: "checks" as const,
+          action: "insert" as const,
+          recordId: row.id,
+          after: row,
+        })),
+        "Checks bulk import",
+      );
       toast.success(`${checks.length} check(s) imported`);
       qc.invalidateQueries({ queryKey: ["checks"] });
       onDone();
