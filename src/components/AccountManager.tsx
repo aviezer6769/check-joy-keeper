@@ -143,11 +143,13 @@ export function AccountManager() {
   const handleAdd = async () => {
     if (!newName.trim()) return;
     setAdding(true);
-    const { error } = await supabase.from("accounts").insert({ account_name: newName.trim() });
+    const { data, error } = await supabase.from("accounts").insert({ account_name: newName.trim() }).select().single();
     setAdding(false);
     if (error) {
       toast.error("Failed to add account: " + error.message);
     } else {
+      const { logAudit } = await import("@/lib/audit");
+      await logAudit({ table: "accounts", action: "insert", recordId: data.id, after: data, source: "Account manager" });
       toast.success("Account added");
       setNewName("");
       qc.invalidateQueries({ queryKey: ["accounts"] });
@@ -156,10 +158,13 @@ export function AccountManager() {
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete "${name}"? All checks in this account will lose their account assignment.`)) return;
+    const { data: before } = await supabase.from("accounts").select("*").eq("id", id).single();
     const { error } = await supabase.from("accounts").delete().eq("id", id);
     if (error) {
       toast.error("Failed to delete: " + error.message);
     } else {
+      const { logAudit } = await import("@/lib/audit");
+      await logAudit({ table: "accounts", action: "delete", recordId: id, before, source: "Account manager" });
       toast.success("Account deleted");
       qc.invalidateQueries({ queryKey: ["accounts"] });
     }
