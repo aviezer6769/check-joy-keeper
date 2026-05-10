@@ -138,6 +138,7 @@ function rowToPayee(row: Record<string, string>): PayeeInsert | null {
     zip: row.zip || null,
     is_active: row.is_active === "false" ? false : true,
     memo: row.memo || null,
+    phone: row.phone || null,
   };
 }
 

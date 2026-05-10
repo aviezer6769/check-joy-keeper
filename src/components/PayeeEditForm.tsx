@@ -37,6 +37,7 @@ const FIELDS: FieldDef[] = [
   { key: "city", label: "City" },
   { key: "state", label: "State" },
   { key: "zip", label: "Zip" },
+  { key: "phone", label: "Phone" },
   { key: "memo", label: "Memo" },
 ];
 

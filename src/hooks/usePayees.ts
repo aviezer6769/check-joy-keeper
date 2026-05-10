@@ -26,6 +26,7 @@ export interface Payee {
   payee_name: string;
   is_active: boolean;
   memo: string | null;
+  phone: string | null;
   created_at: string;
   updated_at: string;
 }

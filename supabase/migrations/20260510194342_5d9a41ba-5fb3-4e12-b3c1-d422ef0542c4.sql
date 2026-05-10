@@ -1,0 +1,1 @@
+ALTER TABLE public.payees ADD COLUMN phone text;

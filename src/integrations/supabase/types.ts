@@ -182,6 +182,7 @@ export type Database = {
           middle_name: string | null
           middle_name_yiddish: string | null
           payee_name: string
+          phone: string | null
           record_id: string | null
           sort_order: number | null
           state: string | null
@@ -209,6 +210,7 @@ export type Database = {
           middle_name?: string | null
           middle_name_yiddish?: string | null
           payee_name: string
+          phone?: string | null
           record_id?: string | null
           sort_order?: number | null
           state?: string | null
@@ -236,6 +238,7 @@ export type Database = {
           middle_name?: string | null
           middle_name_yiddish?: string | null
           payee_name?: string
+          phone?: string | null
           record_id?: string | null
           sort_order?: number | null
           state?: string | null
