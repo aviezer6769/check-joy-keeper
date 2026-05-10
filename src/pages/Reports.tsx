@@ -251,6 +251,8 @@ const Reports = () => {
     filterModes: colLayout.filterModes,
     customColumns,
     customValues,
+    filterRules,
+    rulesLogic,
   });
 
   const loadReportForEdit = (r: SavedReport) => {
@@ -271,6 +273,8 @@ const Reports = () => {
     const ov = f._overrides || {};
     setCustomColumns(ov.customColumns || []);
     setCustomValues(ov.customValues || {});
+    setFilterRules(Array.isArray(ov.filterRules) ? ov.filterRules : []);
+    setRulesLogic(ov.rulesLogic === "or" ? "or" : "and");
     // Apply layout after a tick so allReportColumns recomputes with custom cols
     setTimeout(() => {
       colLayout.applyLayout({
