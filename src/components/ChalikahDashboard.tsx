@@ -103,8 +103,32 @@ export function ChalikahDashboard({ checks }: ChalikahDashboardProps) {
       }
     }
 
-    return Array.from(map.values()).sort((a, b) => b.totalAmount - a.totalAmount);
-  }, [checks, chalikahList, accounts]);
+    const arr = Array.from(map.values());
+    arr.sort((a, b) => {
+      const { key, dir } = sort;
+      const mul = dir === "asc" ? 1 : -1;
+      if (key === "name") {
+        return a.name.localeCompare(b.name, "he") * mul;
+      }
+      if (key === "checkCount") {
+        return (a.checkCount - b.checkCount) * mul;
+      }
+      if (key === "totalAmount") {
+        return (a.totalAmount - b.totalAmount) * mul;
+      }
+      if (key === "givenAmount") {
+        return (a.givenAmount - b.givenAmount) * mul;
+      }
+      if (key === "pendingAmount") {
+        return (a.pendingAmount - b.pendingAmount) * mul;
+      }
+      if (key === "voidCount") {
+        return (a.voidCount - b.voidCount) * mul;
+      }
+      return 0;
+    });
+    return arr;
+  }, [checks, chalikahList, accounts, sort]);
 
   const grandTotal = summaries.reduce((s, c) => s + c.totalAmount, 0);
   const grandGiven = summaries.reduce((s, c) => s + c.givenAmount, 0);
