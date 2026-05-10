@@ -91,6 +91,10 @@ const Reports = () => {
   const [customValues, setCustomValues] = useState<Record<string, Record<string, string>>>({});
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
+  // Filter rules with AND/OR logic (across any column, incl. dynamic chalikah)
+  type FilterRule = { id: string; key: string; mode: FilterMode; value: string };
+  const [filterRules, setFilterRules] = useState<FilterRule[]>([]);
+  const [rulesLogic, setRulesLogic] = useState<"and" | "or">("and");
   // Save-dialog dynamic options
   const [saveMode, setSaveMode] = useState<"snapshot" | "dynamic">("snapshot");
   const [chalikahMode, setChalikahMode] = useState<ChalikahMode>("last_n");
