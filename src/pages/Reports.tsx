@@ -799,6 +799,27 @@ const Reports = () => {
       </header>
 
       <main className="container py-6 space-y-6">
+        {editingReportId && (
+          <Card className="border-primary">
+            <CardContent className="pt-4 pb-4 flex items-center gap-3 flex-wrap">
+              <Edit3 className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Editing report:</span>
+              <Input
+                value={editingReportName}
+                onChange={(e) => setEditingReportName(e.target.value)}
+                className="w-[260px] h-8"
+                placeholder="Report name"
+              />
+              <div className="flex gap-2 ml-auto">
+                <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
+                <Button size="sm" onClick={handleUpdate} disabled={updateReport.isPending}>
+                  <Save className="h-4 w-4 mr-2" /> Update Report
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Filters */}
         <Card>
           <CardHeader>
