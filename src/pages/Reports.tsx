@@ -1084,6 +1084,98 @@ const Reports = () => {
                           Clear all filters
                         </Button>
                       </div>
+
+                      {/* Filter rules with AND/OR logic */}
+                      <div className="space-y-2 border-t pt-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-semibold">Filter Rules (AND / OR)</Label>
+                          <Select value={rulesLogic} onValueChange={(v) => setRulesLogic(v as "and" | "or")}>
+                            <SelectTrigger className="h-7 w-[90px] text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="and">Match ALL (AND)</SelectItem>
+                              <SelectItem value="or">Match ANY (OR)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Combine rules across any column (incl. dynamic chalikah & custom columns).
+                        </p>
+                        <div className="space-y-2 max-h-[260px] overflow-auto">
+                          {filterRules.map((r, idx) => (
+                            <div key={r.id} className="flex items-center gap-1">
+                              {idx > 0 && (
+                                <span className="text-[10px] uppercase font-semibold text-muted-foreground w-8">
+                                  {rulesLogic}
+                                </span>
+                              )}
+                              {idx === 0 && <span className="w-8" />}
+                              <Select
+                                value={r.key || "__none__"}
+                                onValueChange={(v) =>
+                                  setFilterRules((prev) => prev.map((p) => p.id === r.id ? { ...p, key: v === "__none__" ? "" : v } : p))
+                                }
+                              >
+                                <SelectTrigger className="h-7 w-[130px] text-xs"><SelectValue placeholder="Column" /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__none__">Column…</SelectItem>
+                                  {allReportColumns
+                                    .filter((c) => c.key !== "sort_order")
+                                    .map((c) => (
+                                      <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                              <Select
+                                value={r.mode}
+                                onValueChange={(v) =>
+                                  setFilterRules((prev) => prev.map((p) => p.id === r.id ? { ...p, mode: v as FilterMode } : p))
+                                }
+                              >
+                                <SelectTrigger className="h-7 w-[80px] text-xs"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="contains">contains</SelectItem>
+                                  <SelectItem value="equals">equals</SelectItem>
+                                  <SelectItem value="not">not</SelectItem>
+                                  <SelectItem value="gt">&gt;</SelectItem>
+                                  <SelectItem value="lt">&lt;</SelectItem>
+                                  <SelectItem value="gte">≥</SelectItem>
+                                  <SelectItem value="lte">≤</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Input
+                                value={r.value}
+                                onChange={(e) =>
+                                  setFilterRules((prev) => prev.map((p) => p.id === r.id ? { ...p, value: e.target.value } : p))
+                                }
+                                placeholder="value"
+                                className="h-7 text-xs flex-1"
+                              />
+                              <Button
+                                size="icon" variant="ghost" className="h-6 w-6"
+                                onClick={() => setFilterRules((prev) => prev.filter((p) => p.id !== r.id))}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm" variant="outline" className="flex-1"
+                            onClick={() => setFilterRules((prev) => [
+                              ...prev,
+                              { id: `r_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,5)}`, key: "", mode: "contains", value: "" }
+                            ])}
+                          >
+                            <Plus className="h-3 w-3 mr-1" /> Add rule
+                          </Button>
+                          {filterRules.length > 0 && (
+                            <Button size="sm" variant="ghost" onClick={() => setFilterRules([])}>
+                              Clear rules
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </PopoverContent>
                 </Popover>
