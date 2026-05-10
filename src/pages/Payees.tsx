@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
 import { HistoryDialog } from "@/components/HistoryDialog";
 import { useAuditSource } from "@/hooks/useAuditSource";
+import { fixHebrewGeresh } from "@/lib/hebrew";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 import { formatPhone } from "@/lib/payee-utils";
@@ -303,16 +304,16 @@ const Payees = () => {
         if (p.urgent_level === null || p.urgent_level === undefined) return <Badge variant="outline">?</Badge>;
         return p.urgent_level > 0 ? <Badge variant="destructive">{p.urgent_level}</Badge> : <span className="text-muted-foreground">0</span>;
       case "yiddish_name":
-        return [p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ") || "—";
+        return fixHebrewGeresh([p.title_1_yiddish, p.first_name_yiddish, p.middle_name_yiddish, p.last_name_yiddish, p.title_2_yiddish].filter(Boolean).join(" ")) || "—";
       case "payee_name":
         return [p.title_to_use, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(" ") || "—";
       case "address":
         return [[p.street_no, p.street_name].filter(Boolean).join(" "), p.apt ? `#${p.apt}` : "", [p.city, p.state].filter(Boolean).join(", "), p.zip].filter(Boolean).join(", ") || "—";
-      case "title_1_yiddish": return p.title_1_yiddish || "—";
-      case "first_name_yiddish": return p.first_name_yiddish || "—";
-      case "middle_name_yiddish": return p.middle_name_yiddish || "—";
-      case "last_name_yiddish": return p.last_name_yiddish || "—";
-      case "title_2_yiddish": return p.title_2_yiddish || "—";
+      case "title_1_yiddish": return fixHebrewGeresh(p.title_1_yiddish) || "—";
+      case "first_name_yiddish": return fixHebrewGeresh(p.first_name_yiddish) || "—";
+      case "middle_name_yiddish": return fixHebrewGeresh(p.middle_name_yiddish) || "—";
+      case "last_name_yiddish": return fixHebrewGeresh(p.last_name_yiddish) || "—";
+      case "title_2_yiddish": return fixHebrewGeresh(p.title_2_yiddish) || "—";
       case "title": return p.title || "—";
       case "title_to_use": return p.title_to_use || "—";
       case "first_name": return p.first_name || "—";
