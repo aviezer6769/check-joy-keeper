@@ -668,9 +668,11 @@ const Reports = () => {
     matrixData: Record<string, Record<string, number>>,
     total: number,
     visibleCols?: ColumnDef[],
-    isStatic?: boolean
+    isStatic?: boolean,
+    customValuesOverride?: Record<string, Record<string, string>>
   ) => {
     const visCols = visibleCols || colLayout.visibleColumns;
+    const cvSource = customValuesOverride || customValues;
 
     return (
       <div className="overflow-auto border rounded-lg">
