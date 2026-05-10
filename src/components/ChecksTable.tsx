@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Trash2, Printer, X } from "lucide-react";
+import { Pencil, Trash2, Printer, X, History } from "lucide-react";
 import { type Check, type CheckStatus } from "@/hooks/useChecks";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useChalikah } from "@/hooks/useChalikah";
@@ -304,6 +304,9 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" onClick={() => onPrint(check)} title="Print">
                       <Printer className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setHistoryCheck(check)} title="History">
+                      <History className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => onEdit(check)} title="Edit">
                       <Pencil className="h-4 w-4" />
