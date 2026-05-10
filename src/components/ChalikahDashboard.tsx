@@ -2,10 +2,11 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, ChevronRight, BarChart3 } from "lucide-react";
+import { ChevronDown, ChevronUp, ChevronRight, BarChart3, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { type Check } from "@/hooks/useChecks";
 import { useChalikah } from "@/hooks/useChalikah";
 import { useAccounts } from "@/hooks/useAccounts";
+import { cn } from "@/lib/utils";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
