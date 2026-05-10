@@ -220,7 +220,7 @@ const Reports = () => {
         {
           name: reportName.trim(),
           report_type: "payee_chalikah_dynamic",
-          filters: cfg as any,
+          filters: { ...(cfg as any), _overrides: buildOverrides() },
           report_data: {},
         },
         { onSuccess: () => { setSaveDialogOpen(false); setReportName(""); } }
@@ -231,7 +231,7 @@ const Reports = () => {
       {
         name: reportName.trim(),
         report_type: "payee_chalikah",
-        filters: currentFilters,
+        filters: { ...currentFilters, _overrides: buildOverrides() },
         report_data: buildReportData(),
       },
       { onSuccess: () => { setSaveDialogOpen(false); setReportName(""); } }
