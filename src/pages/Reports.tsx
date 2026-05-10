@@ -289,14 +289,26 @@ const Reports = () => {
   const handleExport = (data?: any) => {
     const src = data || buildReportData();
     // Use displayedRows (sorted/filtered) for live view, or saved data's payeeRows
-    const baseRows = data ? (src.payeeRows as typeof payeeRows) : displayedRows;
+    const baseRows = data ? ((src.payeeRows || []) as typeof payeeRows) : displayedRows;
     // If there's a selection, export only selected; otherwise export all displayed
     const exportPayees = selectedNames.size > 0
       ? baseRows.filter((pr) => selectedNames.has(pr.key))
       : baseRows;
+    // For saved data, use that data's columns; for live, use the live layout
+    const exportCols: ColumnDef[] = data
+      ? [
+          { key: "record_id", label: "Record ID" },
+          { key: "yiddish_name", label: "Yiddish Name" },
+          { key: "payee_name", label: "Payee" },
+          { key: "address", label: "Address" },
+          { key: "memo", label: "Memo" },
+          ...((src.chalikahCols || []) as Array<{id:string;name:string}>).map((c) => ({ key: `ch_${c.id}`, label: c.name })),
+          { key: "total", label: "Total" },
+        ]
+      : colLayout.visibleColumns;
     const rows = exportPayees.map((pr) => {
       const row: Record<string, any> = {};
-      colLayout.visibleColumns.forEach((col) => {
+      exportCols.forEach((col) => {
         if (col.key === "record_id") row["Record ID"] = pr.record_id;
         else if (col.key === "urgent_level") row["Urgent"] = pr.urgent_level == null ? "?" : pr.urgent_level;
         else if (col.key === "is_active") row["Active"] = pr.is_active ? "Active" : "Inactive";
@@ -315,7 +327,7 @@ const Reports = () => {
 
     // Totals row
     const totalsRow: Record<string, any> = {};
-    colLayout.visibleColumns.forEach((col) => {
+    exportCols.forEach((col) => {
       if (col.key === "payee_name") totalsRow["Payee"] = "TOTAL";
       else if (col.key === "record_id") totalsRow["Record ID"] = "";
       else if (col.key === "urgent_level") totalsRow["Urgent"] = "";
