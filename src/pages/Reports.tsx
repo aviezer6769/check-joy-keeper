@@ -521,9 +521,10 @@ const Reports = () => {
   const getRowTextValue = (
     pr: typeof payeeRows[number],
     colKey: string,
-    matrixData: Record<string, Record<string, number>>
+    matrixData: Record<string, Record<string, number>>,
+    cvOverride?: Record<string, Record<string, string>>
   ): string => {
-    if (colKey.startsWith("cust_")) return customValues[colKey]?.[pr.key] || "";
+    if (colKey.startsWith("cust_")) return (cvOverride || customValues)[colKey]?.[pr.key] || "";
     if (colKey === "sort_order") return "";
     if (colKey === "record_id") return pr.record_id || "";
     if (colKey === "urgent_level") return pr.urgent_level == null ? "?" : String(pr.urgent_level);
@@ -545,9 +546,10 @@ const Reports = () => {
   const getRowSortValue = (
     pr: typeof payeeRows[number],
     colKey: string,
-    matrixData: Record<string, Record<string, number>>
+    matrixData: Record<string, Record<string, number>>,
+    cvOverride?: Record<string, Record<string, string>>
   ): string | number => {
-    if (colKey.startsWith("cust_")) return (customValues[colKey]?.[pr.key] || "").toLowerCase();
+    if (colKey.startsWith("cust_")) return ((cvOverride || customValues)[colKey]?.[pr.key] || "").toLowerCase();
     if (colKey === "record_id") {
       const n = parseFloat(pr.record_id || "");
       return isNaN(n) ? (pr.record_id || "").toLowerCase() : n;
@@ -564,6 +566,68 @@ const Reports = () => {
       return matrixData[pr.key]?.[chId] || 0;
     }
     return "";
+  };
+
+  // Apply saved overrides (filters, filterModes, filterRules+rulesLogic, sort) to rows.
+  // Used by saved-report previews, full-view, and exports so they match what the user saved.
+  const applySavedLayout = <T extends typeof payeeRows[number]>(
+    rows: T[],
+    matrixData: Record<string, Record<string, number>>,
+    ov: any,
+    cvOverride?: Record<string, Record<string, string>>
+  ): T[] => {
+    if (!ov) return rows;
+    const filters: Record<string, string> = ov.filters || {};
+    const filterModes: Record<string, FilterMode> = ov.filterModes || {};
+    const rules: FilterRule[] = Array.isArray(ov.filterRules) ? ov.filterRules : [];
+    const logic: "and" | "or" = ov.rulesLogic === "or" ? "or" : "and";
+    const sort: SortState | null = ov.sort || null;
+
+    const matchRule = (pr: T, key: string, mode: FilterMode, val: string) => {
+      if (!val) return true;
+      const text = getRowTextValue(pr, key, matrixData, cvOverride);
+      if (val === "__blank__") return !text || text.trim() === "" || text === "0";
+      const tl = text.toLowerCase();
+      const vl = val.toLowerCase();
+      const numT = parseFloat(text);
+      const numV = parseFloat(val);
+      switch (mode) {
+        case "equals": return tl === vl;
+        case "not": return tl !== vl;
+        case "gt": return !isNaN(numT) && !isNaN(numV) && numT > numV;
+        case "lt": return !isNaN(numT) && !isNaN(numV) && numT < numV;
+        case "gte": return !isNaN(numT) && !isNaN(numV) && numT >= numV;
+        case "lte": return !isNaN(numT) && !isNaN(numV) && numT <= numV;
+        case "contains":
+        default: return tl.includes(vl);
+      }
+    };
+
+    let result = [...rows];
+    const activeFilters = Object.entries(filters).filter(([, v]) => v && v.length > 0);
+    if (activeFilters.length > 0) {
+      result = result.filter((pr) =>
+        activeFilters.every(([k, v]) => matchRule(pr, k, filterModes[k] || "contains", v))
+      );
+    }
+    const activeRules = rules.filter((r) => r.key && r.value && r.value.length > 0);
+    if (activeRules.length > 0) {
+      result = result.filter((pr) => {
+        const checks = activeRules.map((r) => matchRule(pr, r.key, r.mode, r.value));
+        return logic === "or" ? checks.some(Boolean) : checks.every(Boolean);
+      });
+    }
+    if (sort) {
+      const { key, dir } = sort;
+      result.sort((a, b) => {
+        const va = getRowSortValue(a, key, matrixData, cvOverride);
+        const vb = getRowSortValue(b, key, matrixData, cvOverride);
+        if (va < vb) return dir === "asc" ? -1 : 1;
+        if (va > vb) return dir === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return result;
   };
 
   // Apply column filters + sorting to payeeRows
