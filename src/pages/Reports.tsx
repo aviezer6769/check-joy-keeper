@@ -1282,7 +1282,7 @@ const Reports = () => {
                               const data = r.report_type === "payee_chalikah_dynamic"
                                 ? computeDynamic(r.filters as any)
                                 : r.report_data;
-                              handleExport(data as any);
+                              handleExport(data as any, r);
                             }}>
                               <Download className="h-3 w-3" />
                             </Button>
