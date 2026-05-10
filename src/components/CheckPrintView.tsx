@@ -130,8 +130,14 @@ function StubMemoText({ text }: { text: string }) {
     <>
       {lines.map((line, li) => {
         const segments: { hebrew: boolean; text: string }[] = [];
-        for (const char of line) {
-          const heb = isHebrew(char);
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          // Treat apostrophe / quote that follows a Hebrew letter as part of the
+          // Hebrew segment so it stays adjacent and renders correctly via geresh.
+          const isQuoteAfterHebrew =
+            (char === "'" || char === "\u2019" || char === '"' || char === "\u201D") &&
+            i > 0 && isHebrew(line[i - 1]);
+          const heb = isHebrew(char) || isQuoteAfterHebrew;
           const last = segments[segments.length - 1];
           if (last && last.hebrew === heb) {
             last.text += char;
