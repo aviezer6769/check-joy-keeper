@@ -1502,8 +1502,13 @@ const Reports = () => {
               ovV,
               savedCv
             );
-            const filteredTotal = filteredRows.reduce(
-              (s, pr) => s + Object.values(rd.matrix?.[pr.key] || {}).reduce((ss: number, v: any) => ss + v, 0),
+            const filteredTotal = filteredRows.reduce<number>(
+              (s, pr) =>
+                s +
+                Object.values((rd.matrix?.[pr.key] || {}) as Record<string, number>).reduce<number>(
+                  (ss, v) => ss + (v as number),
+                  0
+                ),
               0
             );
             return renderMatrix(
