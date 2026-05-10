@@ -750,7 +750,15 @@ const Reports = () => {
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRenameReport(r); setRenameValue(r.name); }}>
                               <Pencil className="h-3 w-3" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleExport(r.report_data as any)}>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Open full view" onClick={() => { setFullViewReport(r); setFullViewSearch(""); setFullViewSort(null); }}>
+                              <Maximize2 className="h-3 w-3" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Download" onClick={() => {
+                              const data = r.report_type === "payee_chalikah_dynamic"
+                                ? computeDynamic(r.filters as any)
+                                : r.report_data;
+                              handleExport(data as any);
+                            }}>
                               <Download className="h-3 w-3" />
                             </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteReport.mutate(r.id)}>
