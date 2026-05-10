@@ -365,11 +365,22 @@ const Payees = () => {
     if (!confirm(`Delete ${selectedIds.size} payee(s)? This cannot be undone.`)) return;
     setBulkDeleting(true);
     const ids = Array.from(selectedIds);
+    const { data: beforeRows } = await supabase.from("payees").select("*").in("id", ids);
     const { error } = await supabase.from("payees").delete().in("id", ids);
     setBulkDeleting(false);
     if (error) {
       toast.error("Bulk delete failed: " + error.message);
     } else {
+      const { logAuditBatch } = await import("@/lib/audit");
+      await logAuditBatch(
+        (beforeRows || []).map((row: any) => ({
+          table: "payees" as const,
+          action: "delete" as const,
+          recordId: row.id,
+          before: row,
+        })),
+        "Payees bulk delete",
+      );
       toast.success(`Deleted ${ids.length} payee(s)`);
       setSelectedIds(new Set());
       qc.invalidateQueries({ queryKey: ["payees"] });
