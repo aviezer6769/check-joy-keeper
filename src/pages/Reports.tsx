@@ -294,6 +294,8 @@ const Reports = () => {
     setEditingReportName("");
     setCustomColumns([]);
     setCustomValues({});
+    setFilterRules([]);
+    setRulesLogic("and");
   };
 
   const handleUpdate = () => {
