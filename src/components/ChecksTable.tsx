@@ -330,6 +330,13 @@ export function ChecksTable({ checks, onEdit, onDelete, onPrint, onStatusChange,
           </TableBody>
         </Table>
       </div>
+      <HistoryDialog
+        table="checks"
+        recordId={historyCheck?.id ?? null}
+        open={!!historyCheck}
+        onOpenChange={(v) => !v && setHistoryCheck(null)}
+        title={historyCheck ? `${historyCheck.payee} #${historyCheck.check_number || ""}` : ""}
+      />
     </div>
   );
 }
