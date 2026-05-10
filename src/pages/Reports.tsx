@@ -279,7 +279,6 @@ const Reports = () => {
     }, 0);
     setHasRun(true);
     setSelectedNames(new Set());
-    toast?.success?.("Report loaded for editing");
   };
 
   const cancelEdit = () => {
