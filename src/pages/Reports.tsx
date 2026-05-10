@@ -368,6 +368,7 @@ const Reports = () => {
     colKey: string,
     matrixData: Record<string, Record<string, number>>
   ): string => {
+    if (colKey.startsWith("cust_")) return customValues[colKey]?.[pr.key] || "";
     if (colKey === "sort_order") return "";
     if (colKey === "record_id") return pr.record_id || "";
     if (colKey === "urgent_level") return pr.urgent_level == null ? "?" : String(pr.urgent_level);
@@ -391,6 +392,7 @@ const Reports = () => {
     colKey: string,
     matrixData: Record<string, Record<string, number>>
   ): string | number => {
+    if (colKey.startsWith("cust_")) return (customValues[colKey]?.[pr.key] || "").toLowerCase();
     if (colKey === "record_id") {
       const n = parseFloat(pr.record_id || "");
       return isNaN(n) ? (pr.record_id || "").toLowerCase() : n;
