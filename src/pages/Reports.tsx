@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Save, Download, Trash2, FileText, Eye, Filter, Pencil, ChevronDown, Maximize2, ArrowUpDown, ArrowUp, ArrowDown, Search } from "lucide-react";
+import { ArrowLeft, Save, Download, Trash2, FileText, Eye, Filter, Pencil, ChevronDown, Maximize2, ArrowUpDown, ArrowUp, ArrowDown, Search, Edit3, Plus, X, SlidersHorizontal } from "lucide-react";
 import { useChecks, type Check } from "@/hooks/useChecks";
 import { useChalikah } from "@/hooks/useChalikah";
 import { useAccounts } from "@/hooks/useAccounts";
@@ -27,6 +27,7 @@ import { useColumnLayout, type ColumnDef, type FilterMode } from "@/hooks/useCol
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 import { useAuditSource } from "@/hooks/useAuditSource";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import * as XLSX from "xlsx";
 
 const fmt = (n: number) =>
@@ -82,6 +83,14 @@ const Reports = () => {
   const [fullViewReport, setFullViewReport] = useState<SavedReport | null>(null);
   const [fullViewSearch, setFullViewSearch] = useState("");
   const [fullViewSort, setFullViewSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
+  // Editing existing report
+  const [editingReportId, setEditingReportId] = useState<string | null>(null);
+  const [editingReportName, setEditingReportName] = useState<string>("");
+  // Custom note columns (per saved report)
+  const [customColumns, setCustomColumns] = useState<Array<{ key: string; label: string }>>([]);
+  const [customValues, setCustomValues] = useState<Record<string, Record<string, string>>>({});
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [newColumnName, setNewColumnName] = useState("");
   // Save-dialog dynamic options
   const [saveMode, setSaveMode] = useState<"snapshot" | "dynamic">("snapshot");
   const [chalikahMode, setChalikahMode] = useState<ChalikahMode>("last_n");
