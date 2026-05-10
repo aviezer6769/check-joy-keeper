@@ -424,7 +424,12 @@ export function CheckPrintView({ check, account, payee, showSignature = true, ch
               }}
             >
               {chalikahName && (
-                <p className="font-semibold">Chalikah: {chalikahName}</p>
+                <p className="font-semibold">
+                  Chalikah:{" "}
+                  <span className="font-hebrew" style={{ fontSize: "11pt" }}>
+                    {fixHebrewGeresh(chalikahName)}
+                  </span>
+                </p>
               )}
               {chalikahPosition && chalikahCount ? (
                 <p>Check {chalikahPosition} of {chalikahCount}</p>
