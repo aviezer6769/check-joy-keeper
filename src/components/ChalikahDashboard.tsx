@@ -154,12 +154,32 @@ export function ChalikahDashboard({ checks }: ChalikahDashboardProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-semibold">Chalikah</TableHead>
-                  <TableHead className="font-semibold text-right">Checks</TableHead>
-                  <TableHead className="font-semibold text-right">Total</TableHead>
-                  <TableHead className="font-semibold text-right">Given</TableHead>
-                  <TableHead className="font-semibold text-right">Pending</TableHead>
-                  <TableHead className="font-semibold text-right">Void</TableHead>
+                  {[
+                    { key: "name", label: "Chalikah", align: "left" as const },
+                    { key: "checkCount", label: "Checks", align: "right" as const },
+                    { key: "totalAmount", label: "Total", align: "right" as const },
+                    { key: "givenAmount", label: "Given", align: "right" as const },
+                    { key: "pendingAmount", label: "Pending", align: "right" as const },
+                    { key: "voidCount", label: "Void", align: "right" as const },
+                  ].map((h) => (
+                    <TableHead
+                      key={h.key}
+                      className={cn(
+                        "font-semibold cursor-pointer select-none hover:text-foreground",
+                        h.align === "right" ? "text-right" : ""
+                      )}
+                      onClick={() => toggleSort(h.key)}
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        {h.label}
+                        {sort.key === h.key ? (
+                          sort.dir === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 opacity-30" />
+                        )}
+                      </span>
+                    </TableHead>
+                  ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
