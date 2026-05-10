@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useColumnLayout, type ColumnDef } from "@/hooks/useColumnLayout";
+import { useAuditSource } from "@/hooks/useAuditSource";
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 import { formatPhone } from "@/lib/payee-utils";
@@ -66,6 +67,7 @@ function formatDate(date: string) {
 }
 
 const Payees = () => {
+  useAuditSource("Payees page");
   const { data: payees = [], isLoading } = usePayees();
   const { data: checks = [] } = useChecks();
   const { data: accounts = [] } = useAccounts();
