@@ -1541,10 +1541,17 @@ const Reports = () => {
               ? computeDynamic(fullViewReport.filters as any)
               : fullViewReport.report_data;
             const matrixData: Record<string, Record<string, number>> = rd.matrix || {};
-            const allRows: any[] = rd.payeeRows || [];
             const savedCols = colsForSavedReport(fullViewReport, rd);
             const savedCustomValues: Record<string, Record<string, string>> =
               ((fullViewReport.filters as any)?._overrides?.customValues) || {};
+            const ovF: any = (fullViewReport.filters as any)?._overrides || {};
+            // Apply saved filters/sort first, then in-dialog search
+            const allRows = applySavedLayout(
+              (rd.payeeRows || []) as typeof payeeRows,
+              matrixData,
+              ovF,
+              savedCustomValues
+            );
             // Search filter only — layout/sort/columns come from saved overrides
             const q = fullViewSearch.trim().toLowerCase();
             const rows = q
