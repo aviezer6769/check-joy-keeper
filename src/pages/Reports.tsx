@@ -1098,7 +1098,8 @@ const Reports = () => {
                           </Select>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Combine rules across any column (incl. dynamic chalikah & custom columns).
+                          Combine rules across any column.
+                          <span className="ml-1 text-primary font-medium">Chalikah</span> columns are tagged.
                         </p>
                         <div className="space-y-2 max-h-[260px] overflow-auto">
                           {filterRules.map((r, idx) => (
