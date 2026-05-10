@@ -1014,10 +1014,16 @@ const Reports = () => {
                   <Download className="h-4 w-4 mr-2" />
                   {selectedNames.size > 0 ? `Export ${selectedNames.size} Selected` : "Export"}
                 </Button>
-                <Button onClick={() => setSaveDialogOpen(true)}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Report
-                </Button>
+                {editingReportId ? (
+                  <Button onClick={handleUpdate} disabled={updateReport.isPending}>
+                    <Save className="h-4 w-4 mr-2" /> Update Report
+                  </Button>
+                ) : (
+                  <Button onClick={() => setSaveDialogOpen(true)}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Report
+                  </Button>
+                )}
                 {savedReports.length > 0 && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -1038,6 +1044,9 @@ const Reports = () => {
                             <span className="text-xs text-muted-foreground ml-2">{new Date(r.created_at).toLocaleDateString()}</span>
                           </button>
                           <div className="flex gap-0.5 shrink-0">
+                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Edit in main view" onClick={() => loadReportForEdit(r)}>
+                              <Edit3 className="h-3 w-3" />
+                            </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRenameReport(r); setRenameValue(r.name); }}>
                               <Pencil className="h-3 w-3" />
                             </Button>
