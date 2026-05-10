@@ -255,6 +255,13 @@ const Reports = () => {
     rulesLogic,
   });
 
+  // Helper to label columns with type indicators
+  const colLabel = (c: ColumnDef) => {
+    if (c.key.startsWith("ch_")) return `${c.label}  (Chalikah)`;
+    if (c.key.startsWith("cust_")) return `${c.label}  (Custom)`;
+    return c.label;
+  };
+
   const loadReportForEdit = (r: SavedReport) => {
     const f: any = r.filters || {};
     const isDyn = r.report_type === "payee_chalikah_dynamic";
@@ -1015,7 +1022,7 @@ const Reports = () => {
                             <SelectContent>
                               <SelectItem value="__none__">No sort</SelectItem>
                               {allReportColumns.map((c) => (
-                                <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                                <SelectItem key={c.key} value={c.key}>{colLabel(c)}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -1048,7 +1055,7 @@ const Reports = () => {
                               return (
                                 <div key={c.key} className="flex items-center gap-1">
                                   <span className="text-xs w-32 truncate" title={c.label}>
-                                    {c.label}{!visible && <span className="text-muted-foreground"> (hidden)</span>}
+                                    {colLabel(c)}{!visible && <span className="text-muted-foreground"> (hidden)</span>}
                                   </span>
                                   <Select
                                     value={mode}
@@ -1098,7 +1105,8 @@ const Reports = () => {
                           </Select>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Combine rules across any column (incl. dynamic chalikah & custom columns).
+                          Combine rules across any column.
+                          <span className="ml-1 text-primary font-medium">Chalikah</span> columns are tagged.
                         </p>
                         <div className="space-y-2 max-h-[260px] overflow-auto">
                           {filterRules.map((r, idx) => (
@@ -1121,7 +1129,7 @@ const Reports = () => {
                                   {allReportColumns
                                     .filter((c) => c.key !== "sort_order")
                                     .map((c) => (
-                                      <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                                      <SelectItem key={c.key} value={c.key}>{colLabel(c)}</SelectItem>
                                     ))}
                                 </SelectContent>
                               </Select>
