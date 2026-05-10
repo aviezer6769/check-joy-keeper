@@ -810,6 +810,14 @@ const Payees = () => {
         />
       )}
 
+      <HistoryDialog
+        table="payees"
+        recordId={historyPayee?.id ?? null}
+        open={!!historyPayee}
+        onOpenChange={(v) => !v && setHistoryPayee(null)}
+        title={historyPayee?.payee_name}
+      />
+
       <PayeeBulkEdit
         payees={selectedPayees}
         open={bulkEditOpen}
