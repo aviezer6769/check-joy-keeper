@@ -872,6 +872,131 @@ const Reports = () => {
                   <Filter className="h-4 w-4 mr-2" />
                   Column Filters
                 </Button>
+                <Popover open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <SlidersHorizontal className="h-4 w-4 mr-2" />
+                      Advanced
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[420px] max-h-[70vh] overflow-auto" align="end">
+                    <div className="space-y-4">
+                      {/* Custom columns */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Custom Note Columns</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={newColumnName}
+                            onChange={(e) => setNewColumnName(e.target.value)}
+                            placeholder="New column name"
+                            className="h-8"
+                            onKeyDown={(e) => { if (e.key === "Enter") addCustomColumn(); }}
+                          />
+                          <Button size="sm" onClick={addCustomColumn} disabled={!newColumnName.trim()}>
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {customColumns.length > 0 && (
+                          <div className="space-y-1">
+                            {customColumns.map((c) => (
+                              <div key={c.key} className="flex items-center gap-2 text-sm">
+                                <span className="flex-1 truncate">{c.label}</span>
+                                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeCustomColumn(c.key)}>
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Sort by any column */}
+                      <div className="space-y-2 border-t pt-3">
+                        <Label className="text-sm font-semibold">Sort (any column)</Label>
+                        <div className="flex gap-2">
+                          <Select
+                            value={colLayout.sort?.key || "__none__"}
+                            onValueChange={(v) => {
+                              if (v === "__none__") colLayout.applyLayout({ sort: null });
+                              else colLayout.applyLayout({ sort: { key: v, dir: colLayout.sort?.dir || "asc" } });
+                            }}
+                          >
+                            <SelectTrigger className="h-8 flex-1"><SelectValue placeholder="No sort" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__">No sort</SelectItem>
+                              {allReportColumns.map((c) => (
+                                <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={colLayout.sort?.dir || "asc"}
+                            onValueChange={(v) => {
+                              if (colLayout.sort) colLayout.applyLayout({ sort: { key: colLayout.sort.key, dir: v as any } });
+                            }}
+                            disabled={!colLayout.sort}
+                          >
+                            <SelectTrigger className="h-8 w-[110px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="asc">Asc</SelectItem>
+                              <SelectItem value="desc">Desc</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Filter by hidden / any columns */}
+                      <div className="space-y-2 border-t pt-3">
+                        <Label className="text-sm font-semibold">Filters (incl. hidden columns)</Label>
+                        <div className="space-y-2 max-h-[260px] overflow-auto">
+                          {allReportColumns
+                            .filter((c) => c.key !== "sort_order")
+                            .map((c) => {
+                              const val = colLayout.filters[c.key] || "";
+                              const mode = colLayout.filterModes[c.key] || "contains";
+                              const visible = colLayout.visibleColumns.some((v) => v.key === c.key);
+                              return (
+                                <div key={c.key} className="flex items-center gap-1">
+                                  <span className="text-xs w-32 truncate" title={c.label}>
+                                    {c.label}{!visible && <span className="text-muted-foreground"> (hidden)</span>}
+                                  </span>
+                                  <Select
+                                    value={mode}
+                                    onValueChange={(v) => colLayout.setFilterMode(c.key, v as FilterMode)}
+                                  >
+                                    <SelectTrigger className="h-7 w-[88px] text-xs"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="contains">contains</SelectItem>
+                                      <SelectItem value="equals">equals</SelectItem>
+                                      <SelectItem value="not">not</SelectItem>
+                                      <SelectItem value="gt">&gt;</SelectItem>
+                                      <SelectItem value="lt">&lt;</SelectItem>
+                                      <SelectItem value="gte">≥</SelectItem>
+                                      <SelectItem value="lte">≤</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Input
+                                    value={val}
+                                    onChange={(e) => colLayout.setFilter(c.key, e.target.value)}
+                                    placeholder="value"
+                                    className="h-7 text-xs flex-1"
+                                  />
+                                  {val && (
+                                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => colLayout.setFilter(c.key, "")}>
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              );
+                            })}
+                        </div>
+                        <Button size="sm" variant="outline" className="w-full" onClick={colLayout.clearFilters}>
+                          Clear all filters
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 <Button onClick={() => setHasRun(true)}>
                   Run Report
                 </Button>
