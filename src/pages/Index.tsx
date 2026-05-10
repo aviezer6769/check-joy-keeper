@@ -387,7 +387,18 @@ const Index = () => {
       {/* Hidden print view */}
       <div className="hidden">
         <div ref={printRef}>
-          {printChecks.map((c, i) => {
+          {(() => {
+            // Group by chalikah_id for position + total
+            const groupKey = (c: Check) => c.chalikah_id || "__none__";
+            const groupTotals: Record<string, number> = {};
+            const groupCounts: Record<string, number> = {};
+            const groupSeen: Record<string, number> = {};
+            printChecks.forEach((c) => {
+              const k = groupKey(c);
+              groupTotals[k] = (groupTotals[k] || 0) + Number(c.amount || 0);
+              groupCounts[k] = (groupCounts[k] || 0) + 1;
+            });
+            return printChecks.map((c, i) => {
             const normalizedPayeeName = (c.payee || "").trim().toLowerCase();
             const normalizedRecord = (c.payee_record_number || "").trim().toLowerCase();
             const matchedPayee =
@@ -396,13 +407,26 @@ const Index = () => {
                 : null) ||
               payees.find((p) => (p.payee_name || "").trim().toLowerCase() === normalizedPayeeName) ||
               null;
+            const k = groupKey(c);
+            groupSeen[k] = (groupSeen[k] || 0) + 1;
+            const chalikahName = c.chalikah_id ? (chalikahMap[c.chalikah_id] || null) : null;
 
             return (
               <div key={c.id} style={i > 0 ? { pageBreakBefore: "always" } : undefined}>
-                <CheckPrintView check={c} account={selectedAccount} payee={matchedPayee} showSignature={printWithSignature} />
+                <CheckPrintView
+                  check={c}
+                  account={selectedAccount}
+                  payee={matchedPayee}
+                  showSignature={printWithSignature}
+                  chalikahName={chalikahName}
+                  chalikahPosition={groupSeen[k]}
+                  chalikahCount={groupCounts[k]}
+                  chalikahTotal={groupTotals[k]}
+                />
               </div>
             );
-          })}
+            });
+          })()}
         </div>
       </div>
 
