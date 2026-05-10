@@ -191,7 +191,8 @@ const Reports = () => {
     ...STATIC_REPORT_COLS,
     ...chalikahCols.map((col) => ({ key: `ch_${col.id}`, label: col.name })),
     { key: "total", label: "Total" },
-  ], [chalikahCols]);
+    ...customColumns.map((c) => ({ key: c.key, label: c.label })),
+  ], [chalikahCols, customColumns]);
 
   const colLayout = useColumnLayout("reports", allReportColumns);
 
