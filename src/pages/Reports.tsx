@@ -1022,7 +1022,7 @@ const Reports = () => {
                             <SelectContent>
                               <SelectItem value="__none__">No sort</SelectItem>
                               {allReportColumns.map((c) => (
-                                <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                                <SelectItem key={c.key} value={c.key}>{colLabel(c)}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
