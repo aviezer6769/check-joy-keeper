@@ -2,10 +2,11 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, ChevronRight, BarChart3 } from "lucide-react";
+import { ChevronDown, ChevronUp, ChevronRight, BarChart3, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { type Check } from "@/hooks/useChecks";
 import { useChalikah } from "@/hooks/useChalikah";
 import { useAccounts } from "@/hooks/useAccounts";
+import { cn } from "@/lib/utils";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
@@ -41,6 +42,16 @@ export function ChalikahDashboard({ checks }: ChalikahDashboardProps) {
   const { data: accounts = [] } = useAccounts();
   const [expanded, setExpanded] = useState(true);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" }>({ key: "name", dir: "asc" });
+
+  const toggleSort = (key: string) => {
+    setSort((prev) => {
+      if (prev.key === key) {
+        return { key, dir: prev.dir === "asc" ? "desc" : "asc" };
+      }
+      return { key, dir: "asc" };
+    });
+  };
 
   const toggleRow = (id: string) => {
     setExpandedRows((prev) => {
@@ -92,8 +103,32 @@ export function ChalikahDashboard({ checks }: ChalikahDashboardProps) {
       }
     }
 
-    return Array.from(map.values()).sort((a, b) => b.totalAmount - a.totalAmount);
-  }, [checks, chalikahList, accounts]);
+    const arr = Array.from(map.values());
+    arr.sort((a, b) => {
+      const { key, dir } = sort;
+      const mul = dir === "asc" ? 1 : -1;
+      if (key === "name") {
+        return a.name.localeCompare(b.name, "he") * mul;
+      }
+      if (key === "checkCount") {
+        return (a.checkCount - b.checkCount) * mul;
+      }
+      if (key === "totalAmount") {
+        return (a.totalAmount - b.totalAmount) * mul;
+      }
+      if (key === "givenAmount") {
+        return (a.givenAmount - b.givenAmount) * mul;
+      }
+      if (key === "pendingAmount") {
+        return (a.pendingAmount - b.pendingAmount) * mul;
+      }
+      if (key === "voidCount") {
+        return (a.voidCount - b.voidCount) * mul;
+      }
+      return 0;
+    });
+    return arr;
+  }, [checks, chalikahList, accounts, sort]);
 
   const grandTotal = summaries.reduce((s, c) => s + c.totalAmount, 0);
   const grandGiven = summaries.reduce((s, c) => s + c.givenAmount, 0);
@@ -119,12 +154,32 @@ export function ChalikahDashboard({ checks }: ChalikahDashboardProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-semibold">Chalikah</TableHead>
-                  <TableHead className="font-semibold text-right">Checks</TableHead>
-                  <TableHead className="font-semibold text-right">Total</TableHead>
-                  <TableHead className="font-semibold text-right">Given</TableHead>
-                  <TableHead className="font-semibold text-right">Pending</TableHead>
-                  <TableHead className="font-semibold text-right">Void</TableHead>
+                  {[
+                    { key: "name", label: "Chalikah", align: "left" as const },
+                    { key: "checkCount", label: "Checks", align: "right" as const },
+                    { key: "totalAmount", label: "Total", align: "right" as const },
+                    { key: "givenAmount", label: "Given", align: "right" as const },
+                    { key: "pendingAmount", label: "Pending", align: "right" as const },
+                    { key: "voidCount", label: "Void", align: "right" as const },
+                  ].map((h) => (
+                    <TableHead
+                      key={h.key}
+                      className={cn(
+                        "font-semibold cursor-pointer select-none hover:text-foreground",
+                        h.align === "right" ? "text-right" : ""
+                      )}
+                      onClick={() => toggleSort(h.key)}
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        {h.label}
+                        {sort.key === h.key ? (
+                          sort.dir === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 opacity-30" />
+                        )}
+                      </span>
+                    </TableHead>
+                  ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
