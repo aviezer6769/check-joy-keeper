@@ -8,6 +8,10 @@ interface CheckPrintViewProps {
   account?: Account | null;
   payee?: Payee | null;
   showSignature?: boolean;
+  chalikahName?: string | null;
+  chalikahPosition?: number;
+  chalikahCount?: number;
+  chalikahTotal?: number;
 }
 
 const PAGE = {
@@ -215,7 +219,7 @@ function StubRightMeta({
   );
 }
 
-export function CheckPrintView({ check, account, payee, showSignature = true }: CheckPrintViewProps) {
+export function CheckPrintView({ check, account, payee, showSignature = true, chalikahName, chalikahPosition, chalikahCount, chalikahTotal }: CheckPrintViewProps) {
   const payeeName = (check.payee.startsWith("Payee #") || check.payee === "Blank") ? "" : check.payee;
   const payerDisplayName = account?.check_payer_name || account?.payer_name || account?.account_name || "CLYKT";
   const stubPayerName = account?.stub_payer_name || account?.payer_name || account?.account_name;
@@ -400,6 +404,27 @@ export function CheckPrintView({ check, account, payee, showSignature = true }: 
           </div>
 
           <PayeeBlock payee={payee} topOffsetIn={STUB_2.payeeTop} leftOffsetIn={0.48} />
+
+          {(chalikahPosition && chalikahCount) || chalikahTotal ? (
+            <div
+              className="absolute leading-tight"
+              style={{
+                left: inches(0.48),
+                bottom: inches(0.1),
+                fontSize: "10pt",
+              }}
+            >
+              {chalikahName && (
+                <p className="font-semibold">Chalikah: {chalikahName}</p>
+              )}
+              {chalikahPosition && chalikahCount ? (
+                <p>Check {chalikahPosition} of {chalikahCount}</p>
+              ) : null}
+              {chalikahTotal != null && (
+                <p>Chalikah Total Printed: {formatCurrency(chalikahTotal)}</p>
+              )}
+            </div>
+          ) : null}
 
           {check.stub_memo && (
             <div
