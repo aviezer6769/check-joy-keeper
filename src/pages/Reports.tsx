@@ -78,6 +78,7 @@ const Reports = () => {
   const [selectedNames, setSelectedNames] = useState<Set<string>>(new Set());
   const [renameReport, setRenameReport] = useState<SavedReport | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [hasRun, setHasRun] = useState(false);
   // Save-dialog dynamic options
   const [saveMode, setSaveMode] = useState<"snapshot" | "dynamic">("snapshot");
   const [chalikahMode, setChalikahMode] = useState<ChalikahMode>("last_n");
@@ -702,6 +703,9 @@ const Reports = () => {
                   <Filter className="h-4 w-4 mr-2" />
                   Column Filters
                 </Button>
+                <Button onClick={() => setHasRun(true)}>
+                  Run Report
+                </Button>
                 <ColumnLayoutManager
                   visibleColumns={colLayout.visibleColumns}
                   hiddenColumns={colLayout.hiddenColumns}
@@ -762,7 +766,11 @@ const Reports = () => {
 
 
         {/* Live matrix */}
-        {checksLoading ? (
+        {!hasRun ? (
+          <div className="text-center py-16 text-muted-foreground">
+            Set your filters and click <span className="font-medium text-foreground">Run Report</span> to generate the report, or open a saved report.
+          </div>
+        ) : checksLoading ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>
         ) : payeeRows.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">No checks match the current filters.</div>
