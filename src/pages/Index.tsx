@@ -219,6 +219,12 @@ const Index = () => {
               <p className="text-sm text-muted-foreground mt-1">Manage and print charity checks</p>
             </div>
             <div className="flex gap-2">
+              <Link to="/">
+                <Button variant="outline">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Home
+                </Button>
+              </Link>
               <Link to="/payees">
                 <Button variant="outline">
                   <Users className="h-4 w-4 mr-2" />
