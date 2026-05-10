@@ -791,7 +791,7 @@ const Reports = () => {
                       );
                     }
                     if (col.key.startsWith("cust_")) {
-                      const val = customValues[col.key]?.[pr.key] || "";
+                      const val = cvSource[col.key]?.[pr.key] || "";
                       if (isStatic) {
                         return <TableCell key={col.key}>{val || "—"}</TableCell>;
                       }
