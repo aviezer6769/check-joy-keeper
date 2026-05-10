@@ -1427,7 +1427,8 @@ const Reports = () => {
               rd.matrix || {},
               rd.grandTotal || 0,
               savedCols,
-              true
+              true,
+              ((viewingReport.filters as any)?._overrides?.customValues) || {}
             );
           })()}
         </DialogContent>
