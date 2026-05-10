@@ -103,6 +103,23 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
       toast.error("Select at least one field to update");
       return;
     }
+    const { logAuditBatch } = await import("@/lib/audit");
+    const beforeIds = checks.map((c) => c.id);
+    const { data: beforeRows } = await supabase.from("checks").select("*").in("id", beforeIds);
+    const beforeMap = new Map((beforeRows || []).map((r: any) => [r.id, r]));
+    const writeAudit = async (source: string) => {
+      const { data: afterRows } = await supabase.from("checks").select("*").in("id", beforeIds);
+      await logAuditBatch(
+        (afterRows || []).map((after: any) => ({
+          table: "checks" as const,
+          action: "update" as const,
+          recordId: after.id,
+          before: beforeMap.get(after.id),
+          after,
+        })),
+        source,
+      );
+    };
 
     const updates: Record<string, any> = {};
     enabledFields.forEach((key) => {
@@ -133,6 +150,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
       if (voidErrors > 0) {
         toast.error(`${voidErrors} row(s) failed to update`);
       } else {
+        await writeAudit("Checks bulk void");
         toast.success(`Updated ${checks.length} check(s)`);
       }
       qc.invalidateQueries({ queryKey: ["checks"] });
@@ -156,6 +174,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
       if (unvoidErrors > 0) {
         toast.error(`${unvoidErrors} row(s) failed to update`);
       } else {
+        await writeAudit("Checks bulk unvoid");
         toast.success(`Updated ${checks.length} check(s)`);
       }
       qc.invalidateQueries({ queryKey: ["checks"] });
@@ -178,6 +197,7 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
     if (bulkErrors > 0) {
       toast.error(`Some rows failed to update`);
     } else {
+      await writeAudit("Checks bulk edit (apply-all)");
       toast.success(`Updated ${checks.length} check(s)`);
     }
     qc.invalidateQueries({ queryKey: ["checks"] });
@@ -225,6 +245,9 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
 
   const handleGridSave = async () => {
     setSaving(true);
+    const ids = gridRows.map((r) => r.id);
+    const { data: beforeRows } = await supabase.from("checks").select("*").in("id", ids);
+    const beforeMap = new Map((beforeRows || []).map((r: any) => [r.id, r]));
     const { errors: gridErrors } = await batchedUpdates(gridRows, async (row) => {
       const { id, created_at, updated_at, ...rest } = row;
       GRID_FIELDS.forEach((f) => {
@@ -245,6 +268,18 @@ export function CheckBulkEdit({ checks, open, onOpenChange, onDone }: CheckBulkE
     if (gridErrors > 0) {
       toast.error(`${gridErrors} row(s) failed to update`);
     } else {
+      const { data: afterRows } = await supabase.from("checks").select("*").in("id", ids);
+      const { logAuditBatch } = await import("@/lib/audit");
+      await logAuditBatch(
+        (afterRows || []).map((after: any) => ({
+          table: "checks" as const,
+          action: "update" as const,
+          recordId: after.id,
+          before: beforeMap.get(after.id),
+          after,
+        })),
+        "Checks bulk edit (grid)",
+      );
       toast.success(`Updated ${gridRows.length} check(s)`);
       qc.invalidateQueries({ queryKey: ["checks"] });
       onDone();
