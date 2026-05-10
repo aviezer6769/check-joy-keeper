@@ -767,6 +767,9 @@ const Reports = () => {
                   const colTotal = rows.reduce((s, pr) => s + (matrixData[pr.key]?.[chId] || 0), 0);
                   return <TableCell key={col.key} className="text-right tabular-nums">{fmt(colTotal)}</TableCell>;
                 }
+                if (col.key.startsWith("cust_")) {
+                  return <TableCell key={col.key} className="bg-muted/50" />;
+                }
                 return <TableCell key={col.key} />;
               })}
             </TableRow>
