@@ -725,6 +725,22 @@ const Reports = () => {
                         </TableCell>
                       );
                     }
+                    if (col.key.startsWith("cust_")) {
+                      const val = customValues[col.key]?.[pr.key] || "";
+                      if (isStatic) {
+                        return <TableCell key={col.key}>{val || "—"}</TableCell>;
+                      }
+                      return (
+                        <TableCell key={col.key} className="bg-background p-1">
+                          <Input
+                            value={val}
+                            onChange={(e) => setCustomValue(col.key, pr.key, e.target.value)}
+                            className="h-8 text-sm"
+                            placeholder="—"
+                          />
+                        </TableCell>
+                      );
+                    }
                     return <TableCell key={col.key}>—</TableCell>;
                   })}
                 </TableRow>
