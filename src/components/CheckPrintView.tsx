@@ -2,6 +2,7 @@ import { type Check } from "@/hooks/useChecks";
 import { type Account } from "@/hooks/useAccounts";
 import { type Payee } from "@/hooks/usePayees";
 import signatureImg from "@/assets/signature.png";
+import { fixHebrewGeresh } from "@/lib/hebrew";
 
 interface CheckPrintViewProps {
   check: Check;
@@ -142,7 +143,7 @@ function StubMemoText({ text }: { text: string }) {
           <div key={li} style={{ direction: segments.some(s => s.hebrew) ? "rtl" : "ltr", overflowWrap: "normal", wordBreak: "normal" }}>
             {segments.length === 0 ? "\u00A0" : segments.map((seg, i) =>
               seg.hebrew ? (
-                <span key={i} className="font-hebrew" style={{ fontSize: "11pt", direction: "rtl" }}>{seg.text}</span>
+                <span key={i} className="font-hebrew" style={{ fontSize: "11pt", direction: "rtl" }}>{fixHebrewGeresh(seg.text)}</span>
               ) : (
                 <span key={i} style={{ direction: "ltr", unicodeBidi: "embed" }}>{seg.text}</span>
               )
@@ -189,7 +190,7 @@ function PayeeBlock({
         fontSize: "10pt",
       }}
     >
-      {yiddishName && <p className="font-hebrew" style={{ fontSize: "11pt" }}>{yiddishName}</p>}
+      {yiddishName && <p className="font-hebrew" style={{ fontSize: "11pt" }}>{fixHebrewGeresh(yiddishName)}</p>}
       <p>{payee.payee_name}</p>
       {streetLine && <p>{streetLine}</p>}
       {cityLine && <p>{cityLine}</p>}
@@ -347,7 +348,7 @@ export function CheckPrintView({ check, account, payee, showSignature = true, ch
       >
         <div className="relative h-full">
           <div className="leading-tight" style={{ maxWidth: "calc(100% - 1.45in)", fontSize: "10pt" }}>
-            {account?.payer_name_yiddish && <p className="font-hebrew" style={{ fontSize: "11pt" }}>{account.payer_name_yiddish}</p>}
+            {account?.payer_name_yiddish && <p className="font-hebrew" style={{ fontSize: "11pt" }}>{fixHebrewGeresh(account.payer_name_yiddish)}</p>}
             <p>{stubPayerName}</p>
             {account?.payer_address && <p>{account.payer_address}</p>}
             {(account?.payer_city || account?.payer_state || account?.payer_zip) && (
