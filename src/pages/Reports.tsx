@@ -523,28 +523,38 @@ const Reports = () => {
     const activeFilters = Object.entries(colLayout.filters).filter(([, v]) => v.length > 0);
     let result = [...payeeRows];
 
+    const matchRule = (pr: typeof payeeRows[number], key: string, mode: FilterMode, val: string) => {
+      if (!val) return true;
+      const text = getRowTextValue(pr, key, matrix);
+      if (val === "__blank__") return !text || text.trim() === "" || text === "0";
+      const tl = text.toLowerCase();
+      const vl = val.toLowerCase();
+      const numT = parseFloat(text);
+      const numV = parseFloat(val);
+      switch (mode) {
+        case "equals": return tl === vl;
+        case "not": return tl !== vl;
+        case "gt": return !isNaN(numT) && !isNaN(numV) && numT > numV;
+        case "lt": return !isNaN(numT) && !isNaN(numV) && numT < numV;
+        case "gte": return !isNaN(numT) && !isNaN(numV) && numT >= numV;
+        case "lte": return !isNaN(numT) && !isNaN(numV) && numT <= numV;
+        case "contains":
+        default: return tl.includes(vl);
+      }
+    };
+
     if (activeFilters.length > 0) {
       result = result.filter((pr) =>
-        activeFilters.every(([key, val]) => {
-          const text = getRowTextValue(pr, key, matrix);
-          if (val === "__blank__") return !text || text.trim() === "" || text === "0";
-          const mode = colLayout.filterModes[key] || "contains";
-          const tl = text.toLowerCase();
-          const vl = val.toLowerCase();
-          const numT = parseFloat(text);
-          const numV = parseFloat(val);
-          switch (mode) {
-            case "equals": return tl === vl;
-            case "not": return tl !== vl;
-            case "gt": return !isNaN(numT) && !isNaN(numV) && numT > numV;
-            case "lt": return !isNaN(numT) && !isNaN(numV) && numT < numV;
-            case "gte": return !isNaN(numT) && !isNaN(numV) && numT >= numV;
-            case "lte": return !isNaN(numT) && !isNaN(numV) && numT <= numV;
-            case "contains":
-            default: return tl.includes(vl);
-          }
-        })
+        activeFilters.every(([key, val]) => matchRule(pr, key, colLayout.filterModes[key] || "contains", val))
       );
+    }
+
+    const activeRules = filterRules.filter((r) => r.key && r.value.length > 0);
+    if (activeRules.length > 0) {
+      result = result.filter((pr) => {
+        const checks = activeRules.map((r) => matchRule(pr, r.key, r.mode, r.value));
+        return rulesLogic === "or" ? checks.some(Boolean) : checks.every(Boolean);
+      });
     }
 
     if (colLayout.sort) {
@@ -579,7 +589,7 @@ const Reports = () => {
     }
 
     return result;
-  }, [payeeRows, matrix, colLayout.filters, colLayout.filterModes, colLayout.sort]);
+  }, [payeeRows, matrix, colLayout.filters, colLayout.filterModes, colLayout.sort, filterRules, rulesLogic]);
 
   // Filter options for dropdown
   const reportFilterOptions = useMemo(() => {
