@@ -42,6 +42,16 @@ export function ChalikahDashboard({ checks }: ChalikahDashboardProps) {
   const { data: accounts = [] } = useAccounts();
   const [expanded, setExpanded] = useState(true);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" }>({ key: "name", dir: "asc" });
+
+  const toggleSort = (key: string) => {
+    setSort((prev) => {
+      if (prev.key === key) {
+        return { key, dir: prev.dir === "asc" ? "desc" : "asc" };
+      }
+      return { key, dir: "asc" };
+    });
+  };
 
   const toggleRow = (id: string) => {
     setExpandedRows((prev) => {
