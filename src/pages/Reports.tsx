@@ -1386,7 +1386,7 @@ const Reports = () => {
                         <ChevronDown className="h-4 w-4 ml-1" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-[280px]">
+                    <DropdownMenuContent align="end" className="w-[340px]">
                       {savedReports.map((r) => (
                         <DropdownMenuItem key={r.id} className="flex items-center justify-between gap-2 p-2" onSelect={(e) => e.preventDefault()}>
                           <button
@@ -1400,7 +1400,7 @@ const Reports = () => {
                             <Button size="icon" variant="ghost" className="h-7 w-7" title="Edit in main view" onClick={() => loadReportForEdit(r)}>
                               <Edit3 className="h-3 w-3" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Duplicate" onClick={() => {
+                            <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1" onClick={() => {
                               const baseName = r.name.replace(/\s*\(copy\s*\d*\)$/i, "").trim();
                               const existingCopies = savedReports.filter((sr) => new RegExp(`^${baseName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\(copy\\s*\\d*\\)$`, "i").test(sr.name));
                               const copyName = existingCopies.length > 0
@@ -1413,7 +1413,7 @@ const Reports = () => {
                                 report_data: r.report_data,
                               });
                             }}>
-                              <Copy className="h-3 w-3" />
+                              <Copy className="h-3 w-3" /> Copy
                             </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRenameReport(r); setRenameValue(r.name); }}>
                               <Pencil className="h-3 w-3" />
