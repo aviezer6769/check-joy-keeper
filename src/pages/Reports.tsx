@@ -129,6 +129,36 @@ const Reports = () => {
     return payeeLookup.byName[payeeName.toLowerCase()] || { record_id: "", yiddish: "", memo: "", address: "", is_active: true, urgent_level: null, last_name_yiddish: "", first_name_yiddish: "", middle_name_yiddish: "" };
   };
 
+  // A zero-value Chalikah rule must also evaluate payees with no matching checks.
+  // Normally those payees are absent from the check-derived matrix altogether.
+  const rulesCanMatchMissingChalikah = (rules: FilterRule[]) =>
+    rules.some((rule) => {
+      if (!rule.key.startsWith("ch_")) return false;
+      if (rule.value === "__blank__") return true;
+      const value = Number(rule.value);
+      if (!Number.isFinite(value)) return false;
+      if (rule.mode === "equals" || rule.mode === "gte" || rule.mode === "lte") return value === 0;
+      if (rule.mode === "lt") return value > 0;
+      if (rule.mode === "gt") return value < 0;
+      return false;
+    });
+
+  const addMissingPayees = (
+    payeeMap: Record<string, any>,
+    map: Record<string, Record<string, number>>
+  ) => {
+    payeesList.forEach((payee) => {
+      const key = payee.record_id ? `__rid__${payee.record_id}` : payee.payee_name;
+      if (payeeMap[key]) return;
+      payeeMap[key] = {
+        key,
+        name: payee.payee_name,
+        ...getPayeeInfo(payee.payee_name, payee.record_id),
+      };
+      map[key] = {};
+    });
+  };
+
   // Filter checks
   const filteredChecks = useMemo(() => {
     let result = allChecks;
@@ -193,6 +223,10 @@ const Reports = () => {
       map[dedupeKey][chId] = (map[dedupeKey][chId] || 0) + c.amount;
     });
 
+    if (rulesCanMatchMissingChalikah(filterRules)) {
+      addMissingPayees(payeeMap, map);
+    }
+
     const chalikahNameMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
     const cols = Array.from(chalikahIds).map((id) => ({
       id,
@@ -205,7 +239,7 @@ const Reports = () => {
     filteredChecks.forEach((c) => (gt += c.amount));
 
     return { matrix: map, payeeRows: rows, chalikahCols: cols, grandTotal: gt };
-  }, [filteredChecks, chalikahList, payeeLookup]);
+  }, [filteredChecks, chalikahList, payeeLookup, payeesList, filterRules]);
 
   // Dynamic columns = static cols + chalikah cols + total
   const allReportColumns: ColumnDef[] = useMemo(() => [
@@ -422,6 +456,12 @@ const Reports = () => {
       }
       map[dedupeKey][chId] = (map[dedupeKey][chId] || 0) + c.amount;
     });
+    const savedRules = Array.isArray((cfg as any)?._overrides?.filterRules)
+      ? (cfg as any)._overrides.filterRules as FilterRule[]
+      : [];
+    if (rulesCanMatchMissingChalikah(savedRules)) {
+      addMissingPayees(payeeMap, map);
+    }
     const chalikahNameMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
     const cols = Array.from(chalikahIds).map((id) => ({
       id, name: id === "__none__" ? "(No Chalikah)" : chalikahNameMap[id] || id,
