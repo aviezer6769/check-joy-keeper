@@ -160,6 +160,18 @@ const Reports = () => {
     });
   };
 
+  // Payee-attribute filters/rules (Active, Urgent, Memo, Record ID...) must be able to
+  // evaluate payees that have no checks in the current set, so seed the whole payee list.
+  const isPayeeAttrKey = (k: string) =>
+    !k.startsWith("ch_") && !k.startsWith("cust_") && k !== "total";
+  const needsAllPayees = (
+    rules: FilterRule[],
+    filters: Record<string, string> = {}
+  ) =>
+    rulesCanMatchMissingChalikah(rules) ||
+    rules.some((r) => isPayeeAttrKey(r.key)) ||
+    Object.entries(filters).some(([k, v]) => v && isPayeeAttrKey(k));
+
   // Filter checks
   const filteredChecks = useMemo(() => {
     let result = allChecks;
