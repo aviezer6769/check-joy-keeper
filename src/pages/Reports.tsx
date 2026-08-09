@@ -93,9 +93,11 @@ const Reports = () => {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
   // Filter rules with AND/OR logic (across any column, incl. dynamic chalikah)
-  type FilterRule = { id: string; key: string; mode: FilterMode; value: string };
+  type FilterRule = { id: string; key: string; mode: FilterMode; value: string; group?: number };
   const [filterRules, setFilterRules] = useState<FilterRule[]>([]);
   const [rulesLogic, setRulesLogic] = useState<"and" | "or">("and");
+  // Per-group logic (inside each set of rules). Falls back to rulesLogic.
+  const [groupLogics, setGroupLogics] = useState<Record<number, "and" | "or">>({});
   // Save-dialog dynamic options
   const [saveMode, setSaveMode] = useState<"snapshot" | "dynamic">("snapshot");
   const [chalikahMode, setChalikahMode] = useState<ChalikahMode>("last_n");
@@ -317,6 +319,7 @@ const Reports = () => {
     customValues,
     filterRules,
     rulesLogic,
+    groupLogics,
   });
 
   // Helper to label columns with type indicators
@@ -346,6 +349,7 @@ const Reports = () => {
     setCustomValues(ov.customValues || {});
     setFilterRules(Array.isArray(ov.filterRules) ? ov.filterRules : []);
     setRulesLogic(ov.rulesLogic === "or" ? "or" : "and");
+    setGroupLogics(ov.groupLogics && typeof ov.groupLogics === "object" ? ov.groupLogics : {});
     // Apply layout after a tick so allReportColumns recomputes with custom cols
     setTimeout(() => {
       colLayout.applyLayout({
@@ -367,6 +371,7 @@ const Reports = () => {
     setCustomValues({});
     setFilterRules([]);
     setRulesLogic("and");
+    setGroupLogics({});
   };
 
   const handleUpdate = () => {
