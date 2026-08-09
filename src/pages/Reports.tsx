@@ -1319,28 +1319,64 @@ const Reports = () => {
                       {/* Filter rules with AND/OR logic */}
                       <div className="space-y-2 border-t pt-3">
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm font-semibold">Filter Rules (AND / OR)</Label>
+                          <Label className="text-sm font-semibold">Filter Rule Sets</Label>
                           <Select value={rulesLogic} onValueChange={(v) => setRulesLogic(v as "and" | "or")}>
                             <SelectTrigger className="h-7 w-[90px] text-xs"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="and">Match ALL (AND)</SelectItem>
-                              <SelectItem value="or">Match ANY (OR)</SelectItem>
+                              <SelectItem value="and">Sets: ALL (AND)</SelectItem>
+                              <SelectItem value="or">Sets: ANY (OR)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Combine rules across any column.
-                          <span className="ml-1 text-primary font-medium">Chalikah</span> columns are tagged.
+                          Each set has its own AND/OR; sets are combined with the logic above.
+                          e.g. Set 1: Active = Active — AND — Set 2: Urgent = 0 OR Urgent is blank.
                         </p>
-                        <div className="space-y-2 max-h-[260px] overflow-auto">
-                          {filterRules.map((r, idx) => (
+                        <div className="space-y-3 max-h-[320px] overflow-auto">
+                          {(() => {
+                            const groupIds = Array.from(
+                              new Set(filterRules.map((r) => r.group ?? 0))
+                            ).sort((a, b) => a - b);
+                            if (groupIds.length === 0) groupIds.push(0);
+                            return groupIds.map((g, gIdx) => {
+                              const rules = filterRules.filter((r) => (r.group ?? 0) === g);
+                              const gl = groupLogics[g] || rulesLogic;
+                              return (
+                                <div key={g} className="rounded-md border p-2 space-y-2">
+                                  {gIdx > 0 && (
+                                    <div className="text-[10px] uppercase font-semibold text-primary -mt-1">
+                                      {rulesLogic}
+                                    </div>
+                                  )}
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="text-xs font-semibold">Set {gIdx + 1}</span>
+                                    <div className="flex items-center gap-1">
+                                      <Select
+                                        value={gl}
+                                        onValueChange={(v) => setGroupLogics((prev) => ({ ...prev, [g]: v as "and" | "or" }))}
+                                      >
+                                        <SelectTrigger className="h-6 w-[80px] text-xs"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="and">AND</SelectItem>
+                                          <SelectItem value="or">OR</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      {groupIds.length > 1 && (
+                                        <Button
+                                          size="icon" variant="ghost" className="h-6 w-6"
+                                          title="Remove set"
+                                          onClick={() => setFilterRules((prev) => prev.filter((p) => (p.group ?? 0) !== g))}
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                          {rules.map((r, idx) => (
                             <div key={r.id} className="flex items-center gap-1">
-                              {idx > 0 && (
-                                <span className="text-[10px] uppercase font-semibold text-muted-foreground w-8">
-                                  {rulesLogic}
-                                </span>
-                              )}
-                              {idx === 0 && <span className="w-8" />}
+                              <span className="text-[10px] uppercase font-semibold text-muted-foreground w-8">
+                                {idx > 0 ? gl : ""}
+                              </span>
                               <Select
                                 value={r.key || "__none__"}
                                 onValueChange={(v) =>
@@ -1390,19 +1426,35 @@ const Reports = () => {
                               </Button>
                             </div>
                           ))}
+                                  <Button
+                                    size="sm" variant="outline" className="w-full h-7 text-xs"
+                                    onClick={() => setFilterRules((prev) => [
+                                      ...prev,
+                                      { id: `r_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,5)}`, key: "", mode: "contains", value: "", group: g }
+                                    ])}
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" /> Add rule to set {gIdx + 1}
+                                  </Button>
+                                </div>
+                              );
+                            });
+                          })()}
                         </div>
                         <div className="flex gap-2">
                           <Button
                             size="sm" variant="outline" className="flex-1"
-                            onClick={() => setFilterRules((prev) => [
-                              ...prev,
-                              { id: `r_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,5)}`, key: "", mode: "contains", value: "" }
-                            ])}
+                            onClick={() => setFilterRules((prev) => {
+                              const next = prev.length === 0 ? 0 : Math.max(...prev.map((p) => p.group ?? 0)) + 1;
+                              return [
+                                ...prev,
+                                { id: `r_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,5)}`, key: "", mode: "contains", value: "", group: next }
+                              ];
+                            })}
                           >
-                            <Plus className="h-3 w-3 mr-1" /> Add rule
+                            <Plus className="h-3 w-3 mr-1" /> Add rule set
                           </Button>
                           {filterRules.length > 0 && (
-                            <Button size="sm" variant="ghost" onClick={() => setFilterRules([])}>
+                            <Button size="sm" variant="ghost" onClick={() => { setFilterRules([]); setGroupLogics({}); }}>
                               Clear rules
                             </Button>
                           )}
