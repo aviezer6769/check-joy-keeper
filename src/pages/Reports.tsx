@@ -598,7 +598,10 @@ const Reports = () => {
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Report");
-    XLSX.writeFile(wb, "report.xlsx");
+    const fileName = report?.name
+      ? report.name.replace(/[^\w\s\-_.]/g, "").replace(/\s+/g, " ").trim() || "report"
+      : "report";
+    XLSX.writeFile(wb, `${fileName}.xlsx`);
   };
 
   // Helper to get cell text value for filtering/sorting
