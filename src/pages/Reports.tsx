@@ -698,6 +698,7 @@ const Reports = () => {
     if (needsAllPayees(rules, filters)) {
       const payeeMap: Record<string, any> = {};
       rows.forEach((r) => { payeeMap[(r as any).key] = r; });
+      matrixData = { ...matrixData };
       addMissingPayees(payeeMap, matrixData);
       rows = Object.values(payeeMap).sort((a: any, b: any) => a.name.localeCompare(b.name)) as T[];
     }
