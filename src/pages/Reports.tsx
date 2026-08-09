@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -27,7 +28,7 @@ import { useColumnLayout, type ColumnDef, type FilterMode, type SortState } from
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 import { useAuditSource } from "@/hooks/useAuditSource";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 import * as XLSX from "xlsx";
 
 const fmt = (n: number) =>
@@ -1132,14 +1133,17 @@ const Reports = () => {
                   <Filter className="h-4 w-4 mr-2" />
                   Column Filters
                 </Button>
-                <Popover open={advancedOpen} onOpenChange={setAdvancedOpen}>
-                  <PopoverTrigger asChild>
+                <Dialog open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                  <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
                       <SlidersHorizontal className="h-4 w-4 mr-2" />
                       Advanced
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[420px] max-h-[70vh] overflow-auto" align="end">
+                  </DialogTrigger>
+                  <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Advanced Report Options</DialogTitle>
+                    </DialogHeader>
                     <div className="space-y-4">
                       {/* Custom columns */}
                       <div className="space-y-2">
@@ -1348,8 +1352,8 @@ const Reports = () => {
                         </div>
                       </div>
                     </div>
-                  </PopoverContent>
-                </Popover>
+                  </DialogContent>
+                </Dialog>
                 <Button onClick={() => setHasRun(true)}>
                   Run Report
                 </Button>
