@@ -28,7 +28,7 @@ import { useColumnLayout, type ColumnDef, type FilterMode, type SortState } from
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 import { useAuditSource } from "@/hooks/useAuditSource";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 import * as XLSX from "xlsx";
 
 const fmt = (n: number) =>
