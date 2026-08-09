@@ -236,7 +236,7 @@ const Reports = () => {
       map[dedupeKey][chId] = (map[dedupeKey][chId] || 0) + c.amount;
     });
 
-    if (needsAllPayees(filterRules, colLayout.filters)) {
+    if (rulesCanMatchMissingChalikah(filterRules)) {
       addMissingPayees(payeeMap, map);
     }
 
@@ -252,7 +252,7 @@ const Reports = () => {
     filteredChecks.forEach((c) => (gt += c.amount));
 
     return { matrix: map, payeeRows: rows, chalikahCols: cols, grandTotal: gt };
-  }, [filteredChecks, chalikahList, payeeLookup, payeesList, filterRules, colLayout.filters]);
+  }, [filteredChecks, chalikahList, payeeLookup, payeesList, filterRules]);
 
   // Dynamic columns = static cols + chalikah cols + total
   const allReportColumns: ColumnDef[] = useMemo(() => [
@@ -692,6 +692,15 @@ const Reports = () => {
     const rules: FilterRule[] = Array.isArray(ov.filterRules) ? ov.filterRules : [];
     const logic: "and" | "or" = ov.rulesLogic === "or" ? "or" : "and";
     const sort: SortState | null = ov.sort || null;
+
+    // Seed payees that have no checks in this set when a payee-attribute or
+    // zero-value chalikah filter needs to evaluate them (e.g. "Active is not Active").
+    if (needsAllPayees(rules, filters)) {
+      const payeeMap: Record<string, any> = {};
+      rows.forEach((r) => { payeeMap[(r as any).key] = r; });
+      addMissingPayees(payeeMap, matrixData);
+      rows = Object.values(payeeMap).sort((a: any, b: any) => a.name.localeCompare(b.name)) as T[];
+    }
 
     const matchRule = (pr: T, key: string, mode: FilterMode, val: string) => {
       if (!val) return true;
