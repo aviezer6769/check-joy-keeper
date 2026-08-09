@@ -611,7 +611,21 @@ const Reports = () => {
 
     // Insert merged title row at the top when exporting a saved report
     const title = report?.name || reportName || "Report";
-    rows.unshift({ "Payee": title });
+    const firstColLabel = (() => {
+      const c = exportCols[0];
+      if (!c) return "Payee";
+      if (c.key === "sort_order") return "Sort";
+      if (c.key === "record_id") return "Record ID";
+      if (c.key === "urgent_level") return "Urgent";
+      if (c.key === "is_active") return "Active";
+      if (c.key === "yiddish_name") return "Yiddish Name";
+      if (c.key === "payee_name") return "Payee";
+      if (c.key === "address") return "Address";
+      if (c.key === "memo") return "Memo";
+      if (c.key === "total") return "Total";
+      return c.label;
+    })();
+    rows.unshift({ [firstColLabel]: title } as Record<string, any>);
 
     const ws = XLSX.utils.json_to_sheet(rows);
     const colCount = exportCols.length;
@@ -621,9 +635,13 @@ const Reports = () => {
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Report");
-    const fileName = report?.name
-      ? report.name.replace(/[^\w\s\-_.]/g, "").replace(/\s+/g, " ").trim() || "report"
-      : "report";
+    const rawName = (report?.name || reportName || "").trim();
+    const fileName =
+      rawName
+        // strip only characters illegal in filenames, keep Hebrew/unicode
+        .replace(/[\\/:*?"<>|]/g, "")
+        .replace(/\s+/g, " ")
+        .trim() || "report";
     XLSX.writeFile(wb, `${fileName}.xlsx`);
   };
 
