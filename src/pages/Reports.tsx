@@ -430,7 +430,25 @@ const Reports = () => {
     ];
     const map = new Map(pool.map((c) => [c.key, c]));
     if (Array.isArray(ov.visibleKeys) && ov.visibleKeys.length > 0) {
-      return ov.visibleKeys.map((k: string) => map.get(k)).filter(Boolean) as ColumnDef[];
+      // Resolve every saved key. Chalikah/custom columns that aren't present in the
+      // recomputed data are still rendered (empty/0) so the layout always matches
+      // what was saved.
+      const chNames = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
+      return ov.visibleKeys
+        .map((k: string) => {
+          const found = map.get(k);
+          if (found) return found;
+          if (k.startsWith("ch_")) {
+            const id = k.slice(3);
+            return { key: k, label: id === "__none__" ? "(No Chalikah)" : chNames[id] || id };
+          }
+          if (k.startsWith("cust_")) {
+            const c = savedCustom.find((sc) => sc.key === k);
+            return c ? { key: c.key, label: c.label } : null;
+          }
+          return null;
+        })
+        .filter(Boolean) as ColumnDef[];
     }
     // Default fallback (legacy reports without overrides)
     return [
