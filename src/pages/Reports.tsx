@@ -659,78 +659,24 @@ const Reports = () => {
     return result;
   };
 
-  // Apply column filters + sorting to payeeRows
-  const displayedRows = useMemo(() => {
-    const activeFilters = Object.entries(colLayout.filters).filter(([, v]) => v.length > 0);
-    let result = [...payeeRows];
-
-    const matchRule = (pr: typeof payeeRows[number], key: string, mode: FilterMode, val: string) => {
-      if (!val) return true;
-      const text = getRowTextValue(pr, key, matrix);
-      if (val === "__blank__") return !text || text.trim() === "" || text === "0";
-      const tl = text.toLowerCase();
-      const vl = val.toLowerCase();
-      const numT = parseFloat(text);
-      const numV = parseFloat(val);
-      switch (mode) {
-        case "equals": return tl === vl;
-        case "not": return tl !== vl;
-        case "gt": return !isNaN(numT) && !isNaN(numV) && numT > numV;
-        case "lt": return !isNaN(numT) && !isNaN(numV) && numT < numV;
-        case "gte": return !isNaN(numT) && !isNaN(numV) && numT >= numV;
-        case "lte": return !isNaN(numT) && !isNaN(numV) && numT <= numV;
-        case "contains":
-        default: return tl.includes(vl);
-      }
-    };
-
-    if (activeFilters.length > 0) {
-      result = result.filter((pr) =>
-        activeFilters.every(([key, val]) => matchRule(pr, key, colLayout.filterModes[key] || "contains", val))
-      );
-    }
-
-    const activeRules = filterRules.filter((r) => r.key && r.value.length > 0);
-    if (activeRules.length > 0) {
-      result = result.filter((pr) => {
-        const checks = activeRules.map((r) => matchRule(pr, r.key, r.mode, r.value));
-        return rulesLogic === "or" ? checks.some(Boolean) : checks.every(Boolean);
-      });
-    }
-
-    if (colLayout.sort) {
-      const { key, dir } = colLayout.sort;
-      if (key === "sort_order") {
-        // Composite sort: active first, urgent priority 1 > 2 > 3 > 0 > ?, then Hebrew name
-        result.sort((a, b) => {
-          const mul = dir === "asc" ? 1 : -1;
-          const activeA = a.is_active ? 0 : 1;
-          const activeB = b.is_active ? 0 : 1;
-          if (activeA !== activeB) return (activeA - activeB) * mul;
-          const getUrgencyPriority = (value: number | null | undefined) =>
-            value === 1 ? 0 : value === 2 ? 1 : value === 3 ? 2 : value === 0 ? 3 : 4;
-          const urgA = getUrgencyPriority(a.urgent_level);
-          const urgB = getUrgencyPriority(b.urgent_level);
-          if (urgA !== urgB) return (urgA - urgB) * mul;
-          const lastCmp = a.last_name_yiddish.localeCompare(b.last_name_yiddish, "he");
-          if (lastCmp !== 0) return lastCmp * mul;
-          const firstCmp = a.first_name_yiddish.localeCompare(b.first_name_yiddish, "he");
-          if (firstCmp !== 0) return firstCmp * mul;
-          return a.middle_name_yiddish.localeCompare(b.middle_name_yiddish, "he") * mul;
-        });
-      } else {
-        result.sort((a, b) => {
-          const va = getRowSortValue(a, key, matrix);
-          const vb = getRowSortValue(b, key, matrix);
-          if (va < vb) return dir === "asc" ? -1 : 1;
-          if (va > vb) return dir === "asc" ? 1 : -1;
-          return 0;
-        });
-      }
-    }
-
-    return result;
-  }, [payeeRows, matrix, colLayout.filters, colLayout.filterModes, colLayout.sort, filterRules, rulesLogic]);
+  // Apply column filters + rules + sorting to payeeRows.
+  // Uses the exact same engine as saved-report previews/exports so live and saved always agree.
+  const displayedRows = useMemo(
+    () =>
+      applySavedLayout(
+        payeeRows,
+        matrix,
+        {
+          filters: colLayout.filters,
+          filterModes: colLayout.filterModes,
+          filterRules,
+          rulesLogic,
+          sort: colLayout.sort,
+        },
+        customValues
+      ),
+    [payeeRows, matrix, colLayout.filters, colLayout.filterModes, colLayout.sort, filterRules, rulesLogic, customValues]
+  );
 
   // Filter options for dropdown
   const reportFilterOptions = useMemo(() => {
