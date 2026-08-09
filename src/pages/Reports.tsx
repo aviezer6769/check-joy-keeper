@@ -148,8 +148,25 @@ const Reports = () => {
     if (dateTo) {
       result = result.filter((c) => c.check_date <= dateTo);
     }
+    // When configuring/editing a DYNAMIC report, restrict to the same chalikah
+    // columns computeDynamic() uses, so the live view matches the saved view.
+    if (saveMode === "dynamic") {
+      let allowed: Set<string> | null = null;
+      if (chalikahMode === "last_n") {
+        const sorted = [...chalikahList].sort((a, b) =>
+          (b.created_at || "").localeCompare(a.created_at || "")
+        );
+        allowed = new Set(sorted.slice(0, chalikahN || 2).map((c) => c.id));
+      } else if (chalikahMode === "specific") {
+        allowed = new Set(specificChalikahIds);
+      }
+      if (allowed) {
+        const ids = allowed;
+        result = result.filter((c) => ids.has(c.chalikah_id || "__none__"));
+      }
+    }
     return result;
-  }, [allChecks, accountFilter, statusFilter, dateFrom, dateTo]);
+  }, [allChecks, accountFilter, statusFilter, dateFrom, dateTo, saveMode, chalikahMode, chalikahN, specificChalikahIds, chalikahList]);
 
   // Build payee × chalikah matrix
   const { matrix, payeeRows, chalikahCols, grandTotal } = useMemo(() => {
