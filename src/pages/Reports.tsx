@@ -236,7 +236,7 @@ const Reports = () => {
       map[dedupeKey][chId] = (map[dedupeKey][chId] || 0) + c.amount;
     });
 
-    if (rulesCanMatchMissingChalikah(filterRules)) {
+    if (needsAllPayees(filterRules, colLayout.filters)) {
       addMissingPayees(payeeMap, map);
     }
 
@@ -252,7 +252,7 @@ const Reports = () => {
     filteredChecks.forEach((c) => (gt += c.amount));
 
     return { matrix: map, payeeRows: rows, chalikahCols: cols, grandTotal: gt };
-  }, [filteredChecks, chalikahList, payeeLookup, payeesList, filterRules]);
+  }, [filteredChecks, chalikahList, payeeLookup, payeesList, filterRules, colLayout.filters]);
 
   // Dynamic columns = static cols + chalikah cols + total
   const allReportColumns: ColumnDef[] = useMemo(() => [
@@ -472,7 +472,8 @@ const Reports = () => {
     const savedRules = Array.isArray((cfg as any)?._overrides?.filterRules)
       ? (cfg as any)._overrides.filterRules as FilterRule[]
       : [];
-    if (rulesCanMatchMissingChalikah(savedRules)) {
+    const savedFilters = ((cfg as any)?._overrides?.filters || {}) as Record<string, string>;
+    if (needsAllPayees(savedRules, savedFilters)) {
       addMissingPayees(payeeMap, map);
     }
     const chalikahNameMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
