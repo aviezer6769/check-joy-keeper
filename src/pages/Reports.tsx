@@ -1386,7 +1386,7 @@ const Reports = () => {
                         <ChevronDown className="h-4 w-4 ml-1" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-[280px]">
+                    <DropdownMenuContent align="end" className="w-[340px]">
                       {savedReports.map((r) => (
                         <DropdownMenuItem key={r.id} className="flex items-center justify-between gap-2 p-2" onSelect={(e) => e.preventDefault()}>
                           <button
