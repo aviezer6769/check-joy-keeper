@@ -1406,28 +1406,21 @@ const Reports = () => {
                             <Button size="icon" variant="ghost" className="h-7 w-7" title="Edit in main view" onClick={() => loadReportForEdit(r)}>
                               <Edit3 className="h-3 w-3" />
                             </Button>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => {
-                                  const baseName = r.name.replace(/\s*\(copy\s*\d*\)$/i, "").trim();
-                                  const existingCopies = savedReports.filter((sr) => new RegExp(`^${baseName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\(copy\\s*\\d*\\)$`, "i").test(sr.name));
-                                  const copyName = existingCopies.length > 0
-                                    ? `${baseName} (copy ${existingCopies.length + 1})`
-                                    : `${baseName} (copy)`;
-                                  saveReport.mutate({
-                                    name: copyName,
-                                    report_type: r.report_type,
-                                    filters: r.filters,
-                                    report_data: r.report_data,
-                                  });
-                                }}>
-                                  <Copy className="h-3 w-3" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Duplicate</p>
-                              </TooltipContent>
-                            </Tooltip>
+                            <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1" onClick={() => {
+                              const baseName = r.name.replace(/\s*\(copy\s*\d*\)$/i, "").trim();
+                              const existingCopies = savedReports.filter((sr) => new RegExp(`^${baseName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\(copy\\s*\\d*\\)$`, "i").test(sr.name));
+                              const copyName = existingCopies.length > 0
+                                ? `${baseName} (copy ${existingCopies.length + 1})`
+                                : `${baseName} (copy)`;
+                              saveReport.mutate({
+                                name: copyName,
+                                report_type: r.report_type,
+                                filters: r.filters,
+                                report_data: r.report_data,
+                              });
+                            }}>
+                              <Copy className="h-3 w-3" /> Copy
+                            </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRenameReport(r); setRenameValue(r.name); }}>
                               <Pencil className="h-3 w-3" />
                             </Button>
