@@ -609,11 +609,9 @@ const Reports = () => {
     });
     rows.push(totalsRow);
 
-    // Insert merged title row at the top when exporting a saved report
+    // Title row above the header row, merged across all columns
     const title = report?.name || reportName || "Report";
-    const firstColLabel = (() => {
-      const c = exportCols[0];
-      if (!c) return "Payee";
+    const headers = exportCols.map((c) => {
       if (c.key === "sort_order") return "Sort";
       if (c.key === "record_id") return "Record ID";
       if (c.key === "urgent_level") return "Urgent";
@@ -624,11 +622,11 @@ const Reports = () => {
       if (c.key === "memo") return "Memo";
       if (c.key === "total") return "Total";
       return c.label;
-    })();
-    rows.unshift({ [firstColLabel]: title } as Record<string, any>);
+    });
 
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const colCount = exportCols.length;
+    const ws = XLSX.utils.aoa_to_sheet([[title]]);
+    XLSX.utils.sheet_add_json(ws, rows, { origin: "A2", header: headers });
+    const colCount = headers.length;
     if (colCount > 1) {
       ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: colCount - 1 } }];
     }
