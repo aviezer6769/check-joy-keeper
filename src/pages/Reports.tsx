@@ -595,7 +595,16 @@ const Reports = () => {
     });
     rows.push(totalsRow);
 
+    // Insert merged title row at the top when exporting a saved report
+    const title = report?.name || reportName || "Report";
+    rows.unshift({ "Payee": title });
+
     const ws = XLSX.utils.json_to_sheet(rows);
+    const colCount = exportCols.length;
+    if (colCount > 1) {
+      ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: colCount - 1 } }];
+    }
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Report");
     const fileName = report?.name
