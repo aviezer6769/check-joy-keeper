@@ -712,6 +712,7 @@ const Reports = () => {
     const filterModes: Record<string, FilterMode> = ov.filterModes || {};
     const rules: FilterRule[] = Array.isArray(ov.filterRules) ? ov.filterRules : [];
     const logic: "and" | "or" = ov.rulesLogic === "or" ? "or" : "and";
+    const gLogics: Record<number, "and" | "or"> = ov.groupLogics || {};
     const sort: SortState | null = ov.sort || null;
 
     // Seed payees that have no checks in this set when a payee-attribute or
@@ -753,9 +754,20 @@ const Reports = () => {
     }
     const activeRules = rules.filter((r) => r.key && r.value && r.value.length > 0);
     if (activeRules.length > 0) {
+      const groups = new Map<number, FilterRule[]>();
+      activeRules.forEach((r) => {
+        const g = r.group ?? 0;
+        if (!groups.has(g)) groups.set(g, []);
+        groups.get(g)!.push(r);
+      });
+      const groupEntries = [...groups.entries()].sort((a, b) => a[0] - b[0]);
       result = result.filter((pr) => {
-        const checks = activeRules.map((r) => matchRule(pr, r.key, r.mode, r.value));
-        return logic === "or" ? checks.some(Boolean) : checks.every(Boolean);
+        const groupResults = groupEntries.map(([g, rs]) => {
+          const gl = gLogics[g] || logic;
+          const checks = rs.map((r) => matchRule(pr, r.key, r.mode, r.value));
+          return gl === "or" ? checks.some(Boolean) : checks.every(Boolean);
+        });
+        return logic === "or" ? groupResults.some(Boolean) : groupResults.every(Boolean);
       });
     }
     if (sort) {
@@ -803,11 +815,12 @@ const Reports = () => {
           filterModes: colLayout.filterModes,
           filterRules,
           rulesLogic,
+          groupLogics,
           sort: colLayout.sort,
         },
         customValues
       ),
-    [payeeRows, matrix, colLayout.filters, colLayout.filterModes, colLayout.sort, filterRules, rulesLogic, customValues]
+    [payeeRows, matrix, colLayout.filters, colLayout.filterModes, colLayout.sort, filterRules, rulesLogic, groupLogics, customValues]
   );
 
   // Filter options for dropdown
