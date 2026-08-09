@@ -1132,14 +1132,17 @@ const Reports = () => {
                   <Filter className="h-4 w-4 mr-2" />
                   Column Filters
                 </Button>
-                <Popover open={advancedOpen} onOpenChange={setAdvancedOpen}>
-                  <PopoverTrigger asChild>
+                <Dialog open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                  <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
                       <SlidersHorizontal className="h-4 w-4 mr-2" />
                       Advanced
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[420px] max-h-[70vh] overflow-auto" align="end">
+                  </DialogTrigger>
+                  <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Advanced Report Options</DialogTitle>
+                    </DialogHeader>
                     <div className="space-y-4">
                       {/* Custom columns */}
                       <div className="space-y-2">
@@ -1348,8 +1351,8 @@ const Reports = () => {
                         </div>
                       </div>
                     </div>
-                  </PopoverContent>
-                </Popover>
+                  </DialogContent>
+                </Dialog>
                 <Button onClick={() => setHasRun(true)}>
                   Run Report
                 </Button>
