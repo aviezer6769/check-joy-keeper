@@ -160,6 +160,18 @@ const Reports = () => {
     });
   };
 
+  // Payee-attribute filters/rules (Active, Urgent, Memo, Record ID...) must be able to
+  // evaluate payees that have no checks in the current set, so seed the whole payee list.
+  const isPayeeAttrKey = (k: string) =>
+    !k.startsWith("ch_") && !k.startsWith("cust_") && k !== "total";
+  const needsAllPayees = (
+    rules: FilterRule[],
+    filters: Record<string, string> = {}
+  ) =>
+    rulesCanMatchMissingChalikah(rules) ||
+    rules.some((r) => isPayeeAttrKey(r.key)) ||
+    Object.entries(filters).some(([k, v]) => v && isPayeeAttrKey(k));
+
   // Filter checks
   const filteredChecks = useMemo(() => {
     let result = allChecks;
@@ -460,7 +472,8 @@ const Reports = () => {
     const savedRules = Array.isArray((cfg as any)?._overrides?.filterRules)
       ? (cfg as any)._overrides.filterRules as FilterRule[]
       : [];
-    if (rulesCanMatchMissingChalikah(savedRules)) {
+    const savedFilters = ((cfg as any)?._overrides?.filters || {}) as Record<string, string>;
+    if (needsAllPayees(savedRules, savedFilters)) {
       addMissingPayees(payeeMap, map);
     }
     const chalikahNameMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
@@ -679,6 +692,16 @@ const Reports = () => {
     const rules: FilterRule[] = Array.isArray(ov.filterRules) ? ov.filterRules : [];
     const logic: "and" | "or" = ov.rulesLogic === "or" ? "or" : "and";
     const sort: SortState | null = ov.sort || null;
+
+    // Seed payees that have no checks in this set when a payee-attribute or
+    // zero-value chalikah filter needs to evaluate them (e.g. "Active is not Active").
+    if (needsAllPayees(rules, filters)) {
+      const payeeMap: Record<string, any> = {};
+      rows.forEach((r) => { payeeMap[(r as any).key] = r; });
+      matrixData = { ...matrixData };
+      addMissingPayees(payeeMap, matrixData);
+      rows = Object.values(payeeMap).sort((a: any, b: any) => a.name.localeCompare(b.name)) as T[];
+    }
 
     const matchRule = (pr: T, key: string, mode: FilterMode, val: string) => {
       if (!val) return true;
