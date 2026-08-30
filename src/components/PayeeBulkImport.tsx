@@ -1,23 +1,25 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAddPayee, type PayeeInsert } from "@/hooks/usePayees";
-import { Upload, Plus, Trash2, FileUp } from "lucide-react";
+import { usePayees, type PayeeInsert } from "@/hooks/usePayees";
+import { Upload, Plus, Trash2, FileUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
-import { buildPayeeName } from "@/lib/payee-utils";
+import { buildPayeeName, formatPhone } from "@/lib/payee-utils";
+import { FieldSuggestInput } from "@/components/FieldSuggestInput";
+
 
 const COLUMN_KEYS: (keyof PayeeInsert)[] = [
   "payee_name", "record_id", "sort_order", "urgent_level",
   "title_1_yiddish", "first_name_yiddish", "middle_name_yiddish", "last_name_yiddish", "title_2_yiddish",
   "title", "title_to_use", "first_name", "middle_name", "last_name",
-  "street_no", "street_name", "apt", "city", "state", "zip",
+  "street_no", "street_name", "apt", "city", "state", "zip", "phone", "memo",
 ];
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -26,8 +28,13 @@ const COLUMN_LABELS: Record<string, string> = {
   last_name_yiddish: "לעצטע", title_2_yiddish: "טיטל 2",
   title: "Title", title_to_use: "TitleToUse", first_name: "First Name", middle_name: "Middle Name",
   last_name: "Last Name", street_no: "St #", street_name: "Street", apt: "Apt",
-  city: "City", state: "State", zip: "Zip",
+  city: "City", state: "State", zip: "Zip", phone: "Phone", memo: "Memo",
 };
+
+const RTL_KEYS = new Set([
+  "title_1_yiddish", "first_name_yiddish", "middle_name_yiddish", "last_name_yiddish", "title_2_yiddish",
+]);
+
 
 // Additional alternate header names (case-insensitive) that map to column keys
 const HEADER_ALIASES: Record<string, keyof PayeeInsert> = {
@@ -50,6 +57,9 @@ const HEADER_ALIASES: Record<string, keyof PayeeInsert> = {
   "city": "city",
   "state": "state",
   "zip": "zip",
+  "phone": "phone", "phone number": "phone", "phone_number": "phone", "tel": "phone",
+  "memo": "memo", "note": "memo", "notes": "memo",
+
 };
 
 function matchHeader(header: string): keyof PayeeInsert | undefined {
@@ -113,13 +123,15 @@ function parseCSV(text: string): Record<string, string>[] {
 }
 
 function rowToPayee(row: Record<string, string>): PayeeInsert | null {
-  const name = (row.payee_name || "").trim();
+  const name = (row.payee_name || "").trim() || buildPayeeName(row).trim();
   if (!name) return null;
+  const urgentRaw = (row.urgent_level ?? "").toString().trim();
   return {
     payee_name: name,
     record_id: row.record_id || null,
     sort_order: Number(row.sort_order) || 0,
-    urgent_level: Number(row.urgent_level) || 0,
+    urgent_level: (urgentRaw === "?" ? null : Number(urgentRaw) || 0) as any,
+
     title_1_yiddish: row.title_1_yiddish || null,
     first_name_yiddish: row.first_name_yiddish || null,
     middle_name_yiddish: row.middle_name_yiddish || null,
@@ -151,6 +163,22 @@ export function PayeeBulkImport() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileRows, setFileRows] = useState<Record<string, string>[]>([]);
   const qc = useQueryClient();
+  const { data: allPayees = [] } = usePayees();
+
+  const nextRecordId = useMemo(() => {
+    const nums = allPayees.map((p) => parseInt(p.record_id || "", 10)).filter((n) => !isNaN(n));
+    return nums.length > 0 ? String(Math.max(...nums) + 1) : "1";
+  }, [allPayees]);
+
+  const suggestionsByField = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    COLUMN_KEYS.forEach((k) => {
+      if (k === "sort_order" || k === "urgent_level") return;
+      map[k] = allPayees.map((p) => (p as any)[k]).filter(Boolean) as string[];
+    });
+    return map;
+  }, [allPayees]);
+
 
   const importPayees = async (payees: PayeeInsert[], onDone: () => void) => {
     if (payees.length === 0) {
@@ -236,15 +264,64 @@ export function PayeeBulkImport() {
   };
 
   const updateRow = (idx: number, key: string, value: string) => {
-    setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, [key]: value } : r)));
+    setRows((prev) =>
+      prev.map((r, i) => {
+        if (i !== idx) return r;
+        const next = { ...r, [key]: key === "phone" ? formatPhone(value) : value };
+        // Auto-fill city/state/zip from an existing payee with the same street
+        if (key === "street_name" && value) {
+          const match = allPayees.find(
+            (p) => p.street_name?.toLowerCase() === value.toLowerCase()
+          );
+          if (match) {
+            if (!next.city) next.city = match.city || "";
+            if (!next.state) next.state = match.state || "";
+            if (!next.zip) next.zip = match.zip || "";
+          }
+        }
+        next.payee_name = buildPayeeName(next);
+        return next;
+      })
+    );
   };
 
-  const addRow = () => setRows((prev) => [...prev, EMPTY_ROW()]);
+  const toggleUnknownUrgent = (idx: number) => {
+    setRows((prev) =>
+      prev.map((r, i) => (i === idx ? { ...r, urgent_level: r.urgent_level === "?" ? "" : "?" } : r))
+    );
+  };
+
+  // Copy a value from a row down to all rows below it
+  const copyDown = (idx: number, key: string) => {
+    setRows((prev) => {
+      const value = prev[idx][key] || "";
+      return prev.map((r, i) => {
+        if (i <= idx) return r;
+        const next = { ...r, [key]: value };
+        next.payee_name = buildPayeeName(next);
+        return next;
+      });
+    });
+  };
+
+  const addRow = () =>
+    setRows((prev) => {
+      const row = EMPTY_ROW();
+      const used = prev.map((r) => parseInt(r.record_id || "", 10)).filter((n) => !isNaN(n));
+      const base = used.length > 0 ? Math.max(...used) : parseInt(nextRecordId, 10) - 1;
+      row.record_id = String((isNaN(base) ? 0 : base) + 1);
+      return [...prev, row];
+    });
   const removeRow = (idx: number) => setRows((prev) => prev.filter((_, i) => i !== idx));
 
-  const MULTI_ROW_KEYS: (keyof PayeeInsert)[] = [
-    "payee_name", "record_id", "first_name", "last_name", "city", "state", "zip",
-  ];
+  const fillRecordIds = () =>
+    setRows((prev) => {
+      let n = parseInt(nextRecordId, 10) || 1;
+      return prev.map((r) => (r.record_id ? r : { ...r, record_id: String(n++) }));
+    });
+
+  const MULTI_ROW_KEYS: (keyof PayeeInsert)[] = COLUMN_KEYS.filter((k) => k !== "payee_name");
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -253,7 +330,7 @@ export function PayeeBulkImport() {
           <Upload className="h-4 w-4 mr-1" /> Import
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Import Payees</DialogTitle>
         </DialogHeader>
@@ -340,12 +417,28 @@ export function PayeeBulkImport() {
           </TabsContent>
 
           <TabsContent value="rows" className="space-y-3 pt-2">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">
+                All payee fields are available. Payee Name is auto-generated from TitleToUse + names.
+                Use the ↓ button in a header to copy a value down to the rows below.
+              </p>
+              <Button size="sm" variant="outline" onClick={fillRecordIds} className="shrink-0">
+                Auto Record IDs
+              </Button>
+            </div>
+            <div className="overflow-x-auto max-h-[45vh] rounded border border-border">
+              <table className="text-xs">
+                <thead className="sticky top-0 bg-muted/80 backdrop-blur z-10">
                   <tr>
+                    <th className="text-left px-1 py-1 font-semibold text-muted-foreground whitespace-nowrap">
+                      Payee Name
+                    </th>
                     {MULTI_ROW_KEYS.map((k) => (
-                      <th key={k} className="text-left px-1 py-1 font-semibold text-muted-foreground">
+                      <th
+                        key={k}
+                        dir={RTL_KEYS.has(k) ? "rtl" : undefined}
+                        className="text-left px-1 py-1 font-semibold text-muted-foreground whitespace-nowrap"
+                      >
                         {COLUMN_LABELS[k]}
                       </th>
                     ))}
@@ -355,14 +448,68 @@ export function PayeeBulkImport() {
                 <tbody>
                   {rows.map((row, idx) => (
                     <tr key={idx}>
+                      <td className="px-1 py-0.5">
+                        <Input
+                          className="h-8 text-xs bg-muted min-w-[160px]"
+                          value={row.payee_name || ""}
+                          readOnly
+                          disabled
+                        />
+                      </td>
                       {MULTI_ROW_KEYS.map((k) => (
                         <td key={k} className="px-1 py-0.5">
-                          <Input
-                            className="h-8 text-xs"
-                            value={row[k] || ""}
-                            onChange={(e) => updateRow(idx, k, e.target.value)}
-                            placeholder={COLUMN_LABELS[k]}
-                          />
+                          <div className="flex items-center gap-0.5">
+                            {k === "urgent_level" ? (
+                              <>
+                                <Input
+                                  type="number"
+                                  className="h-8 text-xs w-16"
+                                  value={row[k] === "?" ? "" : row[k] || ""}
+                                  onChange={(e) => updateRow(idx, k, e.target.value)}
+                                  placeholder={row[k] === "?" ? "?" : "0"}
+                                  disabled={row[k] === "?"}
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={row[k] === "?" ? "default" : "outline"}
+                                  className="h-8 px-2 text-xs shrink-0"
+                                  onClick={() => toggleUnknownUrgent(idx)}
+                                >
+                                  ?
+                                </Button>
+                              </>
+                            ) : k === "sort_order" ? (
+                              <Input
+                                type="number"
+                                className="h-8 text-xs w-16"
+                                value={row[k] || ""}
+                                onChange={(e) => updateRow(idx, k, e.target.value)}
+                                placeholder="0"
+                              />
+                            ) : (
+                              <FieldSuggestInput
+                                dir={RTL_KEYS.has(k) ? "rtl" : undefined}
+                                className="h-8 text-xs min-w-[110px]"
+                                value={row[k] || ""}
+                                onChange={(v) => updateRow(idx, k, v)}
+                                suggestions={suggestionsByField[k] || []}
+                                placeholder={COLUMN_LABELS[k]}
+                              />
+                            )}
+                            {idx < rows.length - 1 && (
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-6 shrink-0"
+                                title="Copy down"
+                                onClick={() => copyDown(idx, k)}
+                              >
+                                <ArrowDown className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
                         </td>
                       ))}
                       <td className="px-1">
@@ -381,6 +528,7 @@ export function PayeeBulkImport() {
                 </tbody>
               </table>
             </div>
+
             <Button size="sm" variant="outline" onClick={addRow}>
               <Plus className="h-3 w-3 mr-1" /> Add Row
             </Button>
