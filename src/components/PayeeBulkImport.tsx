@@ -123,13 +123,15 @@ function parseCSV(text: string): Record<string, string>[] {
 }
 
 function rowToPayee(row: Record<string, string>): PayeeInsert | null {
-  const name = (row.payee_name || "").trim();
+  const name = (row.payee_name || "").trim() || buildPayeeName(row).trim();
   if (!name) return null;
+  const urgentRaw = (row.urgent_level ?? "").toString().trim();
   return {
     payee_name: name,
     record_id: row.record_id || null,
     sort_order: Number(row.sort_order) || 0,
-    urgent_level: Number(row.urgent_level) || 0,
+    urgent_level: (urgentRaw === "?" ? null : Number(urgentRaw) || 0) as any,
+
     title_1_yiddish: row.title_1_yiddish || null,
     first_name_yiddish: row.first_name_yiddish || null,
     middle_name_yiddish: row.middle_name_yiddish || null,
