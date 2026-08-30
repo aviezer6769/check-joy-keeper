@@ -501,6 +501,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
     if (needsAllPayees(savedRules, savedFilters)) {
       addMissingPayees(payeeMap, map);
     }
+    if (allowedChalikahIds2) allowedChalikahIds2.forEach((id) => chalikahIds.add(id));
     const chalikahNameMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
     const cols = Array.from(chalikahIds).map((id) => ({
       id, name: id === "__none__" ? "(No Chalikah)" : chalikahNameMap[id] || id,
