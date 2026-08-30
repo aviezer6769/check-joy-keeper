@@ -93,9 +93,6 @@ const Reports = () => {
   const [renameReport, setRenameReport] = useState<SavedReport | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [hasRun, setHasRun] = useState(false);
-  const [fullViewReport, setFullViewReport] = useState<SavedReport | null>(null);
-  const [fullViewSearch, setFullViewSearch] = useState("");
-  const [fullViewSort, setFullViewSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   // Editing existing report
   const [editingReportId, setEditingReportId] = useState<string | null>(null);
   const [editingReportName, setEditingReportName] = useState<string>("");
@@ -1551,7 +1548,7 @@ const Reports = () => {
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRenameReport(r); setRenameValue(r.name); }}>
                               <Pencil className="h-3 w-3" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Open full view" onClick={() => { setFullViewReport(r); setFullViewSearch(""); setFullViewSort(null); }}>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Open in main view" onClick={() => { loadReportForEdit(r); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
                               <Maximize2 className="h-3 w-3" />
                             </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7" title="Download" onClick={() => {
@@ -1720,86 +1717,6 @@ const Reports = () => {
               savedCols,
               true,
               savedCv
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
-
-      {/* Full-view dialog with search + sort */}
-      <Dialog open={!!fullViewReport} onOpenChange={(open) => { if (!open) setFullViewReport(null); }}>
-        <DialogContent className="max-w-[98vw] w-[98vw] h-[95vh] flex flex-col p-4">
-          <DialogHeader>
-            <DialogTitle>
-              {fullViewReport?.name}
-              {fullViewReport?.report_type === "payee_chalikah_dynamic" && (
-                <Badge variant="outline" className="ml-2">Dynamic</Badge>
-              )}
-            </DialogTitle>
-          </DialogHeader>
-          {fullViewReport && (() => {
-            const isDyn = fullViewReport.report_type === "payee_chalikah_dynamic";
-            const rd: any = isDyn
-              ? computeDynamic(fullViewReport.filters as any)
-              : fullViewReport.report_data;
-            const matrixData: Record<string, Record<string, number>> = rd.matrix || {};
-            const savedCols = colsForSavedReport(fullViewReport, rd);
-            const savedCustomValues: Record<string, Record<string, string>> =
-              ((fullViewReport.filters as any)?._overrides?.customValues) || {};
-            const ovF: any = (fullViewReport.filters as any)?._overrides || {};
-            // Apply saved filters/sort first, then in-dialog search
-            const allRows = applySavedLayout(
-              (rd.payeeRows || []) as typeof payeeRows,
-              matrixData,
-              ovF,
-              savedCustomValues
-            );
-            // Search filter only — layout/sort/columns come from saved overrides
-            const q = fullViewSearch.trim().toLowerCase();
-            const rows = q
-              ? allRows.filter((pr) =>
-                  (pr.name || "").toLowerCase().includes(q) ||
-                  (pr.yiddish || "").toLowerCase().includes(q) ||
-                  (pr.record_id || "").toLowerCase().includes(q) ||
-                  (pr.address || "").toLowerCase().includes(q) ||
-                  (pr.memo || "").toLowerCase().includes(q)
-                )
-              : allRows;
-            const total = rows.reduce(
-              (s, pr) =>
-                s + Object.values(matrixData[pr.key] || {}).reduce((ss: number, v: any) => ss + v, 0),
-              0
-            );
-            return (
-              <>
-                <div className="flex items-center gap-2 pb-2">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      value={fullViewSearch}
-                      onChange={(e) => setFullViewSearch(e.target.value)}
-                      placeholder="Search payee, yiddish, record id, address, memo..."
-                      className="pl-8"
-                    />
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {rows.length} of {allRows.length} payees
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => handleExport(rd, fullViewReport)}>
-                    <Download className="h-4 w-4 mr-2" /> Download
-                  </Button>
-                </div>
-                <div className="flex-1 overflow-auto">
-                  {renderMatrix(
-                    rows,
-                    rd.chalikahCols || [],
-                    matrixData,
-                    total,
-                    savedCols,
-                    true,
-                    savedCustomValues
-                  )}
-                </div>
-              </>
             );
           })()}
         </DialogContent>
