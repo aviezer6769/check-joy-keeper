@@ -338,11 +338,16 @@ const Reports = () => {
     return c.label;
   };
 
-  const loadReportForEdit = (r: SavedReport) => {
+const loadReportForEdit = (r: SavedReport, openEditor = true) => {
     const f: any = r.filters || {};
     const isDyn = r.report_type === "payee_chalikah_dynamic";
-    setEditingReportId(r.id);
-    setEditingReportName(r.name);
+    if (openEditor) {
+      setEditingReportId(r.id);
+      setEditingReportName(r.name);
+    } else {
+      setEditingReportId(null);
+      setEditingReportName("");
+    }
     setSaveMode(isDyn ? "dynamic" : "snapshot");
     setAccountFilter(f.accountFilter || "all");
     setStatusFilter(f.statusFilter || "issued");
