@@ -330,7 +330,7 @@ export function PayeeBulkImport() {
           <Upload className="h-4 w-4 mr-1" /> Import
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Import Payees</DialogTitle>
         </DialogHeader>
