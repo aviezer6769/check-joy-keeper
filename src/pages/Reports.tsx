@@ -93,9 +93,6 @@ const Reports = () => {
   const [renameReport, setRenameReport] = useState<SavedReport | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [hasRun, setHasRun] = useState(false);
-  const [fullViewReport, setFullViewReport] = useState<SavedReport | null>(null);
-  const [fullViewSearch, setFullViewSearch] = useState("");
-  const [fullViewSort, setFullViewSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   // Editing existing report
   const [editingReportId, setEditingReportId] = useState<string | null>(null);
   const [editingReportName, setEditingReportName] = useState<string>("");
@@ -1551,7 +1548,7 @@ const Reports = () => {
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRenameReport(r); setRenameValue(r.name); }}>
                               <Pencil className="h-3 w-3" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Open full view" onClick={() => { setFullViewReport(r); setFullViewSearch(""); setFullViewSort(null); }}>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Open in main view" onClick={() => { loadReportForEdit(r); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
                               <Maximize2 className="h-3 w-3" />
                             </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7" title="Download" onClick={() => {
