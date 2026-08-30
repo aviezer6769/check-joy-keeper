@@ -524,7 +524,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
       // recomputed data are still rendered (empty/0) so the layout always matches
       // what was saved.
       const chNames = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
-      return ov.visibleKeys
+      const resolved = ov.visibleKeys
         .map((k: string) => {
           const found = map.get(k);
           if (found) return found;
@@ -539,7 +539,27 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
           return null;
         })
         .filter(Boolean) as ColumnDef[];
+
+      // Dynamic reports must surface newly-created chalikah columns (e.g. a new
+      // "08 - ..." period) even though they were not in the saved visibleKeys.
+      if (report?.report_type === "payee_chalikah_dynamic") {
+        const present = new Set(resolved.map((c) => c.key));
+        const missing = chCols.filter((c) => !present.has(c.key));
+        if (missing.length > 0) {
+          let insertAt = -1;
+          for (let i = resolved.length - 1; i >= 0; i--) {
+            if (resolved[i].key.startsWith("ch_")) { insertAt = i + 1; break; }
+          }
+          if (insertAt === -1) {
+            const totalIdx = resolved.findIndex((c) => c.key === "total");
+            insertAt = totalIdx === -1 ? resolved.length : totalIdx;
+          }
+          resolved.splice(insertAt, 0, ...missing);
+        }
+      }
+      return resolved;
     }
+
     // Default fallback (legacy reports without overrides)
     return [
       { key: "record_id", label: "Record ID" },
