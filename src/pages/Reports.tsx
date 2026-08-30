@@ -78,6 +78,7 @@ const Reports = () => {
   const [viewingReport, setViewingReport] = useState<SavedReport | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedNames, setSelectedNames] = useState<Set<string>>(new Set());
+  const [batchCheckOpen, setBatchCheckOpen] = useState(false);
   const [renameReport, setRenameReport] = useState<SavedReport | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [hasRun, setHasRun] = useState(false);
