@@ -1553,7 +1553,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRenameReport(r); setRenameValue(r.name); }}>
                               <Pencil className="h-3 w-3" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Open in main view" onClick={() => { loadReportForEdit(r); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Open in main view" onClick={() => { loadReportForEdit(r, false); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
                               <Maximize2 className="h-3 w-3" />
                             </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7" title="Download" onClick={() => {
