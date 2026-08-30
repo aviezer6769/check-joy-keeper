@@ -248,15 +248,64 @@ export function PayeeBulkImport() {
   };
 
   const updateRow = (idx: number, key: string, value: string) => {
-    setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, [key]: value } : r)));
+    setRows((prev) =>
+      prev.map((r, i) => {
+        if (i !== idx) return r;
+        const next = { ...r, [key]: key === "phone" ? formatPhone(value) : value };
+        // Auto-fill city/state/zip from an existing payee with the same street
+        if (key === "street_name" && value) {
+          const match = allPayees.find(
+            (p) => p.street_name?.toLowerCase() === value.toLowerCase()
+          );
+          if (match) {
+            if (!next.city) next.city = match.city || "";
+            if (!next.state) next.state = match.state || "";
+            if (!next.zip) next.zip = match.zip || "";
+          }
+        }
+        next.payee_name = buildPayeeName(next);
+        return next;
+      })
+    );
   };
 
-  const addRow = () => setRows((prev) => [...prev, EMPTY_ROW()]);
+  const toggleUnknownUrgent = (idx: number) => {
+    setRows((prev) =>
+      prev.map((r, i) => (i === idx ? { ...r, urgent_level: r.urgent_level === "?" ? "" : "?" } : r))
+    );
+  };
+
+  // Copy a value from a row down to all rows below it
+  const copyDown = (idx: number, key: string) => {
+    setRows((prev) => {
+      const value = prev[idx][key] || "";
+      return prev.map((r, i) => {
+        if (i <= idx) return r;
+        const next = { ...r, [key]: value };
+        next.payee_name = buildPayeeName(next);
+        return next;
+      });
+    });
+  };
+
+  const addRow = () =>
+    setRows((prev) => {
+      const row = EMPTY_ROW();
+      const used = prev.map((r) => parseInt(r.record_id || "", 10)).filter((n) => !isNaN(n));
+      const base = used.length > 0 ? Math.max(...used) : parseInt(nextRecordId, 10) - 1;
+      row.record_id = String((isNaN(base) ? 0 : base) + 1);
+      return [...prev, row];
+    });
   const removeRow = (idx: number) => setRows((prev) => prev.filter((_, i) => i !== idx));
 
-  const MULTI_ROW_KEYS: (keyof PayeeInsert)[] = [
-    "payee_name", "record_id", "first_name", "last_name", "city", "state", "zip",
-  ];
+  const fillRecordIds = () =>
+    setRows((prev) => {
+      let n = parseInt(nextRecordId, 10) || 1;
+      return prev.map((r) => (r.record_id ? r : { ...r, record_id: String(n++) }));
+    });
+
+  const MULTI_ROW_KEYS: (keyof PayeeInsert)[] = COLUMN_KEYS.filter((k) => k !== "payee_name");
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
