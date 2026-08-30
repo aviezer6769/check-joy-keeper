@@ -1838,6 +1838,13 @@ const Reports = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BatchCheckDialog
+        open={batchCheckOpen}
+        onOpenChange={setBatchCheckOpen}
+        payees={selectedPayeesForChecks}
+        onDone={() => setSelectedNames(new Set())}
+      />
     </div>
   );
 };
