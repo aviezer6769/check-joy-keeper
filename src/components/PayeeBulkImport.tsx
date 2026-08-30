@@ -417,12 +417,28 @@ export function PayeeBulkImport() {
           </TabsContent>
 
           <TabsContent value="rows" className="space-y-3 pt-2">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">
+                All payee fields are available. Payee Name is auto-generated from TitleToUse + names.
+                Use the ↓ button in a header to copy a value down to the rows below.
+              </p>
+              <Button size="sm" variant="outline" onClick={fillRecordIds} className="shrink-0">
+                Auto Record IDs
+              </Button>
+            </div>
+            <div className="overflow-x-auto max-h-[45vh] rounded border border-border">
+              <table className="text-xs">
+                <thead className="sticky top-0 bg-muted/80 backdrop-blur z-10">
                   <tr>
+                    <th className="text-left px-1 py-1 font-semibold text-muted-foreground whitespace-nowrap">
+                      Payee Name
+                    </th>
                     {MULTI_ROW_KEYS.map((k) => (
-                      <th key={k} className="text-left px-1 py-1 font-semibold text-muted-foreground">
+                      <th
+                        key={k}
+                        dir={RTL_KEYS.has(k) ? "rtl" : undefined}
+                        className="text-left px-1 py-1 font-semibold text-muted-foreground whitespace-nowrap"
+                      >
                         {COLUMN_LABELS[k]}
                       </th>
                     ))}
@@ -432,14 +448,68 @@ export function PayeeBulkImport() {
                 <tbody>
                   {rows.map((row, idx) => (
                     <tr key={idx}>
+                      <td className="px-1 py-0.5">
+                        <Input
+                          className="h-8 text-xs bg-muted min-w-[160px]"
+                          value={row.payee_name || ""}
+                          readOnly
+                          disabled
+                        />
+                      </td>
                       {MULTI_ROW_KEYS.map((k) => (
                         <td key={k} className="px-1 py-0.5">
-                          <Input
-                            className="h-8 text-xs"
-                            value={row[k] || ""}
-                            onChange={(e) => updateRow(idx, k, e.target.value)}
-                            placeholder={COLUMN_LABELS[k]}
-                          />
+                          <div className="flex items-center gap-0.5">
+                            {k === "urgent_level" ? (
+                              <>
+                                <Input
+                                  type="number"
+                                  className="h-8 text-xs w-16"
+                                  value={row[k] === "?" ? "" : row[k] || ""}
+                                  onChange={(e) => updateRow(idx, k, e.target.value)}
+                                  placeholder={row[k] === "?" ? "?" : "0"}
+                                  disabled={row[k] === "?"}
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={row[k] === "?" ? "default" : "outline"}
+                                  className="h-8 px-2 text-xs shrink-0"
+                                  onClick={() => toggleUnknownUrgent(idx)}
+                                >
+                                  ?
+                                </Button>
+                              </>
+                            ) : k === "sort_order" ? (
+                              <Input
+                                type="number"
+                                className="h-8 text-xs w-16"
+                                value={row[k] || ""}
+                                onChange={(e) => updateRow(idx, k, e.target.value)}
+                                placeholder="0"
+                              />
+                            ) : (
+                              <FieldSuggestInput
+                                dir={RTL_KEYS.has(k) ? "rtl" : undefined}
+                                className="h-8 text-xs min-w-[110px]"
+                                value={row[k] || ""}
+                                onChange={(v) => updateRow(idx, k, v)}
+                                suggestions={suggestionsByField[k] || []}
+                                placeholder={COLUMN_LABELS[k]}
+                              />
+                            )}
+                            {idx < rows.length - 1 && (
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-6 shrink-0"
+                                title="Copy down"
+                                onClick={() => copyDown(idx, k)}
+                              >
+                                <ArrowDown className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
                         </td>
                       ))}
                       <td className="px-1">
@@ -458,6 +528,7 @@ export function PayeeBulkImport() {
                 </tbody>
               </table>
             </div>
+
             <Button size="sm" variant="outline" onClick={addRow}>
               <Plus className="h-3 w-3 mr-1" /> Add Row
             </Button>
