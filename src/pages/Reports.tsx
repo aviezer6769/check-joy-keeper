@@ -183,6 +183,19 @@ const Reports = () => {
     rules.some((r) => isPayeeAttrKey(r.key)) ||
     Object.entries(filters).some(([k, v]) => v && isPayeeAttrKey(k));
 
+  // Chalikah ids allowed by the current dynamic config (null = no restriction)
+  const allowedChalikahIds = useMemo<Set<string> | null>(() => {
+    if (saveMode !== "dynamic") return null;
+    if (chalikahMode === "last_n") {
+      const sorted = [...chalikahList].sort((a, b) =>
+        (b.created_at || "").localeCompare(a.created_at || "")
+      );
+      return new Set(sorted.slice(0, chalikahN || 2).map((c) => c.id));
+    }
+    if (chalikahMode === "specific") return new Set(specificChalikahIds);
+    return null;
+  }, [saveMode, chalikahMode, chalikahN, specificChalikahIds, chalikahList]);
+
   // Filter checks
   const filteredChecks = useMemo(() => {
     let result = allChecks;
@@ -204,23 +217,12 @@ const Reports = () => {
     }
     // When configuring/editing a DYNAMIC report, restrict to the same chalikah
     // columns computeDynamic() uses, so the live view matches the saved view.
-    if (saveMode === "dynamic") {
-      let allowed: Set<string> | null = null;
-      if (chalikahMode === "last_n") {
-        const sorted = [...chalikahList].sort((a, b) =>
-          (b.created_at || "").localeCompare(a.created_at || "")
-        );
-        allowed = new Set(sorted.slice(0, chalikahN || 2).map((c) => c.id));
-      } else if (chalikahMode === "specific") {
-        allowed = new Set(specificChalikahIds);
-      }
-      if (allowed) {
-        const ids = allowed;
-        result = result.filter((c) => ids.has(c.chalikah_id || "__none__"));
-      }
+    if (allowedChalikahIds) {
+      const ids = allowedChalikahIds;
+      result = result.filter((c) => ids.has(c.chalikah_id || "__none__"));
     }
     return result;
-  }, [allChecks, accountFilter, statusFilter, dateFrom, dateTo, saveMode, chalikahMode, chalikahN, specificChalikahIds, chalikahList]);
+  }, [allChecks, accountFilter, statusFilter, dateFrom, dateTo, allowedChalikahIds]);
 
   // Build payee × chalikah matrix
   const { matrix, payeeRows, chalikahCols, grandTotal } = useMemo(() => {
@@ -251,6 +253,10 @@ const Reports = () => {
       addMissingPayees(payeeMap, map);
     }
 
+    // Dynamic configs always show every selected chalikah as a column, even if
+    // the current status/date filters left it without any checks.
+    if (allowedChalikahIds) allowedChalikahIds.forEach((id) => chalikahIds.add(id));
+
     const chalikahNameMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
     const cols = Array.from(chalikahIds).map((id) => ({
       id,
@@ -263,7 +269,7 @@ const Reports = () => {
     filteredChecks.forEach((c) => (gt += c.amount));
 
     return { matrix: map, payeeRows: rows, chalikahCols: cols, grandTotal: gt };
-  }, [filteredChecks, chalikahList, payeeLookup, payeesList, filterRules]);
+  }, [filteredChecks, chalikahList, payeeLookup, payeesList, filterRules, allowedChalikahIds]);
 
   // Dynamic columns = static cols + chalikah cols + total
   const allReportColumns: ColumnDef[] = useMemo(() => [
@@ -495,6 +501,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
     if (needsAllPayees(savedRules, savedFilters)) {
       addMissingPayees(payeeMap, map);
     }
+    if (allowedChalikahIds) allowedChalikahIds.forEach((id) => chalikahIds.add(id));
     const chalikahNameMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
     const cols = Array.from(chalikahIds).map((id) => ({
       id, name: id === "__none__" ? "(No Chalikah)" : chalikahNameMap[id] || id,
