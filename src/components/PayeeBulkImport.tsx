@@ -19,7 +19,7 @@ const COLUMN_KEYS: (keyof PayeeInsert)[] = [
   "payee_name", "record_id", "sort_order", "urgent_level",
   "title_1_yiddish", "first_name_yiddish", "middle_name_yiddish", "last_name_yiddish", "title_2_yiddish",
   "title", "title_to_use", "first_name", "middle_name", "last_name",
-  "street_no", "street_name", "apt", "city", "state", "zip",
+  "street_no", "street_name", "apt", "city", "state", "zip", "phone", "memo",
 ];
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -28,8 +28,13 @@ const COLUMN_LABELS: Record<string, string> = {
   last_name_yiddish: "לעצטע", title_2_yiddish: "טיטל 2",
   title: "Title", title_to_use: "TitleToUse", first_name: "First Name", middle_name: "Middle Name",
   last_name: "Last Name", street_no: "St #", street_name: "Street", apt: "Apt",
-  city: "City", state: "State", zip: "Zip",
+  city: "City", state: "State", zip: "Zip", phone: "Phone", memo: "Memo",
 };
+
+const RTL_KEYS = new Set([
+  "title_1_yiddish", "first_name_yiddish", "middle_name_yiddish", "last_name_yiddish", "title_2_yiddish",
+]);
+
 
 // Additional alternate header names (case-insensitive) that map to column keys
 const HEADER_ALIASES: Record<string, keyof PayeeInsert> = {
