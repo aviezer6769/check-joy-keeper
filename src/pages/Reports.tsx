@@ -407,6 +407,9 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
         filters: ov.filters || {},
         filterModes: ov.filterModes || {},
       });
+      // Let the dynamic-chalikah auto-insert effect re-run for columns that
+      // are missing from this report's saved layout (e.g. newly created 08).
+      autoAddedChRef.current.clear();
     }, 0);
     setHasRun(true);
     setSelectedNames(new Set());
