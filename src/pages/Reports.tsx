@@ -183,6 +183,19 @@ const Reports = () => {
     rules.some((r) => isPayeeAttrKey(r.key)) ||
     Object.entries(filters).some(([k, v]) => v && isPayeeAttrKey(k));
 
+  // Chalikah ids allowed by the current dynamic config (null = no restriction)
+  const allowedChalikahIds = useMemo<Set<string> | null>(() => {
+    if (saveMode !== "dynamic") return null;
+    if (chalikahMode === "last_n") {
+      const sorted = [...chalikahList].sort((a, b) =>
+        (b.created_at || "").localeCompare(a.created_at || "")
+      );
+      return new Set(sorted.slice(0, chalikahN || 2).map((c) => c.id));
+    }
+    if (chalikahMode === "specific") return new Set(specificChalikahIds);
+    return null;
+  }, [saveMode, chalikahMode, chalikahN, specificChalikahIds, chalikahList]);
+
   // Filter checks
   const filteredChecks = useMemo(() => {
     let result = allChecks;
