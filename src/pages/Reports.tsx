@@ -253,6 +253,10 @@ const Reports = () => {
       addMissingPayees(payeeMap, map);
     }
 
+    // Dynamic configs always show every selected chalikah as a column, even if
+    // the current status/date filters left it without any checks.
+    if (allowedChalikahIds) allowedChalikahIds.forEach((id) => chalikahIds.add(id));
+
     const chalikahNameMap = Object.fromEntries(chalikahList.map((c) => [c.id, c.name]));
     const cols = Array.from(chalikahIds).map((id) => ({
       id,
@@ -265,7 +269,7 @@ const Reports = () => {
     filteredChecks.forEach((c) => (gt += c.amount));
 
     return { matrix: map, payeeRows: rows, chalikahCols: cols, grandTotal: gt };
-  }, [filteredChecks, chalikahList, payeeLookup, payeesList, filterRules]);
+  }, [filteredChecks, chalikahList, payeeLookup, payeesList, filterRules, allowedChalikahIds]);
 
   // Dynamic columns = static cols + chalikah cols + total
   const allReportColumns: ColumnDef[] = useMemo(() => [
