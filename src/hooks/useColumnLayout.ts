@@ -89,12 +89,26 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
 
   const toggleColumn = useCallback(
     (key: string) => {
-      setLayout({
-        ...layout,
-        visibleKeys: layout.visibleKeys.includes(key)
-          ? layout.visibleKeys.filter((k) => k !== key)
-          : [...layout.visibleKeys, key],
-      });
+      let nextKeys: string[];
+      if (layout.visibleKeys.includes(key)) {
+        nextKeys = layout.visibleKeys.filter((k) => k !== key);
+      } else if (key.startsWith("ch_")) {
+        // Chalikah columns belong together — insert after the last ch_ column
+        // (before memo/custom columns) instead of appending at the very end.
+        let insertAt = -1;
+        for (let i = layout.visibleKeys.length - 1; i >= 0; i--) {
+          if (layout.visibleKeys[i].startsWith("ch_")) { insertAt = i + 1; break; }
+        }
+        if (insertAt === -1) {
+          const totalIdx = layout.visibleKeys.indexOf("total");
+          insertAt = totalIdx === -1 ? layout.visibleKeys.length : totalIdx;
+        }
+        nextKeys = [...layout.visibleKeys];
+        nextKeys.splice(insertAt, 0, key);
+      } else {
+        nextKeys = [...layout.visibleKeys, key];
+      }
+      setLayout({ ...layout, visibleKeys: nextKeys });
     },
     [layout, setLayout]
   );

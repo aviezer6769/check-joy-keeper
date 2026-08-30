@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -281,6 +281,34 @@ const Reports = () => {
 
   const colLayout = useColumnLayout("reports", allReportColumns);
 
+  // When a DYNAMIC report is loaded in the main view, newly-created chalikah
+  // columns (e.g. "08 - ...") aren't in the saved visibleKeys. Auto-insert them
+  // right after the last chalikah column so they sit next to their siblings
+  // instead of being hidden or appended at the far end. Each column is only
+  // auto-inserted once per session so manual hiding still sticks.
+  const autoAddedChRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!hasRun || saveMode !== "dynamic") return;
+    const missing = allReportColumns
+      .map((c) => c.key)
+      .filter((k) => k.startsWith("ch_")
+        && !colLayout.layout.visibleKeys.includes(k)
+        && !autoAddedChRef.current.has(k));
+    if (missing.length === 0) return;
+    missing.forEach((k) => autoAddedChRef.current.add(k));
+    const keys = [...colLayout.layout.visibleKeys];
+    let insertAt = -1;
+    for (let i = keys.length - 1; i >= 0; i--) {
+      if (keys[i].startsWith("ch_")) { insertAt = i + 1; break; }
+    }
+    if (insertAt === -1) {
+      const totalIdx = keys.indexOf("total");
+      insertAt = totalIdx === -1 ? keys.length : totalIdx;
+    }
+    keys.splice(insertAt, 0, ...missing);
+    colLayout.applyLayout({ visibleKeys: keys });
+  }, [hasRun, saveMode, allReportColumns, colLayout.layout.visibleKeys]);
+
   const currentFilters = { accountFilter, statusFilter, dateFrom, dateTo };
 
   const buildReportData = () => ({
@@ -379,6 +407,9 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
         filters: ov.filters || {},
         filterModes: ov.filterModes || {},
       });
+      // Let the dynamic-chalikah auto-insert effect re-run for columns that
+      // are missing from this report's saved layout (e.g. newly created 08).
+      autoAddedChRef.current.clear();
     }, 0);
     setHasRun(true);
     setSelectedNames(new Set());

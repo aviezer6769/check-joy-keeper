@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Settings2, GripVertical, RotateCcw } from "lucide-react";
+import { Settings2, GripVertical, RotateCcw, ArrowUp, ArrowDown } from "lucide-react";
 import { type ColumnDef } from "@/hooks/useColumnLayout";
 import { useState, useRef, useCallback } from "react";
 
@@ -99,6 +99,22 @@ export function ColumnLayoutManager({
                 >
                   {col.label}
                 </span>
+                <Button
+                  variant="ghost" size="sm" className="h-5 w-5 p-0 shrink-0"
+                  disabled={idx === 0}
+                  title="Move up"
+                  onClick={() => onReorder(idx, idx - 1)}
+                >
+                  <ArrowUp className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="ghost" size="sm" className="h-5 w-5 p-0 shrink-0"
+                  disabled={idx === visibleColumns.length - 1}
+                  title="Move down"
+                  onClick={() => onReorder(idx, idx + 1)}
+                >
+                  <ArrowDown className="h-3 w-3" />
+                </Button>
               </div>
               {expandedWidth === col.key && (
                 <div className="flex items-center gap-2 px-6 py-1">
