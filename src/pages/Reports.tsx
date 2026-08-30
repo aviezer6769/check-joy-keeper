@@ -864,6 +864,14 @@ const Reports = () => {
         {!isStatic && selectedNames.size > 0 && (
           <div className="px-4 py-2 bg-muted/50 border-b text-sm text-muted-foreground flex items-center gap-2">
             {selectedNames.size} selected
+            <Button
+              variant="default"
+              size="sm"
+              disabled={selectedPayeesForChecks.length === 0}
+              onClick={() => setBatchCheckOpen(true)}
+            >
+              <FileCheck className="h-4 w-4 mr-1" /> Create Checks ({selectedPayeesForChecks.length})
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => setSelectedNames(new Set())}>
               Clear
             </Button>
