@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Save, Download, Trash2, FileText, Eye, Filter, Pencil, ChevronDown, Maximize2, ArrowUpDown, ArrowUp, ArrowDown, Search, Edit3, Plus, X, SlidersHorizontal, Copy } from "lucide-react";
+import { ArrowLeft, Save, Download, Trash2, FileText, Eye, Filter, Pencil, ChevronDown, Maximize2, ArrowUpDown, ArrowUp, ArrowDown, Search, Edit3, Plus, X, SlidersHorizontal, Copy, FileCheck } from "lucide-react";
 import { useChecks, type Check } from "@/hooks/useChecks";
 import { useChalikah } from "@/hooks/useChalikah";
 import { useAccounts } from "@/hooks/useAccounts";
@@ -28,6 +28,7 @@ import { useColumnLayout, type ColumnDef, type FilterMode, type SortState } from
 import { ColumnLayoutManager } from "@/components/ColumnLayoutManager";
 import { DraggableTableHeader } from "@/components/DraggableTableHeader";
 import { useAuditSource } from "@/hooks/useAuditSource";
+import { BatchCheckDialog } from "@/components/BatchCheckDialog";
 
 import * as XLSX from "xlsx";
 
@@ -78,6 +79,17 @@ const Reports = () => {
   const [viewingReport, setViewingReport] = useState<SavedReport | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedNames, setSelectedNames] = useState<Set<string>>(new Set());
+  const [batchCheckOpen, setBatchCheckOpen] = useState(false);
+
+  // Payees matching the current report row selection (for writing checks directly from a report)
+  const selectedPayeesForChecks = useMemo(
+    () =>
+      payeesList.filter((p) => {
+        if (p.record_id && selectedNames.has(`__rid__${p.record_id}`)) return true;
+        return selectedNames.has(p.payee_name);
+      }),
+    [payeesList, selectedNames]
+  );
   const [renameReport, setRenameReport] = useState<SavedReport | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [hasRun, setHasRun] = useState(false);
@@ -863,6 +875,14 @@ const Reports = () => {
         {!isStatic && selectedNames.size > 0 && (
           <div className="px-4 py-2 bg-muted/50 border-b text-sm text-muted-foreground flex items-center gap-2">
             {selectedNames.size} selected
+            <Button
+              variant="default"
+              size="sm"
+              disabled={selectedPayeesForChecks.length === 0}
+              onClick={() => setBatchCheckOpen(true)}
+            >
+              <FileCheck className="h-4 w-4 mr-1" /> Create Checks ({selectedPayeesForChecks.length})
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => setSelectedNames(new Set())}>
               Clear
             </Button>
@@ -1818,6 +1838,13 @@ const Reports = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BatchCheckDialog
+        open={batchCheckOpen}
+        onOpenChange={setBatchCheckOpen}
+        payees={selectedPayeesForChecks}
+        onDone={() => setSelectedNames(new Set())}
+      />
     </div>
   );
 };
