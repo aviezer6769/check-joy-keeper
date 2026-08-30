@@ -57,6 +57,9 @@ const HEADER_ALIASES: Record<string, keyof PayeeInsert> = {
   "city": "city",
   "state": "state",
   "zip": "zip",
+  "phone": "phone", "phone number": "phone", "phone_number": "phone", "tel": "phone",
+  "memo": "memo", "note": "memo", "notes": "memo",
+
 };
 
 function matchHeader(header: string): keyof PayeeInsert | undefined {
