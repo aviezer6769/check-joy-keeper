@@ -1,17 +1,19 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAddPayee, type PayeeInsert } from "@/hooks/usePayees";
-import { Upload, Plus, Trash2, FileUp } from "lucide-react";
+import { usePayees, type PayeeInsert } from "@/hooks/usePayees";
+import { Upload, Plus, Trash2, FileUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
-import { buildPayeeName } from "@/lib/payee-utils";
+import { buildPayeeName, formatPhone } from "@/lib/payee-utils";
+import { FieldSuggestInput } from "@/components/FieldSuggestInput";
+
 
 const COLUMN_KEYS: (keyof PayeeInsert)[] = [
   "payee_name", "record_id", "sort_order", "urgent_level",
