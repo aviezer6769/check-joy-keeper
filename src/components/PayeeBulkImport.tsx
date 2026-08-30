@@ -163,6 +163,22 @@ export function PayeeBulkImport() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileRows, setFileRows] = useState<Record<string, string>[]>([]);
   const qc = useQueryClient();
+  const { data: allPayees = [] } = usePayees();
+
+  const nextRecordId = useMemo(() => {
+    const nums = allPayees.map((p) => parseInt(p.record_id || "", 10)).filter((n) => !isNaN(n));
+    return nums.length > 0 ? String(Math.max(...nums) + 1) : "1";
+  }, [allPayees]);
+
+  const suggestionsByField = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    COLUMN_KEYS.forEach((k) => {
+      if (k === "sort_order" || k === "urgent_level") return;
+      map[k] = allPayees.map((p) => (p as any)[k]).filter(Boolean) as string[];
+    });
+    return map;
+  }, [allPayees]);
+
 
   const importPayees = async (payees: PayeeInsert[], onDone: () => void) => {
     if (payees.length === 0) {
