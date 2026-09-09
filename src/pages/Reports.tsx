@@ -488,6 +488,8 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
     }
     if (cfg.statusFilter === "issued") {
       result = result.filter((c) => c.status === "Given" || c.status === "Cleared");
+    } else if (cfg.statusFilter === "issued_open") {
+      result = result.filter((c) => c.status !== "Void");
     } else if (cfg.statusFilter === "pending") {
       result = result.filter((c) => c.status === "Open" || c.status === "Printed");
     } else if (cfg.statusFilter && cfg.statusFilter !== "all") {
