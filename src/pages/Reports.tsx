@@ -378,6 +378,7 @@ const Reports = () => {
 const loadReportForEdit = (r: SavedReport, openEditor = true) => {
     const f: any = r.filters || {};
     const isDyn = r.report_type === "payee_chalikah_dynamic";
+    setLoadedReportName(r.name);
     if (openEditor) {
       setEditingReportId(r.id);
       setEditingReportName(r.name);
