@@ -204,6 +204,8 @@ const Reports = () => {
     }
     if (statusFilter === "issued") {
       result = result.filter((c) => c.status === "Given" || c.status === "Cleared");
+    } else if (statusFilter === "issued_open") {
+      result = result.filter((c) => c.status !== "Void");
     } else if (statusFilter === "pending") {
       result = result.filter((c) => c.status === "Open" || c.status === "Printed");
     } else if (statusFilter !== "all") {
@@ -486,6 +488,8 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
     }
     if (cfg.statusFilter === "issued") {
       result = result.filter((c) => c.status === "Given" || c.status === "Cleared");
+    } else if (cfg.statusFilter === "issued_open") {
+      result = result.filter((c) => c.status !== "Void");
     } else if (cfg.statusFilter === "pending") {
       result = result.filter((c) => c.status === "Open" || c.status === "Printed");
     } else if (cfg.statusFilter && cfg.statusFilter !== "all") {
@@ -1248,6 +1252,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
                     <SelectItem value="issued">Issued (Given+Cleared)</SelectItem>
+                    <SelectItem value="issued_open">Issued + Open (all except Void)</SelectItem>
                     <SelectItem value="pending">Pending (Open+Printed)</SelectItem>
                     <SelectItem value="Void">Void</SelectItem>
                   </SelectContent>
