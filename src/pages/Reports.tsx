@@ -204,6 +204,8 @@ const Reports = () => {
     }
     if (statusFilter === "issued") {
       result = result.filter((c) => c.status === "Given" || c.status === "Cleared");
+    } else if (statusFilter === "issued_open") {
+      result = result.filter((c) => c.status !== "Void");
     } else if (statusFilter === "pending") {
       result = result.filter((c) => c.status === "Open" || c.status === "Printed");
     } else if (statusFilter !== "all") {
