@@ -1556,7 +1556,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
                     </div>
                   </DialogContent>
                 </Dialog>
-                <Button onClick={() => setHasRun(true)}>
+                <Button onClick={() => { setLoadedReportName(""); setHasRun(true); }}>
                   Run Report
                 </Button>
                 <ColumnLayoutManager
