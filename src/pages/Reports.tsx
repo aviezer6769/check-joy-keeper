@@ -692,8 +692,14 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
     });
     rows.push(totalsRow);
 
-    // Title row above the header row, merged across all columns
-    const title = report?.name || reportName || "Report";
+    // Report name used for both the merged title row and the file name
+    let resolvedName = (
+      report?.name || editingReportName || loadedReportName || reportName || ""
+    ).trim();
+    if (!resolvedName) {
+      resolvedName = (window.prompt("Report name (used for the title and file name):", "") || "").trim();
+    }
+    const title = resolvedName || "Report";
     const headers = exportCols.map((c) => {
       if (c.key === "sort_order") return "Sort";
       if (c.key === "record_id") return "Record ID";
