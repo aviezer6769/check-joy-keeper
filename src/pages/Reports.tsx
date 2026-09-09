@@ -722,7 +722,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Report");
-    const rawName = (report?.name || reportName || "").trim();
+    const rawName = resolvedName;
     const fileName =
       rawName
         // strip only characters illegal in filenames, keep Hebrew/unicode
