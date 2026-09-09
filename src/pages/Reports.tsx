@@ -96,6 +96,7 @@ const Reports = () => {
   // Editing existing report
   const [editingReportId, setEditingReportId] = useState<string | null>(null);
   const [editingReportName, setEditingReportName] = useState<string>("");
+  const [loadedReportName, setLoadedReportName] = useState<string>("");
   // Custom note columns (per saved report)
   const [customColumns, setCustomColumns] = useState<Array<{ key: string; label: string }>>([]);
   const [customValues, setCustomValues] = useState<Record<string, Record<string, string>>>({});
