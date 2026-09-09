@@ -1248,6 +1248,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
                     <SelectItem value="issued">Issued (Given+Cleared)</SelectItem>
+                    <SelectItem value="issued_open">Issued + Open (all except Void)</SelectItem>
                     <SelectItem value="pending">Pending (Open+Printed)</SelectItem>
                     <SelectItem value="Void">Void</SelectItem>
                   </SelectContent>
