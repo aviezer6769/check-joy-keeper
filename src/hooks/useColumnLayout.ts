@@ -77,7 +77,10 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
 
   const visibleColumns = useMemo(() => {
     const map = new Map(allColumns.map((c) => [c.key, c]));
-    return layout.visibleKeys.map((k) => map.get(k)!).filter(Boolean);
+    return layout.visibleKeys.flatMap((k) => {
+      const column = map.get(k);
+      return column ? [column] : [];
+    });
   }, [layout.visibleKeys, allColumns]);
 
   const hiddenColumns = useMemo(() => {
@@ -115,25 +118,29 @@ export function useColumnLayout(storageKey: string, allColumns: ColumnDef[]) {
 
   const moveColumn = useCallback(
     (key: string, direction: "up" | "down") => {
-      const idx = layout.visibleKeys.indexOf(key);
+      const next = visibleColumns.map((column) => column.key);
+      const idx = next.indexOf(key);
       if (idx < 0) return;
       const newIdx = direction === "up" ? idx - 1 : idx + 1;
-      if (newIdx < 0 || newIdx >= layout.visibleKeys.length) return;
-      const next = [...layout.visibleKeys];
+      if (newIdx < 0 || newIdx >= next.length) return;
       [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
       setLayout({ ...layout, visibleKeys: next });
     },
-    [layout, setLayout]
+    [layout, visibleColumns, setLayout]
   );
 
   const reorderColumn = useCallback(
     (fromIndex: number, toIndex: number) => {
-      const next = [...layout.visibleKeys];
+      // Controls use rendered indices; saved keys for unavailable columns must
+      // not shift those indices or make moving past Memo appear stuck.
+      const next = visibleColumns.map((column) => column.key);
+      if (fromIndex < 0 || fromIndex >= next.length || toIndex < 0 || toIndex >= next.length) return;
       const [moved] = next.splice(fromIndex, 1);
+      if (moved === undefined) return;
       next.splice(toIndex, 0, moved);
       setLayout({ ...layout, visibleKeys: next });
     },
-    [layout, setLayout]
+    [layout, visibleColumns, setLayout]
   );
 
   const setColumnWidth = useCallback(
