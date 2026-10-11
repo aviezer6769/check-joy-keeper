@@ -773,11 +773,14 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
     if (colKey === "address") return pr.address || "";
     if (colKey === "memo") return pr.memo || "";
     if (colKey === "total") {
-      return String(Object.values(matrixData[pr.key] || {}).reduce((s, v) => s + v, 0));
+      return String(sumMatrixRow(matrixData[pr.key]));
     }
     if (colKey.startsWith("ch_")) {
       const chId = colKey.slice(3);
       return String(matrixData[pr.key]?.[chId] || 0);
+    }
+    if (colKey.startsWith("acc_")) {
+      return String(matrixData[pr.key]?.[colKey] || 0);
     }
     return "";
   };
@@ -799,10 +802,13 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
     if (colKey === "payee_name") return pr.name.toLowerCase();
     if (colKey === "address") return (pr.address || "").toLowerCase();
     if (colKey === "memo") return (pr.memo || "").toLowerCase();
-    if (colKey === "total") return Object.values(matrixData[pr.key] || {}).reduce((s, v) => s + v, 0);
+    if (colKey === "total") return sumMatrixRow(matrixData[pr.key]);
     if (colKey.startsWith("ch_")) {
       const chId = colKey.slice(3);
       return matrixData[pr.key]?.[chId] || 0;
+    }
+    if (colKey.startsWith("acc_")) {
+      return matrixData[pr.key]?.[colKey] || 0;
     }
     return "";
   };
