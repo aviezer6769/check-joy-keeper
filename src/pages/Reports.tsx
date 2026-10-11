@@ -142,11 +142,15 @@ const Reports = () => {
     return payeeLookup.byName[payeeName.toLowerCase()] || { record_id: "", yiddish: "", memo: "", address: "", is_active: true, urgent_level: null, last_name_yiddish: "", first_name_yiddish: "", middle_name_yiddish: "" };
   };
 
-  // A zero-value Chalikah rule must also evaluate payees with no matching checks.
+  // Sum only chalikah cells of a matrix row (account acc_ cells excluded) = row Total
+  const sumMatrixRow = (rec?: Record<string, number>) =>
+    Object.entries(rec || {}).reduce((s, [k, v]) => (k.startsWith("acc_") ? s : s + Number(v)), 0);
+
+  // A zero-value Chalikah/Account rule must also evaluate payees with no matching checks.
   // Normally those payees are absent from the check-derived matrix altogether.
   const rulesCanMatchMissingChalikah = (rules: FilterRule[]) =>
     rules.some((rule) => {
-      if (!rule.key.startsWith("ch_")) return false;
+      if (!rule.key.startsWith("ch_") && !rule.key.startsWith("acc_")) return false;
       if (rule.value === "__blank__") return true;
       const value = Number(rule.value);
       if (!Number.isFinite(value)) return false;
@@ -175,7 +179,7 @@ const Reports = () => {
   // Payee-attribute filters/rules (Active, Urgent, Memo, Record ID...) must be able to
   // evaluate payees that have no checks in the current set, so seed the whole payee list.
   const isPayeeAttrKey = (k: string) =>
-    !k.startsWith("ch_") && !k.startsWith("cust_") && k !== "total";
+    !k.startsWith("ch_") && !k.startsWith("acc_") && !k.startsWith("cust_") && k !== "total";
   const needsAllPayees = (
     rules: FilterRule[],
     filters: Record<string, string> = {}
