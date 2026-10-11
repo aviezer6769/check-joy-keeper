@@ -142,11 +142,15 @@ const Reports = () => {
     return payeeLookup.byName[payeeName.toLowerCase()] || { record_id: "", yiddish: "", memo: "", address: "", is_active: true, urgent_level: null, last_name_yiddish: "", first_name_yiddish: "", middle_name_yiddish: "" };
   };
 
-  // A zero-value Chalikah rule must also evaluate payees with no matching checks.
+  // Sum only chalikah cells of a matrix row (account acc_ cells excluded) = row Total
+  const sumMatrixRow = (rec?: Record<string, number>) =>
+    Object.entries(rec || {}).reduce((s, [k, v]) => (k.startsWith("acc_") ? s : s + Number(v)), 0);
+
+  // A zero-value Chalikah/Account rule must also evaluate payees with no matching checks.
   // Normally those payees are absent from the check-derived matrix altogether.
   const rulesCanMatchMissingChalikah = (rules: FilterRule[]) =>
     rules.some((rule) => {
-      if (!rule.key.startsWith("ch_")) return false;
+      if (!rule.key.startsWith("ch_") && !rule.key.startsWith("acc_")) return false;
       if (rule.value === "__blank__") return true;
       const value = Number(rule.value);
       if (!Number.isFinite(value)) return false;
@@ -175,7 +179,7 @@ const Reports = () => {
   // Payee-attribute filters/rules (Active, Urgent, Memo, Record ID...) must be able to
   // evaluate payees that have no checks in the current set, so seed the whole payee list.
   const isPayeeAttrKey = (k: string) =>
-    !k.startsWith("ch_") && !k.startsWith("cust_") && k !== "total";
+    !k.startsWith("ch_") && !k.startsWith("acc_") && !k.startsWith("cust_") && k !== "total";
   const needsAllPayees = (
     rules: FilterRule[],
     filters: Record<string, string> = {}
@@ -250,6 +254,8 @@ const Reports = () => {
         payeeMap[dedupeKey] = { key: dedupeKey, name: effectivePayee, ...info };
       }
       map[dedupeKey][chId] = (map[dedupeKey][chId] || 0) + c.amount;
+      const accId = `acc_${c.account_id || "__none__"}`;
+      map[dedupeKey][accId] = (map[dedupeKey][accId] || 0) + c.amount;
     });
 
     if (rulesCanMatchMissingChalikah(filterRules)) {
@@ -274,13 +280,14 @@ const Reports = () => {
     return { matrix: map, payeeRows: rows, chalikahCols: cols, grandTotal: gt };
   }, [filteredChecks, chalikahList, payeeLookup, payeesList, filterRules, allowedChalikahIds]);
 
-  // Dynamic columns = static cols + chalikah cols + total
+  // Dynamic columns = static cols + chalikah cols + account cols + total
   const allReportColumns: ColumnDef[] = useMemo(() => [
     ...STATIC_REPORT_COLS,
     ...chalikahCols.map((col) => ({ key: `ch_${col.id}`, label: col.name })),
+    ...accounts.map((a) => ({ key: `acc_${a.id}`, label: a.account_name })),
     { key: "total", label: "Total" },
     ...customColumns.map((c) => ({ key: c.key, label: c.label })),
-  ], [chalikahCols, customColumns]);
+  ], [chalikahCols, customColumns, accounts]);
 
   const colLayout = useColumnLayout("reports", allReportColumns);
 
@@ -371,6 +378,7 @@ const Reports = () => {
   // Helper to label columns with type indicators
   const colLabel = (c: ColumnDef) => {
     if (c.key.startsWith("ch_")) return `${c.label}  (Chalikah)`;
+    if (c.key.startsWith("acc_")) return `${c.label}  (Account)`;
     if (c.key.startsWith("cust_")) return `${c.label}  (Custom)`;
     return c.label;
   };
@@ -530,6 +538,8 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
         payeeMap[dedupeKey] = { key: dedupeKey, name: effectivePayee, ...info };
       }
       map[dedupeKey][chId] = (map[dedupeKey][chId] || 0) + c.amount;
+      const accId = `acc_${c.account_id || "__none__"}`;
+      map[dedupeKey][accId] = (map[dedupeKey][accId] || 0) + c.amount;
     });
     const savedRules = Array.isArray((cfg as any)?._overrides?.filterRules)
       ? (cfg as any)._overrides.filterRules as FilterRule[]
@@ -559,6 +569,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
     const pool: ColumnDef[] = [
       ...STATIC_REPORT_COLS,
       ...chCols,
+      ...accounts.map((a) => ({ key: `acc_${a.id}`, label: a.account_name })),
       { key: "total", label: "Total" },
       ...savedCustom.map((c) => ({ key: c.key, label: c.label })),
     ];
@@ -575,6 +586,11 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
           if (k.startsWith("ch_")) {
             const id = k.slice(3);
             return { key: k, label: id === "__none__" ? "(No Chalikah)" : chNames[id] || id };
+          }
+          if (k.startsWith("acc_")) {
+            const id = k.slice(4);
+            const acc = accounts.find((a) => a.id === id);
+            return { key: k, label: id === "__none__" ? "(No Account)" : acc?.account_name || id };
           }
           if (k.startsWith("cust_")) {
             const c = savedCustom.find((sc) => sc.key === k);
@@ -655,10 +671,14 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
         else if (col.key === "payee_name") row["Payee"] = pr.name;
         else if (col.key === "address") row["Address"] = pr.address || "";
         else if (col.key === "memo") row["Memo"] = pr.memo || "";
-        else if (col.key === "total") row["Total"] = Object.values(src.matrix[pr.key] || {}).reduce((s: number, v: any) => s + Number(v), 0);
+        else if (col.key === "total") row["Total"] = sumMatrixRow(src.matrix[pr.key]);
         else if (col.key.startsWith("ch_")) {
           const chId = col.key.slice(3);
           row[col.label] = src.matrix[pr.key]?.[chId] || 0;
+        }
+        else if (col.key.startsWith("acc_")) {
+          const accId = col.key;
+          row[col.label] = src.matrix[pr.key]?.[accId] || 0;
         }
         else if (col.key.startsWith("cust_")) {
           row[col.label] = savedCustomValues[col.key]?.[pr.key] || "";
@@ -678,11 +698,15 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
       else if (col.key === "address") totalsRow["Address"] = "";
       else if (col.key === "total") {
         totalsRow["Total"] = exportPayees.reduce((s: number, pr: any) =>
-          s + (Object.values(src.matrix[pr.key] || {}) as number[]).reduce((ss, v) => ss + Number(v), 0), 0);
+          s + sumMatrixRow(src.matrix[pr.key]), 0);
       } else if (col.key.startsWith("ch_")) {
         const chId = col.key.slice(3);
         totalsRow[col.label] = exportPayees.reduce(
           (s: number, pr: any) => s + (src.matrix[pr.key]?.[chId] || 0), 0
+        );
+      } else if (col.key.startsWith("acc_")) {
+        totalsRow[col.label] = exportPayees.reduce(
+          (s: number, pr: any) => s + (src.matrix[pr.key]?.[col.key] || 0), 0
         );
       } else if (col.key.startsWith("cust_")) {
         totalsRow[col.label] = "";
@@ -749,11 +773,14 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
     if (colKey === "address") return pr.address || "";
     if (colKey === "memo") return pr.memo || "";
     if (colKey === "total") {
-      return String(Object.values(matrixData[pr.key] || {}).reduce((s, v) => s + v, 0));
+      return String(sumMatrixRow(matrixData[pr.key]));
     }
     if (colKey.startsWith("ch_")) {
       const chId = colKey.slice(3);
       return String(matrixData[pr.key]?.[chId] || 0);
+    }
+    if (colKey.startsWith("acc_")) {
+      return String(matrixData[pr.key]?.[colKey] || 0);
     }
     return "";
   };
@@ -775,10 +802,13 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
     if (colKey === "payee_name") return pr.name.toLowerCase();
     if (colKey === "address") return (pr.address || "").toLowerCase();
     if (colKey === "memo") return (pr.memo || "").toLowerCase();
-    if (colKey === "total") return Object.values(matrixData[pr.key] || {}).reduce((s, v) => s + v, 0);
+    if (colKey === "total") return sumMatrixRow(matrixData[pr.key]);
     if (colKey.startsWith("ch_")) {
       const chId = colKey.slice(3);
       return matrixData[pr.key]?.[chId] || 0;
+    }
+    if (colKey.startsWith("acc_")) {
+      return matrixData[pr.key]?.[colKey] || 0;
     }
     return "";
   };
@@ -926,8 +956,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
 
   // Compute filtered grand total
   const filteredGrandTotal = useMemo(() =>
-    displayedRows.reduce((s, pr) =>
-      s + Object.values(matrix[pr.key] || {}).reduce((ss, v) => ss + v, 0), 0
+    displayedRows.reduce((s, pr) => s + sumMatrixRow(matrix[pr.key]), 0
     ), [displayedRows, matrix]);
 
   const renderMatrix = (
@@ -1017,7 +1046,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
           </TableHeader>
           <TableBody>
             {rows.map((pr) => {
-              const rowTotal = Object.values(matrixData[pr.key] || {}).reduce((s, v) => s + v, 0);
+              const rowTotal = sumMatrixRow(matrixData[pr.key]);
               return (
                 <TableRow key={pr.key} className={!isStatic && selectedNames.has(pr.key) ? "bg-muted/30" : undefined}>
                   {!isStatic && (
@@ -1066,6 +1095,13 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
                         </TableCell>
                       );
                     }
+                    if (col.key.startsWith("acc_")) {
+                      return (
+                        <TableCell key={col.key} className="text-right tabular-nums">
+                          {matrixData[pr.key]?.[col.key] ? fmt(matrixData[pr.key][col.key]) : "—"}
+                        </TableCell>
+                      );
+                    }
                     if (col.key.startsWith("cust_")) {
                       const val = cvSource[col.key]?.[pr.key] || "";
                       if (isStatic) {
@@ -1106,6 +1142,10 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
                 if (col.key.startsWith("ch_")) {
                   const chId = col.key.slice(3);
                   const colTotal = rows.reduce((s, pr) => s + (matrixData[pr.key]?.[chId] || 0), 0);
+                  return <TableCell key={col.key} className="text-right tabular-nums">{fmt(colTotal)}</TableCell>;
+                }
+                if (col.key.startsWith("acc_")) {
+                  const colTotal = rows.reduce((s, pr) => s + (matrixData[pr.key]?.[col.key] || 0), 0);
                   return <TableCell key={col.key} className="text-right tabular-nums">{fmt(colTotal)}</TableCell>;
                 }
                 if (col.key.startsWith("cust_")) {
@@ -1777,12 +1817,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
               savedCv
             );
             const filteredTotal = filteredRows.reduce<number>(
-              (s, pr) =>
-                s +
-                Object.values((rd.matrix?.[pr.key] || {}) as Record<string, number>).reduce<number>(
-                  (ss, v) => ss + (v as number),
-                  0
-                ),
+              (s, pr) => s + sumMatrixRow(rd.matrix?.[pr.key]),
               0
             );
             return renderMatrix(
