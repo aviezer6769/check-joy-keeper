@@ -671,10 +671,14 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
         else if (col.key === "payee_name") row["Payee"] = pr.name;
         else if (col.key === "address") row["Address"] = pr.address || "";
         else if (col.key === "memo") row["Memo"] = pr.memo || "";
-        else if (col.key === "total") row["Total"] = Object.values(src.matrix[pr.key] || {}).reduce((s: number, v: any) => s + Number(v), 0);
+        else if (col.key === "total") row["Total"] = sumMatrixRow(src.matrix[pr.key]);
         else if (col.key.startsWith("ch_")) {
           const chId = col.key.slice(3);
           row[col.label] = src.matrix[pr.key]?.[chId] || 0;
+        }
+        else if (col.key.startsWith("acc_")) {
+          const accId = col.key;
+          row[col.label] = src.matrix[pr.key]?.[accId] || 0;
         }
         else if (col.key.startsWith("cust_")) {
           row[col.label] = savedCustomValues[col.key]?.[pr.key] || "";
@@ -694,11 +698,15 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
       else if (col.key === "address") totalsRow["Address"] = "";
       else if (col.key === "total") {
         totalsRow["Total"] = exportPayees.reduce((s: number, pr: any) =>
-          s + (Object.values(src.matrix[pr.key] || {}) as number[]).reduce((ss, v) => ss + Number(v), 0), 0);
+          s + sumMatrixRow(src.matrix[pr.key]), 0);
       } else if (col.key.startsWith("ch_")) {
         const chId = col.key.slice(3);
         totalsRow[col.label] = exportPayees.reduce(
           (s: number, pr: any) => s + (src.matrix[pr.key]?.[chId] || 0), 0
+        );
+      } else if (col.key.startsWith("acc_")) {
+        totalsRow[col.label] = exportPayees.reduce(
+          (s: number, pr: any) => s + (src.matrix[pr.key]?.[col.key] || 0), 0
         );
       } else if (col.key.startsWith("cust_")) {
         totalsRow[col.label] = "";
