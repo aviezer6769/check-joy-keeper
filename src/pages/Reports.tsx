@@ -254,6 +254,8 @@ const Reports = () => {
         payeeMap[dedupeKey] = { key: dedupeKey, name: effectivePayee, ...info };
       }
       map[dedupeKey][chId] = (map[dedupeKey][chId] || 0) + c.amount;
+      const accId = `acc_${c.account_id || "__none__"}`;
+      map[dedupeKey][accId] = (map[dedupeKey][accId] || 0) + c.amount;
     });
 
     if (rulesCanMatchMissingChalikah(filterRules)) {
@@ -278,13 +280,14 @@ const Reports = () => {
     return { matrix: map, payeeRows: rows, chalikahCols: cols, grandTotal: gt };
   }, [filteredChecks, chalikahList, payeeLookup, payeesList, filterRules, allowedChalikahIds]);
 
-  // Dynamic columns = static cols + chalikah cols + total
+  // Dynamic columns = static cols + chalikah cols + account cols + total
   const allReportColumns: ColumnDef[] = useMemo(() => [
     ...STATIC_REPORT_COLS,
     ...chalikahCols.map((col) => ({ key: `ch_${col.id}`, label: col.name })),
+    ...accounts.map((a) => ({ key: `acc_${a.id}`, label: a.account_name })),
     { key: "total", label: "Total" },
     ...customColumns.map((c) => ({ key: c.key, label: c.label })),
-  ], [chalikahCols, customColumns]);
+  ], [chalikahCols, customColumns, accounts]);
 
   const colLayout = useColumnLayout("reports", allReportColumns);
 
