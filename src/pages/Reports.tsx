@@ -956,8 +956,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
 
   // Compute filtered grand total
   const filteredGrandTotal = useMemo(() =>
-    displayedRows.reduce((s, pr) =>
-      s + Object.values(matrix[pr.key] || {}).reduce((ss, v) => ss + v, 0), 0
+    displayedRows.reduce((s, pr) => s + sumMatrixRow(matrix[pr.key]), 0
     ), [displayedRows, matrix]);
 
   const renderMatrix = (
@@ -1047,7 +1046,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
           </TableHeader>
           <TableBody>
             {rows.map((pr) => {
-              const rowTotal = Object.values(matrixData[pr.key] || {}).reduce((s, v) => s + v, 0);
+              const rowTotal = sumMatrixRow(matrixData[pr.key]);
               return (
                 <TableRow key={pr.key} className={!isStatic && selectedNames.has(pr.key) ? "bg-muted/30" : undefined}>
                   {!isStatic && (
