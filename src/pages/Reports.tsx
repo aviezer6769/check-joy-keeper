@@ -1095,6 +1095,13 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
                         </TableCell>
                       );
                     }
+                    if (col.key.startsWith("acc_")) {
+                      return (
+                        <TableCell key={col.key} className="text-right tabular-nums">
+                          {matrixData[pr.key]?.[col.key] ? fmt(matrixData[pr.key][col.key]) : "—"}
+                        </TableCell>
+                      );
+                    }
                     if (col.key.startsWith("cust_")) {
                       const val = cvSource[col.key]?.[pr.key] || "";
                       if (isStatic) {
@@ -1135,6 +1142,10 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
                 if (col.key.startsWith("ch_")) {
                   const chId = col.key.slice(3);
                   const colTotal = rows.reduce((s, pr) => s + (matrixData[pr.key]?.[chId] || 0), 0);
+                  return <TableCell key={col.key} className="text-right tabular-nums">{fmt(colTotal)}</TableCell>;
+                }
+                if (col.key.startsWith("acc_")) {
+                  const colTotal = rows.reduce((s, pr) => s + (matrixData[pr.key]?.[col.key] || 0), 0);
                   return <TableCell key={col.key} className="text-right tabular-nums">{fmt(colTotal)}</TableCell>;
                 }
                 if (col.key.startsWith("cust_")) {
