@@ -569,6 +569,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
     const pool: ColumnDef[] = [
       ...STATIC_REPORT_COLS,
       ...chCols,
+      ...accounts.map((a) => ({ key: `acc_${a.id}`, label: a.account_name })),
       { key: "total", label: "Total" },
       ...savedCustom.map((c) => ({ key: c.key, label: c.label })),
     ];
@@ -585,6 +586,11 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
           if (k.startsWith("ch_")) {
             const id = k.slice(3);
             return { key: k, label: id === "__none__" ? "(No Chalikah)" : chNames[id] || id };
+          }
+          if (k.startsWith("acc_")) {
+            const id = k.slice(4);
+            const acc = accounts.find((a) => a.id === id);
+            return { key: k, label: id === "__none__" ? "(No Account)" : acc?.account_name || id };
           }
           if (k.startsWith("cust_")) {
             const c = savedCustom.find((sc) => sc.key === k);
