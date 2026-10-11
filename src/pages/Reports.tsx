@@ -378,6 +378,7 @@ const Reports = () => {
   // Helper to label columns with type indicators
   const colLabel = (c: ColumnDef) => {
     if (c.key.startsWith("ch_")) return `${c.label}  (Chalikah)`;
+    if (c.key.startsWith("acc_")) return `${c.label}  (Account)`;
     if (c.key.startsWith("cust_")) return `${c.label}  (Custom)`;
     return c.label;
   };
@@ -537,6 +538,8 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
         payeeMap[dedupeKey] = { key: dedupeKey, name: effectivePayee, ...info };
       }
       map[dedupeKey][chId] = (map[dedupeKey][chId] || 0) + c.amount;
+      const accId = `acc_${c.account_id || "__none__"}`;
+      map[dedupeKey][accId] = (map[dedupeKey][accId] || 0) + c.amount;
     });
     const savedRules = Array.isArray((cfg as any)?._overrides?.filterRules)
       ? (cfg as any)._overrides.filterRules as FilterRule[]
