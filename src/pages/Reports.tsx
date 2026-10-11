@@ -1817,12 +1817,7 @@ const loadReportForEdit = (r: SavedReport, openEditor = true) => {
               savedCv
             );
             const filteredTotal = filteredRows.reduce<number>(
-              (s, pr) =>
-                s +
-                Object.values((rd.matrix?.[pr.key] || {}) as Record<string, number>).reduce<number>(
-                  (ss, v) => ss + (v as number),
-                  0
-                ),
+              (s, pr) => s + sumMatrixRow(rd.matrix?.[pr.key]),
               0
             );
             return renderMatrix(
